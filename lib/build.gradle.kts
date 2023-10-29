@@ -1,5 +1,6 @@
 plugins {
-  id("org.jetbrains.kotlin.jvm").version("1.9.10")
+  id("org.jetbrains.kotlin.jvm") version "1.9.10"
+  id("com.diffplug.spotless") version "6.22.0"
   id("java-library")
 }
 
@@ -25,4 +26,15 @@ tasks.test {
   useJUnitPlatform()
   systemProperty("cucumber.junit-platform.naming-strategy", "long")
   outputs.upToDateWhen { false }
+}
+
+spotless {
+  kotlin { ktfmt() }
+  kotlinGradle { ktfmt() }
+}
+
+task("precommit") {
+  if (project.tasks.findByName("spotlessApply") != null) {
+    dependsOn("spotlessApply")
+  }
 }
