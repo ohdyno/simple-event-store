@@ -1,3 +1,3 @@
 package me.xingzhou.projects.simple.event.store
 
-data class StreamName(val name: String)
+data class AppendToken(val value: String)

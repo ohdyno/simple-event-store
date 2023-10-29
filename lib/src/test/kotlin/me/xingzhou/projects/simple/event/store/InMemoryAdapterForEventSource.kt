@@ -10,4 +10,12 @@ class InMemoryAdapterForEventSource : ForEventSource {
   override fun retrieveEvents(streamName: StreamName): List<DomainEvent> {
     return streams[streamName]!!
   }
+
+  override fun appendToStream(
+      streamName: StreamName,
+      event: DomainEvent,
+      appendToken: AppendToken
+  ) {
+    streams[streamName]!!.add(event)
+  }
 }
