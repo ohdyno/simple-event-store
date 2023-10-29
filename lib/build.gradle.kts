@@ -33,9 +33,3 @@ spotless {
   kotlin { ktfmt() }
   kotlinGradle { ktfmt() }
 }
-
-task("precommit") {
-  if (project.tasks.findByName("spotlessApply") != null) {
-    dependsOn("spotlessApply")
-  }
-}
