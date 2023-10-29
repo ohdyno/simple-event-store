@@ -10,6 +10,10 @@ import org.junit.platform.suite.api.Suite
 @Suite
 @IncludeEngines("cucumber")
 @SelectClasspathResource("features")
-@ConfigurationParameter(key = PLUGIN_PROPERTY_NAME, value = "pretty, html:build/reports/features.html, junit:build/reports/features.xml")
-@ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "me.xingzhou.projects.simple.event.store.features.eventstreams")
+@ConfigurationParameter(
+    key = PLUGIN_PROPERTY_NAME,
+    value = "pretty, html:build/reports/features.html, junit:build/reports/features.xml")
+@ConfigurationParameter(
+    key = GLUE_PROPERTY_NAME,
+    value = "me.xingzhou.projects.simple.event.store.features.eventstreams")
 class TestAllFeatures
