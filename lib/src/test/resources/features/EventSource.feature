@@ -4,7 +4,7 @@ Feature: Manipulating the Event Source Event Stream
   Each stream is identified by its name and is composed of multiple events.
 
   Background:
-    Given the event source is set up for testing
+    Given the event source is setup for testing
 
   Scenario: Creating A New Stream
 
