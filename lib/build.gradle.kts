@@ -29,6 +29,7 @@ tasks.test {
 }
 
 spotless {
+  ratchetFrom("origin/main")
   kotlin { ktfmt() }
   kotlinGradle { ktfmt() }
 }
