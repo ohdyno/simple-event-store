@@ -32,4 +32,8 @@ spotless {
   ratchetFrom("origin/main")
   kotlin { ktfmt() }
   kotlinGradle { ktfmt() }
+  gherkin {
+    target("src/**/*.feature")
+    gherkinUtils()
+  }
 }
