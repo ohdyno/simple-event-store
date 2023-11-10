@@ -7,6 +7,11 @@ plugins {
 repositories { mavenCentral() }
 
 dependencies {
+  // For Serializing Domain Events
+  runtimeOnly("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.6.0")
+
+  testImplementation("io.kotest:kotest-assertions-core-jvm:5.8.0")
+
   testImplementation(platform("org.junit:junit-bom:5.10.0"))
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
   testImplementation("org.junit.jupiter:junit-jupiter-engine")

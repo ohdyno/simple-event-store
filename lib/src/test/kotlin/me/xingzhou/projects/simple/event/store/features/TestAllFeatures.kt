@@ -1,4 +1,4 @@
-package me.xingzhou.projects.simple.event.store.features.eventstreams
+package me.xingzhou.projects.simple.event.store.features
 
 import io.cucumber.core.options.Constants.GLUE_PROPERTY_NAME
 import io.cucumber.core.options.Constants.PLUGIN_PROPERTY_NAME
@@ -9,7 +9,7 @@ import org.junit.platform.suite.api.Suite
 
 @Suite
 @IncludeEngines("cucumber")
-@SelectClasspathResource("features")
+@SelectClasspathResource("me.xingzhou.projects.simple.event.store.features")
 @ConfigurationParameter(
     key = PLUGIN_PROPERTY_NAME,
     value = "pretty, html:build/reports/features.html, junit:build/reports/features.xml")
