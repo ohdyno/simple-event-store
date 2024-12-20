@@ -34,6 +34,14 @@ jobs:
     - name: Build with Gradle Wrapper
       run: ./gradlew build
 
+    - name: Display Test Results
+      uses: dorny/test-reporter@v1
+      if: success() || failure()
+      with:
+        name: JUnit Tests
+        path: /**/reports/*.xml
+        reporter: java-junit
+
   dependency-submission:
 
     runs-on: ubuntu-latest
