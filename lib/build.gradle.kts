@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
   kotlin("jvm") version "2.1.0"
+  kotlin("plugin.serialization") version "2.1.0"
   id("com.gradle.cucumber.companion") version "1.3.0"
   id("java-library")
 }
@@ -21,8 +22,7 @@ configurations { compileOnly { extendsFrom(configurations.annotationProcessor.ge
 repositories { mavenCentral() }
 
 dependencies {
-  // For Serializing Domain Events
-  runtimeOnly("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.8.0-RC")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 
   testImplementation("io.kotest:kotest-assertions-core-jvm:6.0.0.M1")
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")

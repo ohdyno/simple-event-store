@@ -2,16 +2,22 @@ package me.xingzhou.projects.simple.event.store
 
 import me.xingzhou.projects.simple.event.store.result.EventStoreResult
 
-class EventStore(private val adapterForEventSource: ForEventSource) {
+class EventStore(private val adapterForEventSource: ForEventSource, private val serializer: EventSerializer) {
   fun createStream(
       streamName: StreamName,
-      event: DomainEvent,
+      event: Event,
       occurredOn: OccurredOn
-  ): Result<EventStoreResult> {
-    return Result.success(EventStoreResult.ForCreateStream(AppendToken("0")))
+  ): EventStoreResult {
+      val appendToken = adapterForEventSource.createStream(streamName.name, serializer.serialize(event), occurredOn.instant)
+    return EventStoreResult.ForCreateStream(AppendToken(appendToken))
   }
 
-  fun retrieveFromStream(streamName: StreamName): Result<EventStoreResult> {
-    return Result.success(EventStoreResult.ForRetrieveFromStream(listOf()))
+  fun retrieveFromStream(streamName: StreamName): EventStoreResult {
+      var events = adapterForEventSource.retrieveFromStream(streamName.name)
+    return EventStoreResult.ForRetrieveFromStream(events)
   }
+}
+
+interface EventSerializer {
+    fun serialize(event: Event): ByteArray
 }

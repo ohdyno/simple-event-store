@@ -8,6 +8,6 @@ class WhenSteps(private val context: SpecificationContext) {
       "an attempt is made to create a new event stream with the desired stream name and the event")
   fun anAttemptIsMadeToCreateANewEventStreamWithTheDesiredStreamNameAndTheEvent() {
     context.result =
-        context.store!!.createStream(context.streamName!!, context.event!!, context.occurredOn!!)
+        context.store.createStream(context.streamName, context.event, context.occurredOn)
   }
 }
