@@ -39,7 +39,7 @@ jobs:
       if: success() || failure()
       with:
         name: JUnit Tests
-        path: /**/reports/*.xml
+        path: lib/**/reports/*.xml
         reporter: java-junit
 
   dependency-submission:
