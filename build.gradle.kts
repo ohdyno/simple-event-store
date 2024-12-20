@@ -6,9 +6,10 @@ plugins {
 repositories { mavenCentral() }
 
 spotless {
-  kotlin { ktfmt() }
-
-  kotlinGradle { ktfmt() }
+  kotlinGradle {
+    target("**/*.gradle.kts")
+    ktfmt()
+  }
 
   flexmark {
     target("**/*.md")

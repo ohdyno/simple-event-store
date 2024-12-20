@@ -10,9 +10,7 @@ import me.xingzhou.projects.simple.event.store.result.EventStoreResult
 
 class ThenSteps(private val context: SpecificationContext) {
 
-  @Then("the stream was successfully created")
-  fun theStreamWasSuccessfullyCreated() {
-  }
+  @Then("the stream was successfully created") fun theStreamWasSuccessfullyCreated() {}
 
   @And("the stream contains the following events")
   fun theStreamContainsTheFollowingEvents(table: DataTable) {
@@ -21,11 +19,13 @@ class ThenSteps(private val context: SpecificationContext) {
         table
             .asMaps()
             .map {
-              RetrievedEvent(context.serializer.serialize(it["Event Type"]!!.asEvent()), it["Occurred On"]!!.asInstant())
+              RetrievedEvent(
+                  context.serializer.serialize(it["Event Type"]!!.asEvent()),
+                  it["Occurred On"]!!.asInstant())
             }
             .toList()
 
-      result as EventStoreResult.ForRetrieveFromStream
+    result as EventStoreResult.ForRetrieveFromStream
 
     result.events.shouldContainExactly(expectedEvents)
   }

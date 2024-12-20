@@ -5,6 +5,7 @@ plugins {
   kotlin("plugin.serialization") version "2.1.0"
   id("com.gradle.cucumber.companion") version "1.3.0"
   id("java-library")
+  id("com.diffplug.spotless") version "7.0.0.BETA4"
 }
 
 java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
@@ -37,3 +38,5 @@ dependencies {
 }
 
 tasks.withType<Test> { useJUnitPlatform() }
+
+spotless { kotlin { ktfmt() } }
