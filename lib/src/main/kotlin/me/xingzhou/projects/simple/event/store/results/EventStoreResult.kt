@@ -1,7 +1,6 @@
-package me.xingzhou.projects.simple.event.store.result
+package me.xingzhou.projects.simple.event.store.results
 
 import me.xingzhou.projects.simple.event.store.AppendToken
-import me.xingzhou.projects.simple.event.store.RetrievedEvent
 
 sealed class EventStoreResult {
   data class ForCreateStream(val appendToken: AppendToken) : EventStoreResult()

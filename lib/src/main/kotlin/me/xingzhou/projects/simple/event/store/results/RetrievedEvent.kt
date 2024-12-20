@@ -1,4 +1,4 @@
-package me.xingzhou.projects.simple.event.store
+package me.xingzhou.projects.simple.event.store.results
 
 import java.time.Instant
 

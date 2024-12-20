@@ -1,8 +1,10 @@
 package me.xingzhou.projects.simple.event.store
 
 import java.time.Instant
+import me.xingzhou.projects.simple.event.store.dependencies.eventsource.ForEventStorage
+import me.xingzhou.projects.simple.event.store.results.RetrievedEvent
 
-class InMemoryAdapterForEventSource : ForEventSource {
+class InMemoryAdapterForEventStorage : ForEventStorage {
   private val streams = mutableMapOf<String, List<EventEntry>>()
 
   override fun createStream(streamName: String, eventData: ByteArray, occurredOn: Instant): String {

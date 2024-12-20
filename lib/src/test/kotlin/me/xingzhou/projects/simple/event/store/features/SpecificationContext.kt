@@ -1,7 +1,9 @@
 package me.xingzhou.projects.simple.event.store.features
 
 import me.xingzhou.projects.simple.event.store.*
-import me.xingzhou.projects.simple.event.store.result.EventStoreResult
+import me.xingzhou.projects.simple.event.store.dependencies.eventserializer.ForEventSerializer
+import me.xingzhou.projects.simple.event.store.dependencies.eventsource.ForEventStorage
+import me.xingzhou.projects.simple.event.store.results.EventStoreResult
 
 class SpecificationContext {
   lateinit var result: EventStoreResult
@@ -9,6 +11,6 @@ class SpecificationContext {
   lateinit var occurredOn: OccurredOn
   lateinit var event: Event
   lateinit var store: EventStore
-  lateinit var adapter: ForEventSource
-  lateinit var serializer: EventSerializer
+  lateinit var adapter: ForEventStorage
+  lateinit var serializer: ForEventSerializer
 }

@@ -10,15 +10,16 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import me.xingzhou.projects.simple.event.store.*
+import me.xingzhou.projects.simple.event.store.dependencies.eventserializer.ForEventSerializer
 
 class GivenSteps(private val context: SpecificationContext) {
   @OptIn(ExperimentalSerializationApi::class)
   @Given("the event source system is setup for testing")
   fun theEventSourceSystemIsSetupForTesting() {
-    val adapter = InMemoryAdapterForEventSource()
+    val adapter = InMemoryAdapterForEventStorage()
     context.adapter = adapter
     val serializer =
-        object : EventSerializer {
+        object : ForEventSerializer {
           val json = Json {
             serializersModule = SerializersModule {
               polymorphic(Event::class) { subclass(TypeA::class) }
@@ -32,7 +33,7 @@ class GivenSteps(private val context: SpecificationContext) {
           }
         }
     context.serializer = serializer
-    context.store = EventStore(adapter, serializer)
+    context.store = EventStore()
   }
 
   @Given("a valid event of type A")
