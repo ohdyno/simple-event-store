@@ -1,6 +1,6 @@
 Feature: Create an Event Stream
 
-  Background: 
+  Background:
     Given the event source system is setup for testing
 
   Scenario: Initializing a New Event Stream
