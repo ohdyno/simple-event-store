@@ -46,8 +46,23 @@ spotless {
 
   kotlinGradle { ktfmt() }
 
+  flexmark {
+    target("**/*.md")
+    flexmark()
+  }
+
   gherkin {
     target("src/**/*.feature")
     gherkinUtils()
+  }
+
+  json {
+    target("**/*.json")
+    simple()
+  }
+
+  yaml {
+    target("**/*.yml")
+    jackson()
   }
 }
