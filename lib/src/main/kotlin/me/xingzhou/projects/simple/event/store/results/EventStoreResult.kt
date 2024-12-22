@@ -6,4 +6,6 @@ sealed class EventStoreResult {
   data class ForCreateStream(val appendToken: AppendToken) : EventStoreResult()
 
   data class ForRetrieveFromStream(val events: List<RetrievedEvent>) : EventStoreResult()
+
+  data class ForCheckStreamExists(val result: Boolean) : EventStoreResult()
 }

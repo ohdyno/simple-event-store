@@ -2,7 +2,7 @@ package me.xingzhou.projects.simple.event.store
 
 import java.time.Instant
 import me.xingzhou.projects.simple.event.store.dependencies.eventsource.ForEventStorage
-import me.xingzhou.projects.simple.event.store.results.RetrievedEvent
+import me.xingzhou.projects.simple.event.store.dependencies.eventsource.StreamEvent
 
 class InMemoryAdapterForEventStorage : ForEventStorage {
   private val streams = mutableMapOf<String, List<EventEntry>>()
@@ -13,10 +13,14 @@ class InMemoryAdapterForEventStorage : ForEventStorage {
     return "0"
   }
 
-  override fun retrieveFromStream(streamName: String): List<RetrievedEvent> {
+  override fun retrieveFromStream(streamName: String): List<StreamEvent> {
     return streams[streamName]!!.map {
-      RetrievedEvent(event = it.eventData, occurredOn = it.occurredOn)
+      StreamEvent(event = it.eventData, occurredOn = it.occurredOn)
     }
+  }
+
+  override fun streamExists(streamName: String): Boolean {
+    return streams.containsKey(streamName)
   }
 }
 

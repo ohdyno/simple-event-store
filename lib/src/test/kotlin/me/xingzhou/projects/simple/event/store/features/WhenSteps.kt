@@ -9,6 +9,7 @@ class WhenSteps(private val context: SpecificationContext) {
 
   @When(
       "an attempt is made to create a new event stream with the desired stream name and the event")
+  @When("creating a stream with this information")
   fun anAttemptIsMadeToCreateANewEventStreamWithTheDesiredStreamNameAndTheEvent() {
     val executionContext =
         ExecutionContext(

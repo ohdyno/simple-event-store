@@ -1,10 +1,12 @@
 package me.xingzhou.projects.simple.event.store
 
 import java.time.Instant
+import me.xingzhou.projects.simple.event.store.commands.CheckStreamExists
 import me.xingzhou.projects.simple.event.store.commands.CreateStream
 import me.xingzhou.projects.simple.event.store.commands.RetrieveFromStream
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult
+import me.xingzhou.projects.simple.event.store.results.RetrievedEvent
 
 class EventStore {
   @JvmName("handleCreateStream")
@@ -21,8 +23,21 @@ class EventStore {
   @JvmName("handleRetrieveFromStream")
   fun handle(context: ExecutionContext<RetrieveFromStream>): EventStoreResult {
     val command = context.command
-    var events = context.forEventStorage.retrieveFromStream(command.streamName.name)
-    return EventStoreResult.ForRetrieveFromStream(events)
+    val events = context.forEventStorage.retrieveFromStream(command.streamName.name)
+    val result =
+        events.map {
+          RetrievedEvent(
+              event = context.forEventSerialization.deserialize(it.event),
+              occurredOn = OccurredOn(it.occurredOn))
+        }
+    return EventStoreResult.ForRetrieveFromStream(result)
+  }
+
+  @JvmName("handleCheckStreamExists")
+  fun handle(context: ExecutionContext<CheckStreamExists>): EventStoreResult {
+    val command = context.command
+    val result = context.forEventStorage.streamExists(command.streamName.name)
+    return EventStoreResult.ForCheckStreamExists(result)
   }
 }
 

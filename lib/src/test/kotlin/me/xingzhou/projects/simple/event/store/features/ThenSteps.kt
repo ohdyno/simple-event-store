@@ -1,47 +1,55 @@
 package me.xingzhou.projects.simple.event.store.features
 
-import io.cucumber.datatable.DataTable
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
 import io.kotest.matchers.collections.shouldContainExactly
-import me.xingzhou.projects.simple.event.store.Event
+import io.kotest.matchers.shouldBe
 import me.xingzhou.projects.simple.event.store.EventStore
+import me.xingzhou.projects.simple.event.store.commands.CheckStreamExists
 import me.xingzhou.projects.simple.event.store.commands.RetrieveFromStream
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult
-import me.xingzhou.projects.simple.event.store.results.RetrievedEvent
 
 class ThenSteps(private val context: SpecificationContext) {
 
-  @Then("the stream was successfully created") fun theStreamWasSuccessfullyCreated() {}
+  @Then("the stream was successfully created")
+  @Then("the new stream exists in the system")
+  fun theStreamWasSuccessfullyCreated() {
+    val executionContext =
+        ExecutionContext(
+            command = CheckStreamExists(streamName = context.streamName),
+            forEventStorage = context.adapter,
+            forEventSerialization = context.serializer)
+    val result = EventStore().handle(executionContext)
 
-  @And("the stream contains the following events")
-  fun theStreamContainsTheFollowingEvents(table: DataTable) {
+    result as EventStoreResult.ForCheckStreamExists
+
+    result.result shouldBe true
+  }
+
+  @And("the stream contains only the event")
+  fun theStreamContainsOnlyTheEvent() {
     val executionContext =
         ExecutionContext(
             command = RetrieveFromStream(streamName = context.streamName),
             forEventStorage = context.adapter,
             forEventSerialization = context.serializer)
     val result = EventStore().handle(executionContext)
-    val expectedEvents =
-        table
-            .asMaps()
-            .map {
-              RetrievedEvent(
-                  context.serializer.serialize(it["Event Type"]!!.asEvent()),
-                  it["Occurred On"]!!.asInstant())
-            }
-            .toList()
+    val (events) = result as EventStoreResult.ForRetrieveFromStream
 
-    result as EventStoreResult.ForRetrieveFromStream
-
-    result.events.shouldContainExactly(expectedEvents)
+    events.map { it.event }.shouldContainExactly(listOf(context.event))
   }
-}
 
-private fun String.asEvent(): Event {
-  return when (this) {
-    "Type A" -> TypeA()
-    else -> throw Error("Unknown Event: $this")
+  @And("the stream captures when the event occurred")
+  fun theStreamCapturesWhenTheEventOccurred() {
+    val executionContext =
+        ExecutionContext(
+            command = RetrieveFromStream(streamName = context.streamName),
+            forEventStorage = context.adapter,
+            forEventSerialization = context.serializer)
+    val result = EventStore().handle(executionContext)
+    val (events) = result as EventStoreResult.ForRetrieveFromStream
+
+    events.map { it.occurredOn }.shouldContainExactly(listOf(context.occurredOn))
   }
 }
