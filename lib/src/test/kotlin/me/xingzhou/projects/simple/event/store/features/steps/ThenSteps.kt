@@ -1,4 +1,4 @@
-package me.xingzhou.projects.simple.event.store.features
+package me.xingzhou.projects.simple.event.store.features.steps
 
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
@@ -8,6 +8,7 @@ import me.xingzhou.projects.simple.event.store.EventStore
 import me.xingzhou.projects.simple.event.store.commands.CheckStreamExists
 import me.xingzhou.projects.simple.event.store.commands.RetrieveFromStream
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
+import me.xingzhou.projects.simple.event.store.features.SpecificationContext
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult
 
 class ThenSteps(private val context: SpecificationContext) {

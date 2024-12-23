@@ -1,10 +1,13 @@
-package me.xingzhou.projects.simple.event.store.features
+package me.xingzhou.projects.simple.event.store.features.steps
 
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Given
 import io.kotest.matchers.shouldBe
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.time.Instant
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
@@ -16,6 +19,8 @@ import me.xingzhou.projects.simple.event.store.*
 import me.xingzhou.projects.simple.event.store.commands.CheckStreamExists
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.dependencies.eventserializer.ForEventSerializer
+import me.xingzhou.projects.simple.event.store.features.SpecificationContext
+import me.xingzhou.projects.simple.event.store.features.fixtures.AnEvent
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult
 
 class GivenSteps(private val context: SpecificationContext) {
@@ -73,4 +78,10 @@ class GivenSteps(private val context: SpecificationContext) {
 
     result.result shouldBe false
   }
+}
+
+fun String.asInstant(): Instant {
+  val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy hh:mm:ss a z")
+  val zonedDateTime = ZonedDateTime.parse(this, formatter)
+  return zonedDateTime.toInstant()
 }

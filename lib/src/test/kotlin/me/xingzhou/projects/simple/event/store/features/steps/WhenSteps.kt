@@ -1,9 +1,10 @@
-package me.xingzhou.projects.simple.event.store.features
+package me.xingzhou.projects.simple.event.store.features.steps
 
 import io.cucumber.java.en.When
 import me.xingzhou.projects.simple.event.store.EventStore
 import me.xingzhou.projects.simple.event.store.commands.CreateStream
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
+import me.xingzhou.projects.simple.event.store.features.SpecificationContext
 
 class WhenSteps(private val context: SpecificationContext) {
 
