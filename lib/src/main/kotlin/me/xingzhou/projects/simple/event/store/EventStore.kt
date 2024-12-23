@@ -5,19 +5,25 @@ import me.xingzhou.projects.simple.event.store.commands.CheckStreamExists
 import me.xingzhou.projects.simple.event.store.commands.CreateStream
 import me.xingzhou.projects.simple.event.store.commands.RetrieveFromStream
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
+import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.ForEventStorage
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult
+import me.xingzhou.projects.simple.event.store.results.EventStoreResult.Failure
 import me.xingzhou.projects.simple.event.store.results.RetrievedEvent
 
 class EventStore {
   @JvmName("handleCreateStream")
   fun handle(context: ExecutionContext<CreateStream>): EventStoreResult {
-    val command = context.command
-    val appendToken =
-        context.forEventStorage.createStream(
-            command.streamName.name,
-            context.forEventSerialization.serialize(command.event),
-            command.occurredOn.instant)
-    return EventStoreResult.ForCreateStream(AppendToken(appendToken))
+    try {
+      val command = context.command
+      val appendToken =
+          context.forEventStorage.createStream(
+              command.streamName.name,
+              context.forEventSerialization.serialize(command.event),
+              command.occurredOn.instant)
+      return EventStoreResult.ForCreateStream(AppendToken(appendToken))
+    } catch (failure: ForEventStorage.Failure.StreamAlreadyExists) {
+      return Failure.StreamAlreadyExists(context.command.streamName, failure.message!!)
+    }
   }
 
   @JvmName("handleRetrieveFromStream")

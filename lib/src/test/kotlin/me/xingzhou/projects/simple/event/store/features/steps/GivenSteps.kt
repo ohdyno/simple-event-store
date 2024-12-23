@@ -25,8 +25,8 @@ import me.xingzhou.projects.simple.event.store.results.EventStoreResult
 class GivenSteps(private val context: SpecificationContext) {
   @Given("the event source system is setup for testing")
   fun theEventSourceSystemIsSetupForTesting() {
-    context.adapter = ForEventStorage {}
-    context.serializer = ForEventSerializer {
+    context.eventStorage = ForEventStorage {}
+    context.eventSerializer = ForEventSerializer {
       serializersModule = SerializersModule {
         polymorphic(Event::class) { subclass(AnEvent::class) }
       }
@@ -45,13 +45,14 @@ class GivenSteps(private val context: SpecificationContext) {
   }
 
   @And("a new stream name")
+  @And("a stream name")
   fun aNewStreamName() {
     context.streamName = StreamName("stream one")
     val executionContext =
         ExecutionContext(
             command = CheckStreamExists(streamName = context.streamName),
-            forEventStorage = context.adapter,
-            forEventSerialization = context.serializer)
+            forEventStorage = context.eventStorage,
+            forEventSerialization = context.eventSerializer)
     val result = EventStore().handle(executionContext)
 
     result as EventStoreResult.ForCheckStreamExists
@@ -68,9 +69,24 @@ class GivenSteps(private val context: SpecificationContext) {
                     streamName = StreamName("stream two"),
                     event = context.event,
                     occurredOn = context.occurredOn),
-            forEventStorage = context.adapter,
-            forEventSerialization = context.serializer)
+            forEventStorage = context.eventStorage,
+            forEventSerialization = context.eventSerializer)
     EventStore().handle(executionContext)
+  }
+
+  @And("the stream already exists in the system")
+  fun theStreamAlreadyExistsInTheSystem() {
+    val executionContext =
+        ExecutionContext(
+            command =
+                CreateStream(
+                    streamName = context.streamName,
+                    event = AnEvent(),
+                    occurredOn = OccurredOn(Instant.EPOCH)),
+            forEventStorage = context.eventStorage,
+            forEventSerialization = context.eventSerializer)
+    EventStore().handle(executionContext)
+    context.eventStorageSnapshot = context.snapshotEventStorage()
   }
 }
 

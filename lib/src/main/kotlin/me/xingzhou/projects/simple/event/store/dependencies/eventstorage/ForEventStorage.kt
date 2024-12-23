@@ -8,4 +8,8 @@ interface ForEventStorage {
   fun retrieveFromStream(streamName: String): List<StreamEvent>
 
   fun streamExists(streamName: String): Boolean
+
+  sealed interface Failure {
+    class StreamAlreadyExists(name: String) : Failure, Exception("stream $name is already exists")
+  }
 }

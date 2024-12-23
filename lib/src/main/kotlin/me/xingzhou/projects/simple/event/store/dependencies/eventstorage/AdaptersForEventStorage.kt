@@ -1,6 +1,7 @@
 package me.xingzhou.projects.simple.event.store.dependencies.eventstorage
 
 import java.time.Instant
+import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.ForEventStorage.Failure.StreamAlreadyExists
 
 fun ForEventStorage(configure: InMemoryMapAdapterBuilder.() -> Unit): ForEventStorage {
   val builder = InMemoryMapAdapterBuilder()
@@ -16,10 +17,13 @@ class InMemoryMapAdapterBuilder {
   }
 }
 
-private class InMemoryMapAdapter(private val streams: MutableMap<String, List<StreamEvent>>) :
+internal class InMemoryMapAdapter(internal val streams: MutableMap<String, List<StreamEvent>>) :
     ForEventStorage {
 
   override fun createStream(streamName: String, eventData: ByteArray, occurredOn: Instant): String {
+    if (streams.containsKey(streamName)) {
+      throw StreamAlreadyExists(streamName)
+    }
     streams[streamName] = listOf(StreamEvent(event = eventData, occurredOn = occurredOn))
     return "0"
   }

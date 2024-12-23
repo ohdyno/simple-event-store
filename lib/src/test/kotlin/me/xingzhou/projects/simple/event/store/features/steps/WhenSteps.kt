@@ -19,8 +19,8 @@ class WhenSteps(private val context: SpecificationContext) {
                     streamName = context.streamName,
                     event = context.event,
                     occurredOn = context.occurredOn),
-            forEventStorage = context.adapter,
-            forEventSerialization = context.serializer,
+            forEventStorage = context.eventStorage,
+            forEventSerialization = context.eventSerializer,
         )
     context.result = EventStore().handle(executionContext)
   }

@@ -3,7 +3,9 @@ package me.xingzhou.projects.simple.event.store.features.steps
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.maps.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import me.xingzhou.projects.simple.event.store.EventStore
 import me.xingzhou.projects.simple.event.store.commands.CheckStreamExists
 import me.xingzhou.projects.simple.event.store.commands.RetrieveFromStream
@@ -19,8 +21,8 @@ class ThenSteps(private val context: SpecificationContext) {
     val executionContext =
         ExecutionContext(
             command = CheckStreamExists(streamName = context.streamName),
-            forEventStorage = context.adapter,
-            forEventSerialization = context.serializer)
+            forEventStorage = context.eventStorage,
+            forEventSerialization = context.eventSerializer)
     val result = EventStore().handle(executionContext)
 
     result as EventStoreResult.ForCheckStreamExists
@@ -28,13 +30,26 @@ class ThenSteps(private val context: SpecificationContext) {
     result.result shouldBe true
   }
 
+  @Then("the system is unchanged")
+  fun theSystemIsUnchanged() {
+    context.snapshotEventStorage() shouldContainExactly context.eventStorageSnapshot
+  }
+
+  @Then("it fails due to a stream with the same name already exists")
+  fun itFailsDueToAStreamExistsWithSameName() {
+    val result = context.result
+    result as EventStoreResult.Failure.StreamAlreadyExists
+    result.streamName shouldBe context.streamName
+    result.message shouldContain "already exists"
+  }
+
   @And("the stream contains only the event")
   fun theStreamContainsOnlyTheEvent() {
     val executionContext =
         ExecutionContext(
             command = RetrieveFromStream(streamName = context.streamName),
-            forEventStorage = context.adapter,
-            forEventSerialization = context.serializer)
+            forEventStorage = context.eventStorage,
+            forEventSerialization = context.eventSerializer)
     val result = EventStore().handle(executionContext)
     val (events) = result as EventStoreResult.ForRetrieveFromStream
 
@@ -46,8 +61,8 @@ class ThenSteps(private val context: SpecificationContext) {
     val executionContext =
         ExecutionContext(
             command = RetrieveFromStream(streamName = context.streamName),
-            forEventStorage = context.adapter,
-            forEventSerialization = context.serializer)
+            forEventStorage = context.eventStorage,
+            forEventSerialization = context.eventSerializer)
     val result = EventStore().handle(executionContext)
     val (events) = result as EventStoreResult.ForRetrieveFromStream
 
