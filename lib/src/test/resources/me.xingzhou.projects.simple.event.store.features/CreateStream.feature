@@ -18,5 +18,17 @@ Feature: Create an Event Stream
 
     Example: Creating two streams with the same name fails
 
-  Rule:
+  Rule: The same event can exist in multiple streams
+
+    Example: Creating two different streams with the same event successfully
+
+      Given an event
+      And when the event occurred
+      And the event already exists in another stream
+      Given a new stream name
+      When creating a stream with this information
+      Then the new stream exists in the system
+      And the stream contains only the event
+      And the stream captures when the event occurred
+
   Rule: Creating a stream successfully returns an append token

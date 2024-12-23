@@ -14,6 +14,7 @@ import me.xingzhou.projects.simple.event.store.EventStore
 import me.xingzhou.projects.simple.event.store.OccurredOn
 import me.xingzhou.projects.simple.event.store.StreamName
 import me.xingzhou.projects.simple.event.store.commands.CheckStreamExists
+import me.xingzhou.projects.simple.event.store.commands.CreateStream
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.dependencies.eventserializer.ForEventSerializer
 import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.ForEventStorage
@@ -44,7 +45,7 @@ class GivenSteps(private val context: SpecificationContext) {
   }
 
   @And("a new stream name")
-  fun aDesiredStreamNameOfStreamOne() {
+  fun aNewStreamName() {
     context.streamName = StreamName("stream one")
     val executionContext =
         ExecutionContext(
@@ -56,6 +57,20 @@ class GivenSteps(private val context: SpecificationContext) {
     result as EventStoreResult.ForCheckStreamExists
 
     result.result shouldBe false
+  }
+
+  @And("the event already exists in another stream")
+  fun theEventAlreadyExistsInAnotherStream() {
+    val executionContext =
+        ExecutionContext(
+            command =
+                CreateStream(
+                    streamName = StreamName("stream two"),
+                    event = context.event,
+                    occurredOn = context.occurredOn),
+            forEventStorage = context.adapter,
+            forEventSerialization = context.serializer)
+    EventStore().handle(executionContext)
   }
 }
 
