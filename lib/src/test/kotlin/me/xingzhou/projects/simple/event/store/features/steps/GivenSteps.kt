@@ -6,13 +6,17 @@ import io.kotest.matchers.shouldBe
 import java.time.Instant
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclass
+import me.xingzhou.projects.simple.event.store.Event
 import me.xingzhou.projects.simple.event.store.EventStore
 import me.xingzhou.projects.simple.event.store.OccurredOn
 import me.xingzhou.projects.simple.event.store.StreamName
 import me.xingzhou.projects.simple.event.store.commands.CheckStreamExists
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
-import me.xingzhou.projects.simple.event.store.eventserializer.KotlinXSerializationAdapter
-import me.xingzhou.projects.simple.event.store.eventsource.InMemoryMapAdapter
+import me.xingzhou.projects.simple.event.store.dependencies.eventserializer.ForEventSerializer
+import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.ForEventStorage
 import me.xingzhou.projects.simple.event.store.features.SpecificationContext
 import me.xingzhou.projects.simple.event.store.features.fixtures.AnEvent
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult
@@ -20,8 +24,12 @@ import me.xingzhou.projects.simple.event.store.results.EventStoreResult
 class GivenSteps(private val context: SpecificationContext) {
   @Given("the event source system is setup for testing")
   fun theEventSourceSystemIsSetupForTesting() {
-    context.adapter = InMemoryMapAdapter()
-    context.serializer = KotlinXSerializationAdapter()
+    context.adapter = ForEventStorage {}
+    context.serializer = ForEventSerializer {
+      serializersModule = SerializersModule {
+        polymorphic(Event::class) { subclass(AnEvent::class) }
+      }
+    }
   }
 
   @Given("an event")

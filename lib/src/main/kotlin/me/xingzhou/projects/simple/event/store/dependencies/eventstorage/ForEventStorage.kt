@@ -1,4 +1,4 @@
-package me.xingzhou.projects.simple.event.store.dependencies.eventsource
+package me.xingzhou.projects.simple.event.store.dependencies.eventstorage
 
 import java.time.Instant
 

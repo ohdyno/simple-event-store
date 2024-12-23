@@ -1,11 +1,23 @@
-package me.xingzhou.projects.simple.event.store.eventsource
+package me.xingzhou.projects.simple.event.store.dependencies.eventstorage
 
 import java.time.Instant
-import me.xingzhou.projects.simple.event.store.dependencies.eventsource.ForEventStorage
-import me.xingzhou.projects.simple.event.store.dependencies.eventsource.StreamEvent
 
-class InMemoryMapAdapter : ForEventStorage {
-  private val streams = mutableMapOf<String, List<EventEntry>>()
+fun ForEventStorage(configure: InMemoryMapAdapterBuilder.() -> Unit): ForEventStorage {
+  val builder = InMemoryMapAdapterBuilder()
+  builder.configure()
+  return builder.build()
+}
+
+class InMemoryMapAdapterBuilder {
+  var streams: MutableMap<String, List<EventEntry>> = mutableMapOf()
+
+  fun build(): ForEventStorage {
+    return InMemoryMapAdapter(streams)
+  }
+}
+
+private class InMemoryMapAdapter(private val streams: MutableMap<String, List<EventEntry>>) :
+    ForEventStorage {
 
   override fun createStream(streamName: String, eventData: ByteArray, occurredOn: Instant): String {
     streams[streamName] =
@@ -24,11 +36,7 @@ class InMemoryMapAdapter : ForEventStorage {
   }
 }
 
-private data class EventEntry(
-    val streamName: String,
-    val eventData: ByteArray,
-    val occurredOn: Instant
-) {
+data class EventEntry(val streamName: String, val eventData: ByteArray, val occurredOn: Instant) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (javaClass != other?.javaClass) return false
