@@ -28,7 +28,6 @@ Feature: Create an Event Stream
   Rule: The same event can exist in multiple streams
 
     Example: Creating two different streams with the same event successfully
-
       Given an event
       And when the event occurred
       And the event already exists in another stream

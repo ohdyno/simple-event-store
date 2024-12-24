@@ -20,7 +20,7 @@ spotless {
   }
 
   gherkin {
-    target("src/**/*.feature")
+    target("**/*.feature")
     gherkinUtils()
   }
 
