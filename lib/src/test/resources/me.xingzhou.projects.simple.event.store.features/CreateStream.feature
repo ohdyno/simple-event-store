@@ -37,5 +37,3 @@ Feature: Create an Event Stream
       Then the new stream exists in the system
       And the stream contains only the event
       And the stream captures when the event occurred
-
-  Rule: Creating a stream successfully returns an append token
