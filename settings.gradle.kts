@@ -8,8 +8,7 @@ gitHooks {
   preCommit {
     from {
       """
-              ./gradlew spotlessApply
-              git add --update
+              ./gradlew spotlessApply && git add --update
           """
           .trimIndent()
     }

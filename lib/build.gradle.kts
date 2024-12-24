@@ -37,7 +37,6 @@ dependencies {
   testImplementation("org.junit.platform:junit-platform-suite")
 }
 
-tasks.withType<Test> { useJUnitPlatform()
-}
+tasks.withType<Test> { useJUnitPlatform() }
 
 spotless { kotlin { ktfmt() } }
