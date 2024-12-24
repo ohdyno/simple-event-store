@@ -3,7 +3,6 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 plugins {
   kotlin("jvm") version "2.1.0"
   kotlin("plugin.serialization") version "2.1.0"
-  id("com.gradle.cucumber.companion") version "1.3.0"
   id("java-library")
   id("com.diffplug.spotless") version "7.0.0.BETA4"
 }
@@ -35,9 +34,10 @@ dependencies {
   testImplementation("io.cucumber:cucumber-junit-platform-engine")
   testImplementation("io.cucumber:cucumber-java")
   testImplementation("io.cucumber:cucumber-picocontainer")
-  testImplementation("org.junit.platform:junit-platform-suite-engine")
+  testImplementation("org.junit.platform:junit-platform-suite")
 }
 
-tasks.withType<Test> { useJUnitPlatform() }
+tasks.withType<Test> { useJUnitPlatform()
+}
 
 spotless { kotlin { ktfmt() } }
