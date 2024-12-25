@@ -1,0 +1,7 @@
+{
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "app",
+    "name": "Java & PostgreSQL",
+    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+    "customizations": {"jetbrains": {"backend": "IntelliJ"}}
+}
