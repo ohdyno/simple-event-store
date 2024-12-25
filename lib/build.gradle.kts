@@ -17,7 +17,6 @@ kotlin {
   }
 }
 
-@Suppress("UnstableApiUsage")
 configurations { compileOnly { extendsFrom(configurations.annotationProcessor.get()) } }
 
 repositories { mavenCentral() }
