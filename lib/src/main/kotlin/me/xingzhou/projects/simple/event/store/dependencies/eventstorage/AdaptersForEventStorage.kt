@@ -26,12 +26,16 @@ internal class InMemoryMapAdapter(internal val streams: MutableMap<String, List<
       eventData: ByteArray,
       occurredOn: Instant
   ): String {
-    if (streams.containsKey(streamName)) {
-      throw StreamAlreadyExists(streamName)
-    }
+    validateStreamExists(streamName)
     streams[streamName] =
         listOf(StreamEvent(eventName = eventName, event = eventData, occurredOn = occurredOn))
-    return "0"
+    return retrieveAppendToken(streamName)
+  }
+
+  private fun validateStreamExists(streamName: String) {
+    if (streamExists(streamName)) {
+      throw StreamAlreadyExists(streamName)
+    }
   }
 
   override fun appendToStream(
