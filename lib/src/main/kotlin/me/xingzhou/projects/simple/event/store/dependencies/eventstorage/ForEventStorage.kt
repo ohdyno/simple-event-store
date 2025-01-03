@@ -3,11 +3,17 @@ package me.xingzhou.projects.simple.event.store.dependencies.eventstorage
 import java.time.Instant
 
 interface ForEventStorage {
-  fun createStream(streamName: String, eventData: ByteArray, occurredOn: Instant): String
+  fun createStream(
+      streamName: String,
+      eventName: String,
+      eventData: ByteArray,
+      occurredOn: Instant
+  ): String
 
   fun appendToStream(
       streamName: String,
       appendToken: String,
+      eventName: String,
       eventData: ByteArray,
       occurredOn: Instant
   ): String

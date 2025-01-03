@@ -20,22 +20,30 @@ class InMemoryMapAdapterBuilder {
 internal class InMemoryMapAdapter(internal val streams: MutableMap<String, List<StreamEvent>>) :
     ForEventStorage {
 
-  override fun createStream(streamName: String, eventData: ByteArray, occurredOn: Instant): String {
+  override fun createStream(
+      streamName: String,
+      eventName: String,
+      eventData: ByteArray,
+      occurredOn: Instant
+  ): String {
     if (streams.containsKey(streamName)) {
       throw StreamAlreadyExists(streamName)
     }
-    streams[streamName] = listOf(StreamEvent(event = eventData, occurredOn = occurredOn))
+    streams[streamName] =
+        listOf(StreamEvent(eventName = eventName, event = eventData, occurredOn = occurredOn))
     return "0"
   }
 
   override fun appendToStream(
       streamName: String,
       appendToken: String,
+      eventName: String,
       eventData: ByteArray,
       occurredOn: Instant
   ): String {
     streams[streamName] =
-        streams[streamName]!! + StreamEvent(event = eventData, occurredOn = occurredOn)
+        streams[streamName]!! +
+            StreamEvent(eventName = eventName, event = eventData, occurredOn = occurredOn)
     return retrieveAppendToken(streamName)
   }
 

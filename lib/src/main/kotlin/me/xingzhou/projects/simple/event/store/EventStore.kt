@@ -13,11 +13,10 @@ class EventStore {
   fun handle(context: ExecutionContext<CreateStream>): EventStoreResult {
     try {
       val command = context.command
+      val (eventName, eventData) = context.forEventSerialization.serialize(command.event)
       val appendToken =
           context.forEventStorage.createStream(
-              command.streamName.name,
-              context.forEventSerialization.serialize(command.event),
-              command.occurredOn.instant)
+              command.streamName.name, eventName, eventData, command.occurredOn.instant)
       return EventStoreResult.ForCreateStream(AppendToken(appendToken))
     } catch (failure: ForEventStorage.Failure.StreamAlreadyExists) {
       return Failure.StreamAlreadyExists(context.command.streamName, failure.message!!)
@@ -31,7 +30,7 @@ class EventStore {
     val result =
         events.map {
           RetrievedEvent(
-              event = context.forEventSerialization.deserialize(it.event),
+              event = context.forEventSerialization.deserialize(it.eventName, it.event),
               occurredOn = OccurredOn(it.occurredOn))
         }
     return EventStoreResult.ForRetrieveFromStream(result)
@@ -62,11 +61,13 @@ class EventStore {
   @JvmName("handleAppendToStream")
   fun handle(context: ExecutionContext<AppendToStream>): EventStoreResult {
     val command = context.command
+    val (eventName, eventData) = context.forEventSerialization.serialize(command.event)
     val result =
         context.forEventStorage.appendToStream(
             command.streamName.name,
             command.appendToken.value,
-            context.forEventSerialization.serialize(command.event),
+            eventName,
+            eventData,
             command.occurredOn.instant)
     return EventStoreResult.ForAppendToStream(AppendToken(result))
   }
