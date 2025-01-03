@@ -13,10 +13,13 @@ class EventStore {
   fun handle(context: ExecutionContext<CreateStream>): EventStoreResult {
     try {
       val command = context.command
-      val (eventName, eventData) = context.forEventSerialization.serialize(command.event)
+      val (eventType, eventData) = context.forEventSerialization.serialize(command.event)
       val appendToken =
           context.forEventStorage.createStream(
-              command.streamName.name, eventName, eventData, command.occurredOn.instant)
+              streamName = command.streamName.name,
+              eventType = eventType,
+              eventData = eventData,
+              occurredOn = command.occurredOn.instant)
       return EventStoreResult.ForCreateStream(AppendToken(appendToken))
     } catch (failure: ForEventStorage.Failure) {
       return when (failure) {
@@ -35,7 +38,7 @@ class EventStore {
     val result =
         events.map {
           RetrievedEvent(
-              event = context.forEventSerialization.deserialize(it.eventName, it.event),
+              event = context.forEventSerialization.deserialize(it.eventType, it.eventData),
               occurredOn = OccurredOn(it.occurredOn))
         }
     return EventStoreResult.ForRetrieveFromStream(result)
@@ -53,7 +56,8 @@ class EventStore {
     try {
       val command = context.command
       val result =
-          context.forEventStorage.validateAppendToken(command.streamName.name, command.token.value)
+          context.forEventStorage.validateAppendToken(
+              streamName = command.streamName.name, token = command.token.value)
       return EventStoreResult.ForValidateAppendToken(result)
     } catch (failure: ForEventStorage.Failure) {
       return when (failure) {
@@ -83,14 +87,14 @@ class EventStore {
   fun handle(context: ExecutionContext<AppendToStream>): EventStoreResult {
     try {
       val command = context.command
-      val (eventName, eventData) = context.forEventSerialization.serialize(command.event)
+      val (eventType, eventData) = context.forEventSerialization.serialize(command.event)
       val result =
           context.forEventStorage.appendToStream(
-              command.streamName.name,
-              command.appendToken.value,
-              eventName,
-              eventData,
-              command.occurredOn.instant)
+              streamName = command.streamName.name,
+              appendToken = command.appendToken.value,
+              eventType = eventType,
+              eventData = eventData,
+              occurredOn = command.occurredOn.instant)
       return EventStoreResult.ForAppendToStream(AppendToken(result))
     } catch (failure: ForEventStorage.Failure) {
       return when (failure) {

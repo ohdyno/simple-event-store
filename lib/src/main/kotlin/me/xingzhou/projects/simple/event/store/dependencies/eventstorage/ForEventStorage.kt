@@ -5,7 +5,7 @@ import java.time.Instant
 interface ForEventStorage {
   fun createStream(
       streamName: String,
-      eventName: String,
+      eventType: String,
       eventData: ByteArray,
       occurredOn: Instant
   ): String
@@ -13,7 +13,7 @@ interface ForEventStorage {
   fun appendToStream(
       streamName: String,
       appendToken: String,
-      eventName: String,
+      eventType: String,
       eventData: ByteArray,
       occurredOn: Instant
   ): String

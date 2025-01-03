@@ -1,4 +1,4 @@
-Feature: Retrieve From Stream
+Feature: Retrieve Events from A Stream
 
   Rule: Events retrieved from a stream are ordered by their version
 
@@ -9,3 +9,5 @@ Feature: Retrieve From Stream
     Example: Successfully retrieving a single type of event
 
     Example: Successfully retrieving multiple types of events
+
+    Example: Retrieving an event type that does not exist returns no events
