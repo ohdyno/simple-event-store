@@ -38,7 +38,14 @@ Feature: Append to Stream
 
   Rule: Appending to a stream successfully returns a new append token
 
-    Example: Appending to the same stream again
+    Example: Appending to a stream successfully
+      Given a stream name
+      And the stream already exists in the system
+      And an event
+      And when the event occurred
+      And a valid append token for the stream
+      When appending the event to the stream
+      Then a valid append token for the stream is returned
 
   Rule: Creating a stream successfully returns an append token
 

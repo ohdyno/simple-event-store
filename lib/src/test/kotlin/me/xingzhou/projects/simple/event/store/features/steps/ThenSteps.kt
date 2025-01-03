@@ -103,7 +103,7 @@ class ThenSteps(private val context: SpecificationContext) {
   @Then("a valid append token for the stream is returned")
   fun anAppendTokenForTheStreamIsReturned() {
     val result = context.result
-    result as EventStoreResult.ForCreateStream
+    result as EventStoreResult.WithAppendToken
 
     val executionContext =
         ExecutionContext(
