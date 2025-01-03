@@ -8,6 +8,12 @@ sealed interface EventStoreResult {
     class StreamAlreadyExists(val streamName: StreamName, message: String) : Failure(message)
 
     class StreamDoesNotExist(val streamName: StreamName, message: String) : Failure(message)
+
+    class InvalidAppendToken(
+        val streamName: StreamName,
+        val appendToken: AppendToken,
+        message: String
+    ) : Failure(message)
   }
 
   data class ForCreateStream(val appendToken: AppendToken) : EventStoreResult

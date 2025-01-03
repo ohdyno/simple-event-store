@@ -18,8 +18,13 @@ class EventStore {
           context.forEventStorage.createStream(
               command.streamName.name, eventName, eventData, command.occurredOn.instant)
       return EventStoreResult.ForCreateStream(AppendToken(appendToken))
-    } catch (failure: ForEventStorage.Failure.StreamAlreadyExists) {
-      return Failure.StreamAlreadyExists(context.command.streamName, failure.message!!)
+    } catch (failure: ForEventStorage.Failure) {
+      return when (failure) {
+        is ForEventStorage.Failure.StreamAlreadyExists ->
+            Failure.StreamAlreadyExists(context.command.streamName, failure.message!!)
+
+        else -> throw failure
+      }
     }
   }
 
@@ -53,15 +58,22 @@ class EventStore {
 
   @JvmName("handleRetrieveAppendToken")
   fun handle(context: ExecutionContext<RetrieveAppendToken>): EventStoreResult {
-    val command = context.command
-    val result = context.forEventStorage.retrieveAppendToken(command.streamName.name)
-    return EventStoreResult.ForRetrieveAppendToken(AppendToken(result))
+    try {
+      val command = context.command
+      val result = context.forEventStorage.retrieveAppendToken(command.streamName.name)
+      return EventStoreResult.ForRetrieveAppendToken(AppendToken(result))
+    } catch (failure: ForEventStorage.Failure) {
+      return when (failure) {
+        is ForEventStorage.Failure.StreamDoesNotExist ->
+            Failure.StreamDoesNotExist(context.command.streamName, failure.message!!)
+        else -> throw failure
+      }
+    }
   }
 
   @JvmName("handleAppendToStream")
   fun handle(context: ExecutionContext<AppendToStream>): EventStoreResult {
     try {
-
       val command = context.command
       val (eventName, eventData) = context.forEventSerialization.serialize(command.event)
       val result =
@@ -72,8 +84,17 @@ class EventStore {
               eventData,
               command.occurredOn.instant)
       return EventStoreResult.ForAppendToStream(AppendToken(result))
-    } catch (failure: ForEventStorage.Failure.StreamDoesNotExist) {
-      return Failure.StreamDoesNotExist(context.command.streamName, failure.message!!)
+    } catch (failure: ForEventStorage.Failure) {
+      return when (failure) {
+        is ForEventStorage.Failure.StreamDoesNotExist ->
+            Failure.StreamDoesNotExist(context.command.streamName, failure.message!!)
+
+        is ForEventStorage.Failure.InvalidAppendToken ->
+            Failure.InvalidAppendToken(
+                context.command.streamName, context.command.appendToken, failure.message!!)
+
+        else -> throw failure
+      }
     }
   }
 }

@@ -9,10 +9,8 @@ import java.time.format.DateTimeFormatter
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
-import me.xingzhou.projects.simple.event.store.Event
-import me.xingzhou.projects.simple.event.store.EventStore
-import me.xingzhou.projects.simple.event.store.OccurredOn
-import me.xingzhou.projects.simple.event.store.StreamName
+import me.xingzhou.projects.simple.event.store.*
+import me.xingzhou.projects.simple.event.store.commands.AppendToStream
 import me.xingzhou.projects.simple.event.store.commands.CheckStreamExists
 import me.xingzhou.projects.simple.event.store.commands.CreateStream
 import me.xingzhou.projects.simple.event.store.commands.RetrieveAppendToken
@@ -106,6 +104,27 @@ class GivenSteps(private val context: SpecificationContext) {
   @Given("a stream name for a stream that does not exist")
   fun aStreamNameForAStreamThatDoesNotExist() {
     context.streamName = StreamName("stream that does not exist")
+  }
+
+  @And("the append token has been used to append to the stream")
+  fun theAppendTokenHasBeenUsedToAppendToTheStream() {
+    val executionContext =
+        ExecutionContext(
+            command =
+                AppendToStream(
+                    streamName = context.streamName,
+                    event = context.event,
+                    occurredOn = context.occurredOn,
+                    appendToken = context.appendToken),
+            forEventStorage = context.eventStorage,
+            forEventSerialization = context.eventSerializer,
+        )
+    EventStore().handle(executionContext)
+  }
+
+  @And("an invalid append token")
+  fun anInvalidAppendToken() {
+    context.appendToken = AppendToken("an invalid append token")
   }
 }
 

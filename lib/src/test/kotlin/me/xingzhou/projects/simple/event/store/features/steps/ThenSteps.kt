@@ -52,6 +52,15 @@ class ThenSteps(private val context: SpecificationContext) {
     result.message shouldContain "does not exist"
   }
 
+  @Then("it fails because the append token is invalid")
+  fun itFailsBecauseTheAppendTokenIsInvalid() {
+    val result = context.result
+    result as EventStoreResult.Failure.InvalidAppendToken
+    result.streamName shouldBe context.streamName
+    result.appendToken shouldBe context.appendToken
+    result.message shouldContain "invalid"
+  }
+
   @And("the stream contains only the event")
   fun theStreamContainsOnlyTheEvent() {
     val executionContext =

@@ -26,9 +26,12 @@ interface ForEventStorage {
 
   fun validateAppendToken(streamName: String, token: String): Boolean
 
-  sealed interface Failure {
-    class StreamAlreadyExists(name: String) : Failure, Exception("stream $name is already exists")
+  sealed class Failure(message: String) : Exception(message) {
+    class StreamAlreadyExists(name: String) : Failure("stream $name is already exists")
 
-    class StreamDoesNotExist(name: String) : Failure, Exception("stream $name does not exist")
+    class StreamDoesNotExist(name: String) : Failure("stream $name does not exist")
+
+    class InvalidAppendToken(streamName: String, appendToken: String) :
+        Failure("The append token $appendToken is invalid for stream $streamName")
   }
 }
