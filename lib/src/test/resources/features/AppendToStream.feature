@@ -16,6 +16,12 @@ Feature: Append to Stream
       And the stream captures when the event occurred
 
     Example: Appending to a stream does not exist fails
+      Given a stream name for a stream that does not exist
+      And an event
+      And when the event occurred
+      And a valid append token for the stream
+      When appending the event to the stream
+      Then it fails because the stream does not exist
 
     Example: Appending to a stream with an invalid append token fails
 

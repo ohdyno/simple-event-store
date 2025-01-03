@@ -102,6 +102,11 @@ class GivenSteps(private val context: SpecificationContext) {
 
     context.appendToken = result.appendToken
   }
+
+  @Given("a stream name for a stream that does not exist")
+  fun aStreamNameForAStreamThatDoesNotExist() {
+    context.streamName = StreamName("stream that does not exist")
+  }
 }
 
 private fun String.asInstant(): Instant {

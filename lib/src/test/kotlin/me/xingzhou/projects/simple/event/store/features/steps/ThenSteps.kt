@@ -44,6 +44,14 @@ class ThenSteps(private val context: SpecificationContext) {
     result.message shouldContain "already exists"
   }
 
+  @Then("it fails because the stream does not exist")
+  fun itFailsBecauseTheStreamDoesNotExist() {
+    val result = context.result
+    result as EventStoreResult.Failure.StreamDoesNotExist
+    result.streamName shouldBe context.streamName
+    result.message shouldContain "does not exist"
+  }
+
   @And("the stream contains only the event")
   fun theStreamContainsOnlyTheEvent() {
     val executionContext =

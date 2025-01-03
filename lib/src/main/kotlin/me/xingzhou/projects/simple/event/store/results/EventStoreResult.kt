@@ -6,6 +6,8 @@ import me.xingzhou.projects.simple.event.store.StreamName
 sealed interface EventStoreResult {
   sealed class Failure(val message: String) : EventStoreResult {
     class StreamAlreadyExists(val streamName: StreamName, message: String) : Failure(message)
+
+    class StreamDoesNotExist(val streamName: StreamName, message: String) : Failure(message)
   }
 
   data class ForCreateStream(val appendToken: AppendToken) : EventStoreResult

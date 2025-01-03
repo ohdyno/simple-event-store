@@ -28,5 +28,7 @@ interface ForEventStorage {
 
   sealed interface Failure {
     class StreamAlreadyExists(name: String) : Failure, Exception("stream $name is already exists")
+
+    class StreamDoesNotExist(name: String) : Failure, Exception("stream $name does not exist")
   }
 }

@@ -26,13 +26,13 @@ internal class InMemoryMapAdapter(internal val streams: MutableMap<String, List<
       eventData: ByteArray,
       occurredOn: Instant
   ): String {
-    validateStreamExists(streamName)
+    validateStreamDoesNotExist(streamName)
     streams[streamName] =
         listOf(StreamEvent(eventName = eventName, event = eventData, occurredOn = occurredOn))
     return retrieveAppendToken(streamName)
   }
 
-  private fun validateStreamExists(streamName: String) {
+  private fun validateStreamDoesNotExist(streamName: String) {
     if (streamExists(streamName)) {
       throw StreamAlreadyExists(streamName)
     }
@@ -45,10 +45,17 @@ internal class InMemoryMapAdapter(internal val streams: MutableMap<String, List<
       eventData: ByteArray,
       occurredOn: Instant
   ): String {
+    validateStreamDoesExist(streamName)
     streams[streamName] =
         streams[streamName]!! +
             StreamEvent(eventName = eventName, event = eventData, occurredOn = occurredOn)
     return retrieveAppendToken(streamName)
+  }
+
+  private fun validateStreamDoesExist(streamName: String) {
+    if (!streamExists(streamName)) {
+      throw ForEventStorage.Failure.StreamDoesNotExist(streamName)
+    }
   }
 
   override fun retrieveFromStream(streamName: String): List<StreamEvent> = streams[streamName]!!

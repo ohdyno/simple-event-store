@@ -60,16 +60,21 @@ class EventStore {
 
   @JvmName("handleAppendToStream")
   fun handle(context: ExecutionContext<AppendToStream>): EventStoreResult {
-    val command = context.command
-    val (eventName, eventData) = context.forEventSerialization.serialize(command.event)
-    val result =
-        context.forEventStorage.appendToStream(
-            command.streamName.name,
-            command.appendToken.value,
-            eventName,
-            eventData,
-            command.occurredOn.instant)
-    return EventStoreResult.ForAppendToStream(AppendToken(result))
+    try {
+
+      val command = context.command
+      val (eventName, eventData) = context.forEventSerialization.serialize(command.event)
+      val result =
+          context.forEventStorage.appendToStream(
+              command.streamName.name,
+              command.appendToken.value,
+              eventName,
+              eventData,
+              command.occurredOn.instant)
+      return EventStoreResult.ForAppendToStream(AppendToken(result))
+    } catch (failure: ForEventStorage.Failure.StreamDoesNotExist) {
+      return Failure.StreamDoesNotExist(context.command.streamName, failure.message!!)
+    }
   }
 }
 
