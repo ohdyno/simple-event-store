@@ -123,6 +123,7 @@ class GivenSteps(private val context: SpecificationContext) {
   }
 
   @And("an invalid append token")
+  @And("any append token")
   fun anInvalidAppendToken() {
     context.appendToken = AppendToken("an invalid append token")
   }

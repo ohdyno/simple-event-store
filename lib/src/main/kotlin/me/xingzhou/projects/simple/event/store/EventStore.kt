@@ -50,10 +50,18 @@ class EventStore {
 
   @JvmName("handleValidateAppendToken")
   fun handle(context: ExecutionContext<ValidateAppendToken>): EventStoreResult {
-    val command = context.command
-    val result =
-        context.forEventStorage.validateAppendToken(command.streamName.name, command.token.value)
-    return EventStoreResult.ForValidateAppendToken(result)
+    try {
+      val command = context.command
+      val result =
+          context.forEventStorage.validateAppendToken(command.streamName.name, command.token.value)
+      return EventStoreResult.ForValidateAppendToken(result)
+    } catch (failure: ForEventStorage.Failure) {
+      return when (failure) {
+        is ForEventStorage.Failure.StreamDoesNotExist ->
+            Failure.StreamDoesNotExist(context.command.streamName, failure.message!!)
+        else -> throw failure
+      }
+    }
   }
 
   @JvmName("handleRetrieveAppendToken")

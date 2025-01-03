@@ -5,6 +5,7 @@ import me.xingzhou.projects.simple.event.store.EventStore
 import me.xingzhou.projects.simple.event.store.commands.AppendToStream
 import me.xingzhou.projects.simple.event.store.commands.CreateStream
 import me.xingzhou.projects.simple.event.store.commands.RetrieveAppendToken
+import me.xingzhou.projects.simple.event.store.commands.ValidateAppendToken
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.features.SpecificationContext
 
@@ -49,6 +50,17 @@ class WhenSteps(private val context: SpecificationContext) {
     val executionContext =
         ExecutionContext(
             command = RetrieveAppendToken(streamName = context.streamName),
+            forEventStorage = context.eventStorage,
+            forEventSerialization = context.eventSerializer)
+    context.result = EventStore().handle(executionContext)
+  }
+
+  @When("validating the append token for the stream")
+  fun validatingTheAppendTokenForTheStream() {
+    val executionContext =
+        ExecutionContext(
+            command =
+                ValidateAppendToken(streamName = context.streamName, token = context.appendToken),
             forEventStorage = context.eventStorage,
             forEventSerialization = context.eventSerializer)
     context.result = EventStore().handle(executionContext)
