@@ -15,6 +15,7 @@ import me.xingzhou.projects.simple.event.store.OccurredOn
 import me.xingzhou.projects.simple.event.store.StreamName
 import me.xingzhou.projects.simple.event.store.commands.CheckStreamExists
 import me.xingzhou.projects.simple.event.store.commands.CreateStream
+import me.xingzhou.projects.simple.event.store.commands.RetrieveAppendToken
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.dependencies.eventserializer.ForEventSerializer
 import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.ForEventStorage
@@ -88,9 +89,22 @@ class GivenSteps(private val context: SpecificationContext) {
     EventStore().handle(executionContext)
     context.eventStorageSnapshot = context.snapshotEventStorage()
   }
+
+  @And("a valid append token for the stream")
+  fun aValidAppendTokenForTheStream() {
+    val executionContext =
+        ExecutionContext(
+            command = RetrieveAppendToken(streamName = context.streamName),
+            forEventStorage = context.eventStorage,
+            forEventSerialization = context.eventSerializer)
+    val result = EventStore().handle(executionContext)
+    result as EventStoreResult.ForRetrieveAppendToken
+
+    context.appendToken = result.appendToken
+  }
 }
 
-fun String.asInstant(): Instant {
+private fun String.asInstant(): Instant {
   val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy hh:mm:ss a z")
   val zonedDateTime = ZonedDateTime.parse(this, formatter)
   return zonedDateTime.toInstant()

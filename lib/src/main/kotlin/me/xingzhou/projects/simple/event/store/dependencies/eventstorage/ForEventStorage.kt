@@ -5,9 +5,18 @@ import java.time.Instant
 interface ForEventStorage {
   fun createStream(streamName: String, eventData: ByteArray, occurredOn: Instant): String
 
+  fun appendToStream(
+      streamName: String,
+      appendToken: String,
+      eventData: ByteArray,
+      occurredOn: Instant
+  ): String
+
   fun retrieveFromStream(streamName: String): List<StreamEvent>
 
   fun streamExists(streamName: String): Boolean
+
+  fun retrieveAppendToken(streamName: String): String
 
   fun validateAppendToken(streamName: String, token: String): Boolean
 

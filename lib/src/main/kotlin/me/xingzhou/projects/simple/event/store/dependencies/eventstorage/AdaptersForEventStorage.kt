@@ -28,10 +28,25 @@ internal class InMemoryMapAdapter(internal val streams: MutableMap<String, List<
     return "0"
   }
 
+  override fun appendToStream(
+      streamName: String,
+      appendToken: String,
+      eventData: ByteArray,
+      occurredOn: Instant
+  ): String {
+    streams[streamName] =
+        streams[streamName]!! + StreamEvent(event = eventData, occurredOn = occurredOn)
+    return retrieveAppendToken(streamName)
+  }
+
   override fun retrieveFromStream(streamName: String): List<StreamEvent> = streams[streamName]!!
 
   override fun streamExists(streamName: String): Boolean {
     return streams.containsKey(streamName)
+  }
+
+  override fun retrieveAppendToken(streamName: String): String {
+    return streams.size.dec().toString()
   }
 
   override fun validateAppendToken(streamName: String, token: String): Boolean {

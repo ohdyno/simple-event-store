@@ -20,6 +20,7 @@ class SpecificationContext {
   lateinit var eventStorageSnapshot: Map<String, List<StreamEvent>>
   lateinit var result: EventStoreResult
   lateinit var streamName: StreamName
+  lateinit var appendToken: AppendToken
   lateinit var occurredOn: OccurredOn
   lateinit var event: Event
   lateinit var store: EventStore

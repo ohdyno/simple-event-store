@@ -1,10 +1,7 @@
 package me.xingzhou.projects.simple.event.store
 
 import java.time.Instant
-import me.xingzhou.projects.simple.event.store.commands.CheckStreamExists
-import me.xingzhou.projects.simple.event.store.commands.CreateStream
-import me.xingzhou.projects.simple.event.store.commands.RetrieveFromStream
-import me.xingzhou.projects.simple.event.store.commands.ValidateAppendToken
+import me.xingzhou.projects.simple.event.store.commands.*
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.ForEventStorage
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult
@@ -53,6 +50,25 @@ class EventStore {
     val result =
         context.forEventStorage.validateAppendToken(command.streamName.name, command.token.value)
     return EventStoreResult.ForValidateAppendToken(result)
+  }
+
+  @JvmName("handleRetrieveAppendToken")
+  fun handle(context: ExecutionContext<RetrieveAppendToken>): EventStoreResult {
+    val command = context.command
+    val result = context.forEventStorage.retrieveAppendToken(command.streamName.name)
+    return EventStoreResult.ForRetrieveAppendToken(AppendToken(result))
+  }
+
+  @JvmName("handleAppendToStream")
+  fun handle(context: ExecutionContext<AppendToStream>): EventStoreResult {
+    val command = context.command
+    val result =
+        context.forEventStorage.appendToStream(
+            command.streamName.name,
+            command.appendToken.value,
+            context.forEventSerialization.serialize(command.event),
+            command.occurredOn.instant)
+    return EventStoreResult.ForAppendToStream(AppendToken(result))
   }
 }
 

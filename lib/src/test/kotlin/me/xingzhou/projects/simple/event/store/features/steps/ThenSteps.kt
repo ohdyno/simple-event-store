@@ -57,6 +57,19 @@ class ThenSteps(private val context: SpecificationContext) {
     events.map { it.event }.shouldContainExactly(listOf(context.event))
   }
 
+  @Then("the stream contains the new event")
+  fun theStreamContainsTheNewEvent() {
+    val executionContext =
+        ExecutionContext(
+            command = RetrieveFromStream(streamName = context.streamName),
+            forEventStorage = context.eventStorage,
+            forEventSerialization = context.eventSerializer)
+    val result = EventStore().handle(executionContext)
+    val (events) = result as EventStoreResult.ForRetrieveFromStream
+
+    events.last().event shouldBe context.event
+  }
+
   @And("the stream captures when the event occurred")
   fun theStreamCapturesWhenTheEventOccurred() {
     val executionContext =
@@ -67,7 +80,7 @@ class ThenSteps(private val context: SpecificationContext) {
     val result = EventStore().handle(executionContext)
     val (events) = result as EventStoreResult.ForRetrieveFromStream
 
-    events.map { it.occurredOn }.shouldContainExactly(listOf(context.occurredOn))
+    events.last { it.event == context.event }.occurredOn shouldBe context.occurredOn
   }
 
   @Then("a valid append token for the stream is returned")
