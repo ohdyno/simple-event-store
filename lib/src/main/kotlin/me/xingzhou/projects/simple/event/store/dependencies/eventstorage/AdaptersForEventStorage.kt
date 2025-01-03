@@ -33,4 +33,8 @@ internal class InMemoryMapAdapter(internal val streams: MutableMap<String, List<
   override fun streamExists(streamName: String): Boolean {
     return streams.containsKey(streamName)
   }
+
+  override fun validateAppendToken(streamName: String, token: String): Boolean {
+    return streams.size.dec().toString() == token
+  }
 }

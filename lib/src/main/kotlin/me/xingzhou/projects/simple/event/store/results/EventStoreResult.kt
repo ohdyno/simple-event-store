@@ -10,6 +10,8 @@ sealed interface EventStoreResult {
 
   data class ForCheckStreamExists(val result: Boolean) : EventStoreResult
 
+  data class ForValidateAppendToken(val result: Boolean) : EventStoreResult
+
   sealed class Failure(val message: String) : EventStoreResult {
     class StreamAlreadyExists(val streamName: StreamName, message: String) : Failure(message)
   }

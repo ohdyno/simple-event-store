@@ -9,6 +9,8 @@ interface ForEventStorage {
 
   fun streamExists(streamName: String): Boolean
 
+  fun validateAppendToken(streamName: String, token: String): Boolean
+
   sealed interface Failure {
     class StreamAlreadyExists(name: String) : Failure, Exception("stream $name is already exists")
   }

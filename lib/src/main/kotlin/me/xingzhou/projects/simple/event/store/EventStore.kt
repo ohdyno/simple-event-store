@@ -4,6 +4,7 @@ import java.time.Instant
 import me.xingzhou.projects.simple.event.store.commands.CheckStreamExists
 import me.xingzhou.projects.simple.event.store.commands.CreateStream
 import me.xingzhou.projects.simple.event.store.commands.RetrieveFromStream
+import me.xingzhou.projects.simple.event.store.commands.ValidateAppendToken
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.ForEventStorage
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult
@@ -44,6 +45,14 @@ class EventStore {
     val command = context.command
     val result = context.forEventStorage.streamExists(command.streamName.name)
     return EventStoreResult.ForCheckStreamExists(result)
+  }
+
+  @JvmName("handleValidateAppendToken")
+  fun handle(context: ExecutionContext<ValidateAppendToken>): EventStoreResult {
+    val command = context.command
+    val result =
+        context.forEventStorage.validateAppendToken(command.streamName.name, command.token.value)
+    return EventStoreResult.ForValidateAppendToken(result)
   }
 }
 

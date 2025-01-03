@@ -9,6 +9,7 @@ import io.kotest.matchers.string.shouldContain
 import me.xingzhou.projects.simple.event.store.EventStore
 import me.xingzhou.projects.simple.event.store.commands.CheckStreamExists
 import me.xingzhou.projects.simple.event.store.commands.RetrieveFromStream
+import me.xingzhou.projects.simple.event.store.commands.ValidateAppendToken
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.features.SpecificationContext
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult
@@ -67,5 +68,23 @@ class ThenSteps(private val context: SpecificationContext) {
     val (events) = result as EventStoreResult.ForRetrieveFromStream
 
     events.map { it.occurredOn }.shouldContainExactly(listOf(context.occurredOn))
+  }
+
+  @Then("a valid append token for the stream is returned")
+  fun anAppendTokenForTheStreamIsReturned() {
+    val result = context.result
+    result as EventStoreResult.ForCreateStream
+
+    val executionContext =
+        ExecutionContext(
+            command =
+                ValidateAppendToken(streamName = context.streamName, token = result.appendToken),
+            forEventStorage = context.eventStorage,
+            forEventSerialization = context.eventSerializer)
+    val validationResult = EventStore().handle(executionContext)
+
+    validationResult as EventStoreResult.ForValidateAppendToken
+
+    validationResult.result shouldBe true
   }
 }
