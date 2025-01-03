@@ -10,7 +10,7 @@ fun ForEventStorage(configure: InMemoryMapAdapterBuilder.() -> Unit): ForEventSt
 }
 
 class InMemoryMapAdapterBuilder {
-  var streams: MutableMap<String, List<StreamEvent>> = mutableMapOf()
+  private val streams: MutableMap<String, List<StreamEvent>> = mutableMapOf()
 
   fun build(): ForEventStorage {
     return InMemoryMapAdapter(streams)
