@@ -2,7 +2,6 @@ package me.xingzhou.projects.simple.event.store.features.steps
 
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Given
-import io.kotest.matchers.shouldBe
 import java.time.Instant
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -20,6 +19,8 @@ import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.ForEven
 import me.xingzhou.projects.simple.event.store.features.SpecificationContext
 import me.xingzhou.projects.simple.event.store.features.fixtures.AnEvent
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult
+import strikt.api.*
+import strikt.assertions.*
 
 class GivenSteps(private val context: SpecificationContext) {
   @Given("the event source system is setup for testing")
@@ -52,11 +53,9 @@ class GivenSteps(private val context: SpecificationContext) {
             command = CheckStreamExists(streamName = context.streamName),
             forEventStorage = context.eventStorage,
             forEventSerialization = context.eventSerializer)
-    val result = EventStore().handle(executionContext)
+    val result = EventStore().handle(executionContext) as EventStoreResult.ForCheckStreamExists
 
-    result as EventStoreResult.ForCheckStreamExists
-
-    result.result shouldBe false
+    expectThat(result.result).isFalse()
   }
 
   @And("the event already exists in another stream")

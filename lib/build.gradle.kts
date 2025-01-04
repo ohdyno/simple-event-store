@@ -27,7 +27,9 @@ dependencies {
   testImplementation("org.postgresql:postgresql:42.7.4")
   testImplementation("com.zaxxer:HikariCP:6.2.1")
 
-  testImplementation("io.kotest:kotest-assertions-core-jvm:6.0.0.M1")
+  testImplementation(platform("io.strikt:strikt-bom:0.35.1")) {
+    testImplementation("io.strikt:strikt-core")
+  }
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
