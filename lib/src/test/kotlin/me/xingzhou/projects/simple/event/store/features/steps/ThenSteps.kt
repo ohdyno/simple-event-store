@@ -17,14 +17,14 @@ class ThenSteps(private val context: SpecificationContext) {
   @Then("the stream was successfully created")
   @Then("the new stream exists in the system")
   fun theStreamWasSuccessfullyCreated() {
-    val executionContext =
+    val result =
         ExecutionContext(
-            command = CheckStreamExists(streamName = context.streamName),
-            forEventStorage = context.eventStorage,
-            forEventSerialization = context.eventSerializer)
-    val result = EventStore().handle(executionContext) as EventStoreResult.ForCheckStreamExists
+                command = CheckStreamExists(streamName = context.streamName),
+                forEventStorage = context.eventStorage,
+                forEventSerialization = context.eventSerializer)
+            .run { EventStore().handle(this) } as EventStoreResult.ForCheckStreamExists
 
-    expectThat(result.result).isTrue()
+    expectThat(result) { get { streamExists }.isTrue() }
   }
 
   @Then("the system is unchanged")
@@ -36,8 +36,7 @@ class ThenSteps(private val context: SpecificationContext) {
 
   @Then("it fails due to a stream with the same name already exists")
   fun itFailsDueToAStreamExistsWithSameName() {
-    val result = context.result as EventStoreResult.Failure.StreamAlreadyExists
-    expectThat(result) {
+    expectThat(context.result as EventStoreResult.Failure.StreamAlreadyExists) {
       get { streamName }.isEqualTo(context.streamName)
       get { message }.contains("already exists")
     }
@@ -45,8 +44,7 @@ class ThenSteps(private val context: SpecificationContext) {
 
   @Then("it fails because the stream does not exist")
   fun itFailsBecauseTheStreamDoesNotExist() {
-    val result = context.result as EventStoreResult.Failure.StreamDoesNotExist
-    expectThat(result) {
+    expectThat(context.result as EventStoreResult.Failure.StreamDoesNotExist) {
       get { streamName }.isEqualTo(context.streamName)
       get { message }.contains("does not exist")
     }
@@ -54,8 +52,7 @@ class ThenSteps(private val context: SpecificationContext) {
 
   @Then("it fails because the append token is invalid")
   fun itFailsBecauseTheAppendTokenIsInvalid() {
-    val result = context.result as EventStoreResult.Failure.InvalidAppendToken
-    expectThat(result) {
+    expectThat(context.result as EventStoreResult.Failure.InvalidAppendToken) {
       get { streamName }.isEqualTo(context.streamName)
       get { appendToken }.isEqualTo(context.appendToken)
       get { message }.contains("invalid")
@@ -64,54 +61,55 @@ class ThenSteps(private val context: SpecificationContext) {
 
   @And("the stream contains only the event")
   fun theStreamContainsOnlyTheEvent() {
-    val executionContext =
+    val (events) =
         ExecutionContext(
-            command = RetrieveFromStream(streamName = context.streamName),
-            forEventStorage = context.eventStorage,
-            forEventSerialization = context.eventSerializer)
-    val (events) = EventStore().handle(executionContext) as EventStoreResult.ForRetrieveFromStream
+                command = RetrieveFromStream(streamName = context.streamName),
+                forEventStorage = context.eventStorage,
+                forEventSerialization = context.eventSerializer)
+            .run { EventStore().handle(this) } as EventStoreResult.ForRetrieveFromStream
 
     expectThat(events).map { it.event }.containsExactly(context.event)
   }
 
   @Then("the stream contains the new event")
   fun theStreamContainsTheNewEvent() {
-    val executionContext =
+    val (events) =
         ExecutionContext(
-            command = RetrieveFromStream(streamName = context.streamName),
-            forEventStorage = context.eventStorage,
-            forEventSerialization = context.eventSerializer)
-    val (events) = EventStore().handle(executionContext) as EventStoreResult.ForRetrieveFromStream
+                command = RetrieveFromStream(streamName = context.streamName),
+                forEventStorage = context.eventStorage,
+                forEventSerialization = context.eventSerializer)
+            .run { EventStore().handle(this) } as EventStoreResult.ForRetrieveFromStream
+
     expectThat(events) { withLast { get { event }.isEqualTo(context.event) } }
   }
 
   @And("the stream captures when the event occurred")
   fun theStreamCapturesWhenTheEventOccurred() {
-    val executionContext =
+    val (events) =
         ExecutionContext(
-            command = RetrieveFromStream(streamName = context.streamName),
-            forEventStorage = context.eventStorage,
-            forEventSerialization = context.eventSerializer)
-    val (events) = EventStore().handle(executionContext) as EventStoreResult.ForRetrieveFromStream
+                command = RetrieveFromStream(streamName = context.streamName),
+                forEventStorage = context.eventStorage,
+                forEventSerialization = context.eventSerializer)
+            .run { EventStore().handle(this) } as EventStoreResult.ForRetrieveFromStream
 
-    expectThat(events.last { it.event == context.event }) {
-      get { occurredOn }.isEqualTo(context.occurredOn)
-    }
+    expectThat(events)
+        .filter { it.event == context.event }
+        .withLast { get { occurredOn }.isEqualTo(context.occurredOn) }
   }
 
   @Then("a valid append token for the stream is returned")
   fun anAppendTokenForTheStreamIsReturned() {
-    val resultWithAppendToken = context.result as EventStoreResult.WithAppendToken
-    val executionContext =
-        ExecutionContext(
-            command =
-                ValidateAppendToken(
-                    streamName = context.streamName, token = resultWithAppendToken.appendToken),
-            forEventStorage = context.eventStorage,
-            forEventSerialization = context.eventSerializer)
-    val validationResult =
-        EventStore().handle(executionContext) as EventStoreResult.ForValidateAppendToken
+    val result =
+        (context.result as EventStoreResult.WithAppendToken)
+            .run {
+              ExecutionContext(
+                  command =
+                      ValidateAppendToken(streamName = context.streamName, token = appendToken),
+                  forEventStorage = context.eventStorage,
+                  forEventSerialization = context.eventSerializer)
+            }
+            .run { EventStore().handle(this) } as EventStoreResult.ForValidateAppendToken
 
-    expectThat(validationResult) { get { result }.isTrue() }
+    expectThat(result) { get { appendTokenIsValid }.isTrue() }
   }
 }

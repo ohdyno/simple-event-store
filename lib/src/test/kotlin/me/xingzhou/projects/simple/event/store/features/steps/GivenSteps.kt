@@ -44,24 +44,28 @@ class GivenSteps(private val context: SpecificationContext) {
     context.occurredOn = OccurredOn("11/22/2023 12:34:56 PM UTC".asInstant())
   }
 
-  @And("a new stream name")
   @And("a stream name")
-  fun aNewStreamName() {
+  fun aStreamName() {
     context.streamName = StreamName("stream one")
-    val executionContext =
-        ExecutionContext(
-            command = CheckStreamExists(streamName = context.streamName),
-            forEventStorage = context.eventStorage,
-            forEventSerialization = context.eventSerializer)
-    val result = EventStore().handle(executionContext) as EventStoreResult.ForCheckStreamExists
+  }
 
-    expectThat(result.result).isFalse()
+  @And("a new stream name")
+  fun aNewStreamName() {
+    context.streamName = StreamName("a new stream name")
+
+    val result =
+        ExecutionContext(
+                command = CheckStreamExists(streamName = context.streamName),
+                forEventStorage = context.eventStorage,
+                forEventSerialization = context.eventSerializer)
+            .run { EventStore().handle(this) } as EventStoreResult.ForCheckStreamExists
+
+    expectThat(result) { get { streamExists }.isFalse() }
   }
 
   @And("the event already exists in another stream")
   fun theEventAlreadyExistsInAnotherStream() {
-    val executionContext =
-        ExecutionContext(
+    ExecutionContext(
             command =
                 CreateStream(
                     streamName = StreamName("stream two"),
@@ -69,13 +73,12 @@ class GivenSteps(private val context: SpecificationContext) {
                     occurredOn = context.occurredOn),
             forEventStorage = context.eventStorage,
             forEventSerialization = context.eventSerializer)
-    EventStore().handle(executionContext)
+        .run { EventStore().handle(this) }
   }
 
   @And("the stream already exists in the system")
   fun theStreamAlreadyExistsInTheSystem() {
-    val executionContext =
-        ExecutionContext(
+    ExecutionContext(
             command =
                 CreateStream(
                     streamName = context.streamName,
@@ -83,19 +86,18 @@ class GivenSteps(private val context: SpecificationContext) {
                     occurredOn = OccurredOn(Instant.EPOCH)),
             forEventStorage = context.eventStorage,
             forEventSerialization = context.eventSerializer)
-    EventStore().handle(executionContext)
+        .run { EventStore().handle(this) }
     context.eventStorageSnapshot = context.snapshotEventStorage()
   }
 
   @And("a valid append token for the stream")
   fun aValidAppendTokenForTheStream() {
-    val executionContext =
+    val result =
         ExecutionContext(
-            command = RetrieveAppendToken(streamName = context.streamName),
-            forEventStorage = context.eventStorage,
-            forEventSerialization = context.eventSerializer)
-    val result = EventStore().handle(executionContext)
-    result as EventStoreResult.ForRetrieveAppendToken
+                command = RetrieveAppendToken(streamName = context.streamName),
+                forEventStorage = context.eventStorage,
+                forEventSerialization = context.eventSerializer)
+            .run { EventStore().handle(this) } as EventStoreResult.ForRetrieveAppendToken
 
     context.appendToken = result.appendToken
   }
@@ -107,8 +109,7 @@ class GivenSteps(private val context: SpecificationContext) {
 
   @And("the append token has been used to append to the stream")
   fun theAppendTokenHasBeenUsedToAppendToTheStream() {
-    val executionContext =
-        ExecutionContext(
+    ExecutionContext(
             command =
                 AppendToStream(
                     streamName = context.streamName,
@@ -118,7 +119,7 @@ class GivenSteps(private val context: SpecificationContext) {
             forEventStorage = context.eventStorage,
             forEventSerialization = context.eventSerializer,
         )
-    EventStore().handle(executionContext)
+        .run { EventStore().handle(this) }
   }
 
   @And("an invalid append token")
