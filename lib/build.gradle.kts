@@ -24,6 +24,9 @@ repositories { mavenCentral() }
 dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 
+  testImplementation("org.postgresql:postgresql:42.7.4")
+  testImplementation("com.zaxxer:HikariCP:6.2.1")
+
   testImplementation("io.kotest:kotest-assertions-core-jvm:6.0.0.M1")
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -34,6 +37,21 @@ dependencies {
   testImplementation("io.cucumber:cucumber-java")
   testImplementation("io.cucumber:cucumber-picocontainer")
   testImplementation("org.junit.platform:junit-platform-suite")
+
+  testImplementation(platform("org.testcontainers:testcontainers-bom:1.20.4")) {
+    constraints {
+      testImplementation("org.apache.commons:commons-compress:1.27.1") {
+        because(
+            """
+        TestContainers 1.20.4 depends on a commons-compression with vulnerabilities which are fixed in 1.27.1.
+        Issue tracked here: https://github.com/testcontainers/testcontainers-java/issues/8338"""
+                .trimIndent())
+      }
+    }
+    testImplementation("org.testcontainers:postgresql")
+    testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("org.slf4j:slf4j-simple:2.0.16") { because("remove Slf4j loggers warnings") }
+  }
 }
 
 tasks.withType<Test> { useJUnitPlatform() }
