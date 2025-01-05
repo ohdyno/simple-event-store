@@ -23,6 +23,7 @@ repositories { mavenCentral() }
 
 dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+  implementation("org.springframework:spring-jdbc:6.2.1")
 
   testImplementation("org.postgresql:postgresql:42.7.4")
   testImplementation("com.zaxxer:HikariCP:6.2.1")
@@ -58,4 +59,10 @@ dependencies {
 
 tasks.withType<Test> { useJUnitPlatform() }
 
-spotless { kotlin { ktfmt() } }
+spotless {
+  kotlin { ktfmt() }
+  sql {
+    target("**/*.sql")
+    dbeaver()
+  }
+}
