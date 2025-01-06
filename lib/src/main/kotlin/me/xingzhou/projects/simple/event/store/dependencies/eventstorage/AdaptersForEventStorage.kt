@@ -231,7 +231,9 @@ internal class InMemoryMapAdapter(internal val streams: MutableMap<String, List<
   }
 
   override fun retrieveFromSystem(): List<SystemEvent> {
-    TODO("Not yet implemented")
+    return streams.flatMap { (streamName, events) ->
+      events.map { SystemEvent(streamName = streamName, streamEvent = it) }
+    }
   }
 
   override fun streamExists(streamName: String): Boolean {
