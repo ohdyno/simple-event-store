@@ -25,7 +25,7 @@ class WhenSteps(private val context: SpecificationContext) {
                 forEventStorage = context.eventStorage,
                 forEventSerialization = context.eventSerializer,
             )
-            .run { EventStore().handle(this) }
+            .let { EventStore().handle(it) }
   }
 
   @When("appending the event to the stream")
@@ -42,7 +42,7 @@ class WhenSteps(private val context: SpecificationContext) {
                 forEventStorage = context.eventStorage,
                 forEventSerialization = context.eventSerializer,
             )
-            .run { EventStore().handle(this) }
+            .let { EventStore().handle(it) }
   }
 
   @When("retrieving the append token for the stream")
@@ -52,7 +52,7 @@ class WhenSteps(private val context: SpecificationContext) {
                 command = RetrieveAppendToken(streamName = context.streamName),
                 forEventStorage = context.eventStorage,
                 forEventSerialization = context.eventSerializer)
-            .run { EventStore().handle(this) }
+            .let { EventStore().handle(it) }
   }
 
   @When("validating the append token for the stream")
@@ -64,6 +64,6 @@ class WhenSteps(private val context: SpecificationContext) {
                         streamName = context.streamName, token = context.appendToken),
                 forEventStorage = context.eventStorage,
                 forEventSerialization = context.eventSerializer)
-            .run { EventStore().handle(this) }
+            .let { EventStore().handle(it) }
   }
 }

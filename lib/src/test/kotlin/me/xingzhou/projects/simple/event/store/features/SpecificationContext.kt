@@ -8,10 +8,11 @@ import me.xingzhou.projects.simple.event.store.results.EventStoreResult
 
 class SpecificationContext {
   fun snapshotEventStorage(): Map<String, List<StreamEvent>> {
-    val allEvents = eventStorage.retrieveFromSystem()
-    val snapshot = mutableMapOf<String, MutableList<StreamEvent>>()
-    allEvents.forEach { snapshot.getOrPut(it.streamName) { mutableListOf() }.add(it.streamEvent) }
-    return snapshot
+    return eventStorage.retrieveFromSystem().fold(emptyMap()) { map, systemEvent ->
+      map.getOrDefault(systemEvent.streamName, emptyList()).let { streamEvents ->
+        (streamEvents + systemEvent.streamEvent).let { map + (systemEvent.streamName to it) }
+      }
+    }
   }
 
   lateinit var eventStorageSnapshot: Map<String, List<StreamEvent>>
