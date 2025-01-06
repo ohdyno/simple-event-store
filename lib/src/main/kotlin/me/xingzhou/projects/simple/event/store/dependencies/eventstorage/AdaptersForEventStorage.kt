@@ -15,8 +15,9 @@ fun ForEventStorage(dataSource: DataSource): ForEventStorage {
 }
 
 fun PostgresAdapter.Companion.setupDatabase(connection: Connection) {
-  val resource = ClassPathResource("db/schema.sql", PostgresAdapter::class.java.classLoader)
-  ScriptUtils.executeSqlScript(connection, resource)
+  ClassPathResource("db/schema.sql", PostgresAdapter::class.java.classLoader).let {
+    ScriptUtils.executeSqlScript(connection, it)
+  }
 }
 
 class PostgresAdapter(private val dataSource: DataSource) : ForEventStorage {
@@ -28,26 +29,34 @@ class PostgresAdapter(private val dataSource: DataSource) : ForEventStorage {
       occurredOn: Instant
   ): String {
     return dataSource.connection.use {
-      try {
-        val statement =
-            it.prepareStatement(
-                """
+      it.runCatching {
+            prepareStatement(
+                    """
                     INSERT INTO eventsource.events
                     (stream_name, version, event_id, event_type, event_data, occurred_on) VALUES
                     (?, ?, ?, ?, (?::jsonb), ?);
-                """
-                    .trimIndent())
-        statement.setString(1, streamName)
-        statement.setInt(2, 0)
-        statement.setString(3, eventId)
-        statement.setString(4, eventType)
-        statement.setString(5, eventData)
-        statement.setTimestamp(6, Timestamp.from(occurredOn))
-        statement.execute()
-        1.toString()
-      } catch (e: SQLException) {
-        throw if (e.sqlState == "23505") StreamAlreadyExists(name = streamName) else e
-      }
+                """)
+                .apply {
+                  setString(1, streamName)
+                  setInt(2, 0)
+                  setString(3, eventId)
+                  setString(4, eventType)
+                  setString(5, eventData)
+                  setTimestamp(6, Timestamp.from(occurredOn))
+                }
+                .run { execute() }
+                .let { 1.toString() }
+          }
+          .getOrElse {
+            throw when (it) {
+              is SQLException ->
+                  when (it.sqlState) {
+                    "23505" -> StreamAlreadyExists(name = streamName)
+                    else -> it
+                  }
+              else -> it
+            }
+          }
     }
   }
 
@@ -60,109 +69,96 @@ class PostgresAdapter(private val dataSource: DataSource) : ForEventStorage {
       occurredOn: Instant
   ): String {
     return dataSource.connection.use {
-      try {
-        val statement =
-            it.prepareStatement(
-                """
-                    INSERT INTO eventsource.events
-                    (stream_name, version, event_id, event_type, event_data, occurred_on) VALUES
-                    (?, ?, ?, ?, (?::jsonb), ?);
-                """
-                    .trimIndent())
-        statement.setString(1, streamName)
-        val version =
-            appendToken.toIntOrNull()
-                ?: throw ForEventStorage.Failure.InvalidAppendToken(
-                    streamName = streamName, appendToken = appendToken)
-        statement.setInt(2, version)
-        statement.setString(3, eventId)
-        statement.setString(4, eventType)
-        statement.setString(5, eventData)
-        statement.setTimestamp(6, Timestamp.from(occurredOn))
-        statement.execute()
-        version.inc().toString()
-      } catch (e: SQLException) {
-        throw if (e.sqlState == "23505")
-            ForEventStorage.Failure.InvalidAppendToken(
-                streamName = streamName, appendToken = appendToken)
-        else e
-      }
+      it.runCatching {
+            appendToken.toInt().let { version ->
+              prepareStatement(
+                      "INSERT INTO eventsource.events (stream_name, version, event_id, event_type, event_data, occurred_on) VALUES (?, ?, ?, ?, (?::jsonb), ?);")
+                  .apply {
+                    setString(1, streamName)
+                    setInt(2, version)
+                    setString(3, eventId)
+                    setString(4, eventType)
+                    setString(5, eventData)
+                    setTimestamp(6, Timestamp.from(occurredOn))
+                  }
+                  .run { execute() }
+                  .let { version.inc().toString() }
+            }
+          }
+          .getOrElse {
+            throw when (it) {
+              is SQLException ->
+                  when (it.sqlState) {
+                    "23505" ->
+                        ForEventStorage.Failure.InvalidAppendToken(
+                            streamName = streamName, appendToken = appendToken)
+                    else -> it
+                  }
+              is NumberFormatException ->
+                  ForEventStorage.Failure.InvalidAppendToken(
+                      streamName = streamName, appendToken = appendToken)
+              else -> it
+            }
+          }
     }
   }
 
   override fun retrieveFromStream(streamName: String): List<StreamEvent> {
     return dataSource.connection.use {
-      val statement =
-          it.prepareStatement(
-              """
-            SELECT * FROM eventsource.events WHERE stream_name = ?;
-        """
-                  .trimIndent())
-
-      statement.setString(1, streamName)
-      val resultSet = statement.executeQuery()
-      val events = mutableListOf<StreamEvent>()
-      while (resultSet.next()) {
-        events.add(
-            StreamEvent(
-                eventType = resultSet.getString("event_type"),
-                eventData = resultSet.getString("event_data"),
-                occurredOn = resultSet.getTimestamp("occurred_on").toInstant()))
-      }
-      events
+      it.prepareStatement("SELECT * FROM eventsource.events WHERE stream_name = ?;")
+          .apply { setString(1, streamName) }
+          .run { executeQuery() }
+          .let {
+            buildList {
+              while (it.next()) {
+                add(
+                    StreamEvent(
+                        eventType = it.getString("event_type"),
+                        eventData = it.getString("event_data"),
+                        occurredOn = it.getTimestamp("occurred_on").toInstant()))
+              }
+            }
+          }
     }
   }
 
   override fun retrieveFromSystem(): List<SystemEvent> {
     return dataSource.connection.use {
-      val statement =
-          it.prepareStatement(
-              """
-            SELECT * FROM eventsource.events;
-        """
-                  .trimIndent())
-
-      val resultSet = statement.executeQuery()
-      val events = mutableListOf<SystemEvent>()
-      while (resultSet.next()) {
-        events.add(
-            SystemEvent(
-                streamName = resultSet.getString("stream_name"),
-                streamEvent =
-                    StreamEvent(
-                        eventType = resultSet.getString("event_type"),
-                        eventData = resultSet.getString("event_data"),
-                        occurredOn = resultSet.getTimestamp("occurred_on").toInstant())))
-      }
-      events
+      it.prepareStatement("SELECT * FROM eventsource.events;")
+          .run { executeQuery() }
+          .let {
+            buildList {
+              while (it.next()) {
+                add(
+                    SystemEvent(
+                        streamName = it.getString("stream_name"),
+                        streamEvent =
+                            StreamEvent(
+                                eventType = it.getString("event_type"),
+                                eventData = it.getString("event_data"),
+                                occurredOn = it.getTimestamp("occurred_on").toInstant())))
+              }
+            }
+          }
     }
   }
 
   override fun streamExists(streamName: String): Boolean {
     return dataSource.connection.use {
-      val statement =
-          it.prepareStatement(
-              """
-              SELECT 1 FROM eventsource.events WHERE stream_name = ?;
-          """
-                  .trimIndent())
-      statement.setString(1, streamName)
-      statement.executeQuery().next()
+      it.prepareStatement("SELECT 1 FROM eventsource.events WHERE stream_name = ?;")
+          .apply { setString(1, streamName) }
+          .run { executeQuery() }
+          .run { next() }
     }
   }
 
   override fun retrieveAppendToken(streamName: String): String {
     return dataSource.connection.use {
-      val statement =
-          it.prepareStatement(
-              """
-              SELECT append_token FROM eventsource.append_tokens WHERE stream_name = ?;
-          """
-                  .trimIndent())
-      statement.setString(1, streamName)
-      val resultSet = statement.executeQuery()
-      if (resultSet.next()) resultSet.getString("append_token")
-      else throw StreamDoesNotExist(streamName)
+      it.prepareStatement(
+              "SELECT append_token FROM eventsource.append_tokens WHERE stream_name = ?;")
+          .apply { setString(1, streamName) }
+          .run { executeQuery() }
+          .run { if (next()) getString("append_token") else throw StreamDoesNotExist(streamName) }
     }
   }
 
