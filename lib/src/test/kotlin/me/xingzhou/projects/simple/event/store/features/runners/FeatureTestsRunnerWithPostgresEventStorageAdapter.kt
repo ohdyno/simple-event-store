@@ -5,8 +5,9 @@ import io.cucumber.junit.platform.engine.Constants.JUNIT_PLATFORM_NAMING_STRATEG
 import org.junit.platform.suite.api.ConfigurationParameter
 import org.junit.platform.suite.api.IncludeEngines
 import org.junit.platform.suite.api.SelectPackages
+import org.junit.platform.suite.api.Suite
 
-// @Suite //TODO Enable suite on CI once Postgres adapter functionality is implemented correctly
+@Suite
 @IncludeEngines("cucumber")
 @SelectPackages("features")
 @ConfigurationParameter(

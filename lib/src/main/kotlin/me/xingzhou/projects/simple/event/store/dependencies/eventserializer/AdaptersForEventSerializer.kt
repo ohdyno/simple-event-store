@@ -1,9 +1,9 @@
 package me.xingzhou.projects.simple.event.store.dependencies.eventserializer
 
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.modules.SerializersModule
 import me.xingzhou.projects.simple.event.store.Event
 import me.xingzhou.projects.simple.event.store.dependencies.eventserializer.ForEventSerializer.SerializedEvent
@@ -23,22 +23,19 @@ class KotlinXSerializationAdapterBuilder {
     return KotlinXSerializationAdapter(serializersModule)
   }
 
-  @OptIn(ExperimentalSerializationApi::class)
   private class KotlinXSerializationAdapter(serializerModule: SerializersModule) :
       ForEventSerializer {
     private val json: Json by lazy { Json { this.serializersModule = serializerModule } }
 
     override fun serialize(event: Event): SerializedEvent {
-      val eventType = json.encodeToJsonElement(event).jsonObject["type"]!!.jsonPrimitive.content
-      val stream = ByteArrayOutputStream()
-      json.encodeToStream(event, stream)
-      val eventData = stream.toByteArray()
-      return SerializedEvent(eventType = eventType, eventData = eventData)
+      val jsonElement = json.encodeToJsonElement<Event>(event)
+      return SerializedEvent(
+          eventType = jsonElement.jsonObject["type"]!!.jsonPrimitive.content,
+          eventData = jsonElement.toString())
     }
 
-    override fun deserialize(type: String, bytes: ByteArray): Event {
-      val stream = ByteArrayInputStream(bytes)
-      return json.decodeFromStream(stream)
+    override fun deserialize(type: String, data: String): Event {
+      return json.decodeFromString(data)
     }
   }
 }

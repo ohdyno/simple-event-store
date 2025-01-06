@@ -17,6 +17,7 @@ class EventStore {
       val appendToken =
           context.forEventStorage.createStream(
               streamName = command.streamName.name,
+              eventId = command.event.id,
               eventType = eventType,
               eventData = eventData,
               occurredOn = command.occurredOn.instant)
@@ -92,6 +93,7 @@ class EventStore {
           context.forEventStorage.appendToStream(
               streamName = command.streamName.name,
               appendToken = command.appendToken.value,
+              eventId = command.event.id,
               eventType = eventType,
               eventData = eventData,
               occurredOn = command.occurredOn.instant)

@@ -5,20 +5,24 @@ import java.time.Instant
 interface ForEventStorage {
   fun createStream(
       streamName: String,
+      eventId: String,
       eventType: String,
-      eventData: ByteArray,
+      eventData: String,
       occurredOn: Instant
   ): String
 
   fun appendToStream(
       streamName: String,
       appendToken: String,
+      eventId: String,
       eventType: String,
-      eventData: ByteArray,
+      eventData: String,
       occurredOn: Instant
   ): String
 
   fun retrieveFromStream(streamName: String): List<StreamEvent>
+
+  fun retrieveFromSystem(): List<SystemEvent>
 
   fun streamExists(streamName: String): Boolean
 
