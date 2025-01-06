@@ -48,12 +48,8 @@ class PostgresAdapter(private val dataSource: DataSource) : ForEventStorage {
                 .let { 1.toString() }
           }
           .getOrElse {
-            throw when (it) {
-              is SQLException ->
-                  when (it.sqlState) {
-                    "23505" -> StreamAlreadyExists(name = streamName)
-                    else -> it
-                  }
+            throw when {
+              it.isUniqueConstraintViolation() -> StreamAlreadyExists(name = streamName)
               else -> it
             }
           }
@@ -86,15 +82,8 @@ class PostgresAdapter(private val dataSource: DataSource) : ForEventStorage {
             }
           }
           .getOrElse {
-            throw when (it) {
-              is SQLException ->
-                  when (it.sqlState) {
-                    "23505" ->
-                        ForEventStorage.Failure.InvalidAppendToken(
-                            streamName = streamName, appendToken = appendToken)
-                    else -> it
-                  }
-              is NumberFormatException ->
+            throw when {
+              it.isUniqueConstraintViolation() || it is NumberFormatException ->
                   ForEventStorage.Failure.InvalidAppendToken(
                       streamName = streamName, appendToken = appendToken)
               else -> it
@@ -244,3 +233,9 @@ internal class InMemoryMapAdapter(internal val streams: MutableMap<String, List<
     return retrieveAppendToken(streamName) == token
   }
 }
+
+/*
+Private! Utility Extension Functions
+ */
+private fun Throwable.isUniqueConstraintViolation() =
+    this is SQLException && this.sqlState == "23505"
