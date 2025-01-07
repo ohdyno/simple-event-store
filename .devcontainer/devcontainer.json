@@ -2,6 +2,11 @@
     "dockerComposeFile": "docker-compose.yml",
     "service": "app",
     "name": "Java & PostgreSQL",
+    "mounts": [{
+        "source": "${localEnv:HOME}/.ssh",
+        "type": "bind",
+        "target": "/home/vscode/.ssh"
+    }],
     "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
     "customizations": {"jetbrains": {"backend": "IntelliJ"}}
 }
