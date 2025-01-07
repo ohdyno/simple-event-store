@@ -2,11 +2,6 @@
     "dockerComposeFile": "docker-compose.yml",
     "service": "app",
     "name": "Java & PostgreSQL",
-    "mounts": [{
-        "source": "${localEnv:HOME}/.gitconfig",
-        "type": "volume",
-        "target": "/root/.gitconfig"
-    }],
     "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
     "customizations": {"jetbrains": {"backend": "IntelliJ"}}
 }
