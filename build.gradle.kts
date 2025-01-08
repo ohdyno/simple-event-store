@@ -29,6 +29,8 @@ spotless {
     simple()
   }
 
+  shell { shfmt("3.10.0") }
+
   yaml {
     target("**/*.yml")
     jackson()
