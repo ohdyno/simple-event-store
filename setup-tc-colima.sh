@@ -11,8 +11,8 @@
 # current shell needs to be modified.
 #
 # - `source ./setup-tc-colima.sh` to enable current shell to have TC use Colima.
-#   This will also print a comma-delimited list of environment variables.
-# - `./setup-tc-colima.sh` to ONLY print a comma-delimited list of environment variables. The current shell will be unchanged.
+#   This will also print a semi-colon-delimited list of environment variables.
+# - `./setup-tc-colima.sh` to ONLY print a semi-colon-delimited list of environment variables. The current shell will be unchanged.
 #   These environment variables can be directly pasted into IntelliJ's run configuration's environment variables: https://www.baeldung.com/intellij-idea-environment-variables
 #
 # Requirements
@@ -56,17 +56,17 @@ export_vars() {
 	done
 }
 
-print_comma_delimited() {
+print_delimited() {
 	read -r -A env_vars <<<"$@"
-	local IFS=","
-	print "${env_vars[*]}"
+	local IFS=";"
+	print -n "${env_vars[*]}" # print without newline at the end; otherwise, cannot directly copy/paste into IntelliJ due to parsing error
 }
 
 # Only print the environment variables. Do not modify the current shell.
 print_vars() {
 	read -r -A env_vars <<<"$(define_vars)"
 
-	print_comma_delimited "${env_vars[@]}"
+	print_delimited "${env_vars[@]}"
 }
 
 # Modify the current shell to use TC with Colima. Also print the environment variables
@@ -75,7 +75,7 @@ setup_colima() {
 
 	export_vars "${env_vars[@]}"
 
-	print_comma_delimited "${env_vars[@]}"
+	print_delimited "${env_vars[@]}"
 }
 
 if [[ $ZSH_EVAL_CONTEXT == 'toplevel' ]]; then
