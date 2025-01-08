@@ -17,13 +17,15 @@ import me.xingzhou.projects.simple.event.store.features.SpecificationContext
 import me.xingzhou.projects.simple.event.store.features.fixtures.AnEvent
 import org.testcontainers.containers.PostgreSQLContainer
 
-lateinit var container: PostgreSQLContainer<Nothing>
+private lateinit var container: PostgreSQLContainer<Nothing>
 
+@Suppress("unused")
 @BeforeAll
 fun setupPostgreSQLContainer() {
   container = PostgreSQLContainer<Nothing>("postgres:17.2").apply { start() }
 }
 
+@Suppress("unused")
 @AfterAll
 fun tearDownPostgreSQLContainer() {
   container.stop()
