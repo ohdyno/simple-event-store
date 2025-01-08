@@ -23,6 +23,10 @@ jobs:
         distribution: "temurin"
     - name: "Setup Gradle"
       uses: "gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582"
+    - uses: "mfinelli/setup-shfmt@v3"
+      name: "Set up shfmt"
+      with:
+        shfmt-version: "3.10.0"
     - name: "Build with Gradle Wrapper"
       run: "./gradlew build"
     - name: "Publish Test Results"
