@@ -7,13 +7,7 @@
 #
 # Usage
 # =====
-# Start Colima with `colima start --network-address`. Then choose one of the follow options depending on if the
-# current shell needs to be modified.
-#
-# - `source ./setup-tc-colima.sh` to enable current shell to have TC use Colima.
-#   This will also print a semi-colon-delimited list of environment variables.
-# - `./setup-tc-colima.sh` to ONLY print a semi-colon-delimited list of environment variables. The current shell will be unchanged.
-#   These environment variables can be directly pasted into IntelliJ's run configuration's environment variables: https://www.baeldung.com/intellij-idea-environment-variables
+# Run this script without any arguments to see intended usage, or checkout content of print_help()
 #
 # Requirements
 # ============
@@ -49,37 +43,48 @@ define_vars() {
 	print "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=$docker_socket TESTCONTAINERS_HOST_OVERRIDE=$address DOCKER_HOST=$docker_host"
 }
 
-export_vars() {
-	read -r -A env_vars <<<"$@"
-	for i in "${env_vars[@]}"; do
-		export "${i?}"
-	done
-}
-
 print_delimited() {
-	read -r -A env_vars <<<"$@"
+	read -r -A env_vars
 	local IFS=";"
 	print -n "${env_vars[*]}" # print without newline at the end; otherwise, cannot directly copy/paste into IntelliJ due to parsing error
 }
 
 # Only print the environment variables. Do not modify the current shell.
-print_vars() {
-	read -r -A env_vars <<<"$(define_vars)"
-
-	print_delimited "${env_vars[@]}"
+print_for_jetbrains() {
+	define_vars | print_delimited
 }
 
-# Modify the current shell to use TC with Colima. Also print the environment variables
-setup_colima() {
-	read -r -A env_vars <<<"$(define_vars)"
-
-	export_vars "${env_vars[@]}"
-
-	print_delimited "${env_vars[@]}"
+print_for_export() {
+	print "export" "$(define_vars)"
 }
 
-if [[ $ZSH_EVAL_CONTEXT == 'toplevel' ]]; then
-	print_vars
-else
-	setup_colima
-fi
+print_help() {
+	local script_name="$1"
+	print "$script_name" "produces environment variables that enables TestContainers to use Colima with Docker."
+	print ""
+	print "Note:" "Colima must be started with --network address e.g. colima start --network-address."
+	print ""
+	print "Usage:"
+	print "$script_name" "[--jb | --sh]"
+	print ""
+	print "Flags:"
+	print "\t" "--jb" "\t" "Print semi-colon delimited environment variables that can be copy/pasted into IntelliJ"
+	print "\t\t" "Example: $script_name --jb | pbcopy"
+	print "\t" "--js" "\t" "Print an export command for the environment variables that can be 'eval()' to change current shell"
+	print "\t\t" "Example: eval \$($script_name --sh)"
+	print "\t" "-h" "\t" "Print this message"
+}
+
+run_script() {
+	local script_name="$1"
+	local flag="$2"
+	if [[ "$flag" == "--jb" ]]; then
+		print_for_jetbrains
+	elif [[ "$flag" == "--sh" ]]; then
+		print_for_export
+	else
+		print_help "$script_name"
+	fi
+}
+
+run_script "$0" "$@"
