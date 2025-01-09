@@ -34,15 +34,24 @@ class EventStore {
 
   @JvmName("handleRetrieveFromStream")
   fun handle(context: ExecutionContext<RetrieveFromStream>): EventStoreResult {
-    val command = context.command
-    val events = context.forEventStorage.retrieveFromStream(command.streamName.name)
-    val result =
-        events.map {
-          RetrievedEvent(
-              event = context.forEventSerialization.deserialize(it.eventType, it.eventData),
-              occurredOn = OccurredOn(it.occurredOn))
-        }
-    return EventStoreResult.ForRetrieveFromStream(result)
+    try {
+      val command = context.command
+      val events = context.forEventStorage.retrieveFromStream(command.streamName.name)
+      val result =
+          events.map {
+            RetrievedEvent(
+                event = context.forEventSerialization.deserialize(it.eventType, it.eventData),
+                occurredOn = OccurredOn(it.occurredOn))
+          }
+      return EventStoreResult.ForRetrieveFromStream(result)
+    } catch (failure: ForEventStorage.Failure) {
+      return when (failure) {
+        is ForEventStorage.Failure.StreamDoesNotExist ->
+            Failure.StreamDoesNotExist(context.command.streamName, failure.message!!)
+
+        else -> throw failure
+      }
+    }
   }
 
   @JvmName("handleCheckStreamExists")

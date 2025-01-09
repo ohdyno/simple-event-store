@@ -120,15 +120,16 @@ class PostgresAdapter(private val dataSource: DataSource) : ForEventStorage {
           .run { executeQuery() }
           .let {
             buildList {
-              while (it.next()) {
-                add(
-                    StreamEvent(
-                        eventType = it.getString(EventSourceSql.Columns.EVENT_TYPE),
-                        eventData = it.getString(EventSourceSql.Columns.EVENT_DATA),
-                        occurredOn =
-                            it.getTimestamp(EventSourceSql.Columns.OCCURRED_ON).toInstant()))
-              }
-            }
+                  while (it.next()) {
+                    add(
+                        StreamEvent(
+                            eventType = it.getString(EventSourceSql.Columns.EVENT_TYPE),
+                            eventData = it.getString(EventSourceSql.Columns.EVENT_DATA),
+                            occurredOn =
+                                it.getTimestamp(EventSourceSql.Columns.OCCURRED_ON).toInstant()))
+                  }
+                }
+                .also { if (it.isEmpty()) throw StreamDoesNotExist(streamName) }
           }
     }
   }
