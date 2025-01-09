@@ -8,6 +8,7 @@ import me.xingzhou.projects.simple.event.store.commands.RetrieveFromStream
 import me.xingzhou.projects.simple.event.store.commands.ValidateAppendToken
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.features.SpecificationContext
+import me.xingzhou.projects.simple.event.store.features.snapshotEventStorage
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult
 import strikt.api.*
 import strikt.assertions.*
@@ -111,5 +112,12 @@ class ThenSteps(private val context: SpecificationContext) {
             .run { EventStore().handle(this) } as EventStoreResult.ForValidateAppendToken
 
     expectThat(result) { get { appendTokenIsValid }.isTrue() }
+  }
+
+  @Then("the events are retrieved in the same order as when they were appended to the stream")
+  fun theEventsAreRetrievedInTheSameOrderAsWhenTheyWereAppendedToTheStream() {
+    with(context.result as EventStoreResult.ForRetrieveFromStream) {
+      expectThat(this.retrievedEvents).isEqualTo(context.expectedStorageContent[context.streamName])
+    }
   }
 }

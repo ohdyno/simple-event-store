@@ -16,7 +16,10 @@ import me.xingzhou.projects.simple.event.store.commands.RetrieveAppendToken
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.features.SpecificationContext
 import me.xingzhou.projects.simple.event.store.features.fixtures.AnEvent
+import me.xingzhou.projects.simple.event.store.features.snapshotEventStorage
+import me.xingzhou.projects.simple.event.store.features.store
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult
+import me.xingzhou.projects.simple.event.store.results.RetrievedEvent
 import strikt.api.expectThat
 import strikt.assertions.isFalse
 
@@ -33,8 +36,27 @@ class GivenSteps(private val context: SpecificationContext) {
   }
 
   @And("a stream name")
+  @And("a stream named \"one\"")
   fun aStreamName() {
     context.streamName = StreamName("stream one")
+  }
+
+  @And("a stream named \"two\"")
+  fun aStreamNamedTwo() {
+    context.streamName = StreamName("stream two")
+  }
+
+  @And("it already has many events")
+  fun itAlreadyHasManyEvents() {
+    buildList { repeat(5) { add(AnEvent(id = "${context.streamName.name}-event-$size")) } }
+        .let {
+          ExecutionContext(
+                  command = CreateOrAppendToStream(streamName = context.streamName, events = it),
+                  forEventStorage = context.eventStorage,
+                  forEventSerialization = context.eventSerializer)
+              .let { EventStore().handle(it) }
+        }
+        .also { context.store(context.streamName, it) }
   }
 
   @And("a new stream name")
@@ -122,3 +144,58 @@ private fun String.asInstant(): Instant {
   val zonedDateTime = ZonedDateTime.parse(this, formatter)
   return zonedDateTime.toInstant()
 }
+
+private data class CreateOrAppendToStream(val streamName: StreamName, val events: List<AnEvent>)
+
+private fun EventStore.handle(context: ExecutionContext<CreateOrAppendToStream>) =
+    context.command.events
+        .map { RetrievedEvent(event = it, occurredOn = OccurredOn.now()) }
+        .apply {
+          forEach { event ->
+            createStream(context, event).let {
+              when {
+                it is EventStoreResult.Failure.StreamAlreadyExists -> {
+                  appendToStream(context, event)
+                }
+              }
+            }
+          }
+        }
+
+private fun EventStore.createStream(
+    context: ExecutionContext<CreateOrAppendToStream>,
+    event: RetrievedEvent
+): EventStoreResult =
+    with(
+        context.copyOf(
+            command =
+                CreateStream(
+                    streamName = context.command.streamName,
+                    event = event.event,
+                    occurredOn = event.occurredOn))) {
+          handle(this)
+        }
+
+private fun EventStore.appendToStream(
+    context: ExecutionContext<CreateOrAppendToStream>,
+    event: RetrievedEvent
+) =
+    with(context.copyOf(command = RetrieveAppendToken(streamName = context.command.streamName))) {
+          handle(this)
+        }
+        .run {
+          when {
+            this is EventStoreResult.ForRetrieveAppendToken -> {
+              with(
+                  context.copyOf(
+                      command =
+                          AppendToStream(
+                              streamName = context.command.streamName,
+                              appendToken = appendToken,
+                              event = event.event,
+                              occurredOn = event.occurredOn))) {
+                    handle(this)
+                  }
+            }
+          }
+        }

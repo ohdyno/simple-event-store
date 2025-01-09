@@ -88,7 +88,11 @@ class EventStore {
 
 data class AppendToken(val value: String)
 
-data class OccurredOn(val instant: Instant)
+data class OccurredOn(val instant: Instant) {
+  companion object {
+    fun now() = OccurredOn(Instant.now())
+  }
+}
 
 data class StreamName(val name: String)
 
