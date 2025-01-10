@@ -27,6 +27,6 @@ fun SpecificationContext.snapshotEventStorage(): Map<String, List<StreamEvent>> 
   }
 }
 
-fun SpecificationContext.store(name: StreamName, events: List<RetrievedEvent>) {
-  expectedStorageContent[name] = events
+fun SpecificationContext.store(streamName: StreamName, events: List<RetrievedEvent>) {
+  expectedStorageContent[streamName] = events
 }

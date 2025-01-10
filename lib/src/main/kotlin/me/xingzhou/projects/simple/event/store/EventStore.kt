@@ -12,7 +12,7 @@ class EventStore {
   @JvmName("handleCreateStream")
   fun handle(context: ExecutionContext<CreateStream>): EventStoreResult =
       runCatching {
-            context.forEventSerialization.serialize(context.command.event).run {
+            context.forEventSerialization.serialize(event = context.command.event).run {
               context.forEventStorage
                   .createStream(
                       streamName = context.command.streamName.name,
@@ -20,30 +20,32 @@ class EventStore {
                       eventType = eventType,
                       eventData = eventData,
                       occurredOn = context.command.occurredOn.instant)
-                  .let { AppendToken(it) }
-                  .let { EventStoreResult.ForCreateStream(it) }
+                  .let { AppendToken(value = it) }
+                  .let { EventStoreResult.ForCreateStream(appendToken = it) }
             }
           }
-          .getOrElse { it.extractKnownFailure(context.command) }
+          .getOrElse { it.extractKnownFailure(command = context.command) }
 
   @JvmName("handleRetrieveFromStream")
   fun handle(context: ExecutionContext<RetrieveFromStream>): EventStoreResult =
       runCatching {
             context.forEventStorage
-                .retrieveFromStream(context.command.streamName.name)
+                .retrieveFromStream(streamName = context.command.streamName.name)
                 .map {
                   RetrievedEvent(
-                      event = context.forEventSerialization.deserialize(it.eventType, it.eventData),
-                      occurredOn = OccurredOn(it.occurredOn))
+                      event =
+                          context.forEventSerialization.deserialize(
+                              type = it.eventType, data = it.eventData),
+                      occurredOn = OccurredOn(instant = it.occurredOn))
                 }
-                .let { EventStoreResult.ForRetrieveFromStream(it) }
+                .let { EventStoreResult.ForRetrieveFromStream(retrievedEvents = it) }
           }
-          .getOrElse { it.extractKnownFailure(context.command) }
+          .getOrElse { it.extractKnownFailure(command = context.command) }
 
   @JvmName("handleCheckStreamExists")
   fun handle(context: ExecutionContext<CheckStreamExists>): EventStoreResult =
-      context.forEventStorage.streamExists(context.command.streamName.name).let {
-        EventStoreResult.ForCheckStreamExists(it)
+      context.forEventStorage.streamExists(streamName = context.command.streamName.name).let {
+        EventStoreResult.ForCheckStreamExists(streamExists = it)
       }
 
   @JvmName("handleValidateAppendToken")
@@ -53,24 +55,24 @@ class EventStore {
                 .validateAppendToken(
                     streamName = context.command.streamName.name,
                     token = context.command.token.value)
-                .let { EventStoreResult.ForValidateAppendToken(it) }
+                .let { EventStoreResult.ForValidateAppendToken(appendTokenIsValid = it) }
           }
-          .getOrElse { it.extractKnownFailure(context.command) }
+          .getOrElse { it.extractKnownFailure(command = context.command) }
 
   @JvmName("handleRetrieveAppendToken")
   fun handle(context: ExecutionContext<RetrieveAppendToken>): EventStoreResult =
       runCatching {
             context.forEventStorage
-                .retrieveAppendToken(context.command.streamName.name)
-                .let { AppendToken(it) }
-                .let { EventStoreResult.ForRetrieveAppendToken(it) }
+                .retrieveAppendToken(streamName = context.command.streamName.name)
+                .let { AppendToken(value = it) }
+                .let { EventStoreResult.ForRetrieveAppendToken(appendToken = it) }
           }
-          .getOrElse { it.extractKnownFailure(context.command) }
+          .getOrElse { it.extractKnownFailure(command = context.command) }
 
   @JvmName("handleAppendToStream")
   fun handle(context: ExecutionContext<AppendToStream>): EventStoreResult =
       runCatching {
-            context.forEventSerialization.serialize(context.command.event).run {
+            context.forEventSerialization.serialize(event = context.command.event).run {
               context.forEventStorage
                   .appendToStream(
                       streamName = context.command.streamName.name,
@@ -79,18 +81,18 @@ class EventStore {
                       eventType = eventType,
                       eventData = eventData,
                       occurredOn = context.command.occurredOn.instant)
-                  .let { AppendToken(it) }
-                  .let { EventStoreResult.ForAppendToStream(it) }
+                  .let { AppendToken(value = it) }
+                  .let { EventStoreResult.ForAppendToStream(appendToken = it) }
             }
           }
-          .getOrElse { it.extractKnownFailure(context.command) }
+          .getOrElse { it.extractKnownFailure(command = context.command) }
 }
 
 data class AppendToken(val value: String)
 
 data class OccurredOn(val instant: Instant) {
   companion object {
-    fun now() = OccurredOn(Instant.now())
+    fun now() = OccurredOn(instant = Instant.now())
   }
 }
 
@@ -104,7 +106,7 @@ interface Event {
 private fun Throwable.extractKnownFailure(command: CreateStream): EventStoreResult =
     when (this) {
       is ForEventStorage.Failure.StreamAlreadyExists ->
-          Failure.StreamAlreadyExists(command.streamName, message!!)
+          Failure.StreamAlreadyExists(streamName = command.streamName, message = message!!)
 
       else -> throw this
     }
@@ -112,7 +114,7 @@ private fun Throwable.extractKnownFailure(command: CreateStream): EventStoreResu
 private fun Throwable.extractKnownFailure(command: RetrieveFromStream): EventStoreResult =
     when (this) {
       is ForEventStorage.Failure.StreamDoesNotExist ->
-          Failure.StreamDoesNotExist(command.streamName, message!!)
+          Failure.StreamDoesNotExist(streamName = command.streamName, message = message!!)
 
       else -> throw this
     }
@@ -120,7 +122,7 @@ private fun Throwable.extractKnownFailure(command: RetrieveFromStream): EventSto
 private fun Throwable.extractKnownFailure(command: ValidateAppendToken): EventStoreResult =
     when (this) {
       is ForEventStorage.Failure.StreamDoesNotExist ->
-          Failure.StreamDoesNotExist(command.streamName, message!!)
+          Failure.StreamDoesNotExist(streamName = command.streamName, message = message!!)
 
       else -> throw this
     }
@@ -128,7 +130,7 @@ private fun Throwable.extractKnownFailure(command: ValidateAppendToken): EventSt
 private fun Throwable.extractKnownFailure(command: RetrieveAppendToken): EventStoreResult =
     when (this) {
       is ForEventStorage.Failure.StreamDoesNotExist ->
-          Failure.StreamDoesNotExist(command.streamName, message!!)
+          Failure.StreamDoesNotExist(streamName = command.streamName, message = message!!)
 
       else -> throw this
     }
@@ -136,10 +138,13 @@ private fun Throwable.extractKnownFailure(command: RetrieveAppendToken): EventSt
 private fun Throwable.extractKnownFailure(command: AppendToStream): EventStoreResult =
     when (this) {
       is ForEventStorage.Failure.StreamDoesNotExist ->
-          Failure.StreamDoesNotExist(command.streamName, message!!)
+          Failure.StreamDoesNotExist(streamName = command.streamName, message = message!!)
 
       is ForEventStorage.Failure.InvalidAppendToken ->
-          Failure.InvalidAppendToken(command.streamName, command.appendToken, message!!)
+          Failure.InvalidAppendToken(
+              streamName = command.streamName,
+              appendToken = command.appendToken,
+              message = message!!)
 
       else -> throw this
     }

@@ -32,18 +32,18 @@ class GivenSteps(private val context: SpecificationContext) {
 
   @And("when the event occurred")
   fun theEventOccurredOnPMUTC() {
-    context.occurredOn = OccurredOn("11/22/2023 12:34:56 PM UTC".asInstant())
+    context.occurredOn = OccurredOn(instant = "11/22/2023 12:34:56 PM UTC".asInstant())
   }
 
   @And("a stream name")
   @And("a stream named \"one\"")
   fun aStreamName() {
-    context.streamName = StreamName("stream one")
+    context.streamName = StreamName(name = "stream one")
   }
 
   @And("a stream named \"two\"")
   fun aStreamNamedTwo() {
-    context.streamName = StreamName("stream two")
+    context.streamName = StreamName(name = "stream two")
   }
 
   @And("it already has many events")
@@ -54,23 +54,22 @@ class GivenSteps(private val context: SpecificationContext) {
                   command = CreateOrAppendToStream(streamName = context.streamName, events = it),
                   forEventStorage = context.eventStorage,
                   forEventSerialization = context.eventSerializer)
-              .let { EventStore().handle(it) }
+              .let { EventStore().handle(context = it) }
         }
-        .also { context.store(context.streamName, it) }
+        .also { context.store(streamName = context.streamName, events = it) }
   }
 
   @And("a new stream name")
   fun aNewStreamName() {
-    context.streamName = StreamName("a new stream name")
+    context.streamName = StreamName(name = "a new stream name")
 
-    val result =
-        ExecutionContext(
-                command = CheckStreamExists(streamName = context.streamName),
-                forEventStorage = context.eventStorage,
-                forEventSerialization = context.eventSerializer)
-            .run { EventStore().handle(this) } as EventStoreResult.ForCheckStreamExists
-
-    expectThat(result) { get { streamExists }.isFalse() }
+    ExecutionContext(
+            command = CheckStreamExists(streamName = context.streamName),
+            forEventStorage = context.eventStorage,
+            forEventSerialization = context.eventSerializer)
+        .run { EventStore().handle(context = this) }
+        .let { it as EventStoreResult.ForCheckStreamExists }
+        .apply { expectThat(streamExists).isFalse() }
   }
 
   @And("the event already exists in another stream")
@@ -83,7 +82,7 @@ class GivenSteps(private val context: SpecificationContext) {
                     occurredOn = context.occurredOn),
             forEventStorage = context.eventStorage,
             forEventSerialization = context.eventSerializer)
-        .run { EventStore().handle(this) }
+        .run { EventStore().handle(context = this) }
   }
 
   @And("the stream already exists in the system")
@@ -96,30 +95,30 @@ class GivenSteps(private val context: SpecificationContext) {
                     occurredOn = OccurredOn(Instant.EPOCH)),
             forEventStorage = context.eventStorage,
             forEventSerialization = context.eventSerializer)
-        .run { EventStore().handle(this) }
+        .run { EventStore().handle(context = this) }
     context.eventStorageSnapshot = context.snapshotEventStorage()
   }
 
   @And("a valid append token for the stream")
   fun aValidAppendTokenForTheStream() {
-    val result =
-        ExecutionContext(
-                command = RetrieveAppendToken(streamName = context.streamName),
-                forEventStorage = context.eventStorage,
-                forEventSerialization = context.eventSerializer)
-            .run { EventStore().handle(this) } as EventStoreResult.ForRetrieveAppendToken
-
-    context.appendToken = result.appendToken
+    ExecutionContext(
+            command = RetrieveAppendToken(streamName = context.streamName),
+            forEventStorage = context.eventStorage,
+            forEventSerialization = context.eventSerializer)
+        .run { EventStore().handle(context = this) }
+        .let { it as EventStoreResult.ForRetrieveAppendToken }
+        .run { context.appendToken = appendToken }
   }
 
   @Given("a stream name for a stream that does not exist")
   fun aStreamNameForAStreamThatDoesNotExist() {
-    context.streamName = StreamName("stream that does not exist")
+    context.streamName = StreamName(name = "stream that does not exist")
   }
 
   @And("the append token has been used to append to the stream")
   fun theAppendTokenHasBeenUsedToAppendToTheStream() {
-    ExecutionContext(
+    with(
+        ExecutionContext(
             command =
                 AppendToStream(
                     streamName = context.streamName,
@@ -128,22 +127,22 @@ class GivenSteps(private val context: SpecificationContext) {
                     appendToken = context.appendToken),
             forEventStorage = context.eventStorage,
             forEventSerialization = context.eventSerializer,
-        )
-        .run { EventStore().handle(this) }
+        )) {
+          EventStore().handle(context = this)
+        }
   }
 
   @And("an invalid append token")
   @And("any append token")
   fun anInvalidAppendToken() {
-    context.appendToken = AppendToken("an invalid append token")
+    context.appendToken = AppendToken(value = "an invalid append token")
   }
 }
 
-private fun String.asInstant(): Instant {
-  val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy hh:mm:ss a z")
-  val zonedDateTime = ZonedDateTime.parse(this, formatter)
-  return zonedDateTime.toInstant()
-}
+private fun String.asInstant(): Instant =
+    DateTimeFormatter.ofPattern("MM/dd/yyyy hh:mm:ss a z").let {
+      ZonedDateTime.parse(/* text= */ this, /* formatter= */ it).toInstant()
+    }
 
 private data class CreateOrAppendToStream(val streamName: StreamName, val events: List<AnEvent>)
 
@@ -152,10 +151,10 @@ private fun EventStore.handle(context: ExecutionContext<CreateOrAppendToStream>)
         .map { RetrievedEvent(event = it, occurredOn = OccurredOn.now()) }
         .apply {
           forEach { event ->
-            createStream(context, event).let {
+            createStream(context = context, event = event).let {
               when {
                 it is EventStoreResult.Failure.StreamAlreadyExists -> {
-                  appendToStream(context, event)
+                  appendToStream(context = context, event = event)
                 }
               }
             }
@@ -173,7 +172,7 @@ private fun EventStore.createStream(
                     streamName = context.command.streamName,
                     event = event.event,
                     occurredOn = event.occurredOn))) {
-          handle(this)
+          handle(context = this)
         }
 
 private fun EventStore.appendToStream(
@@ -181,7 +180,7 @@ private fun EventStore.appendToStream(
     event: RetrievedEvent
 ) =
     with(context.copyOf(command = RetrieveAppendToken(streamName = context.command.streamName))) {
-          handle(this)
+          handle(context = this)
         }
         .run {
           when {
@@ -194,7 +193,7 @@ private fun EventStore.appendToStream(
                               appendToken = appendToken,
                               event = event.event,
                               occurredOn = event.occurredOn))) {
-                    handle(this)
+                    handle(context = this)
                   }
             }
           }
