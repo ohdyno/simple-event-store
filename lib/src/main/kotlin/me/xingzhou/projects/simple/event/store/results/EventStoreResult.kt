@@ -23,6 +23,10 @@ sealed interface EventStoreResult {
       override val appendToken: AppendToken
   ) : WithAppendToken
 
+  data class ForRetrieveFromSystem(
+      val events: List<RetrievedSystemEvent>,
+  ) : EventStoreResult
+
   data class ForCheckStreamExists(val streamExists: Boolean) : EventStoreResult
 
   data class ForValidateAppendToken(val appendTokenIsValid: Boolean) : EventStoreResult

@@ -7,7 +7,6 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import me.xingzhou.projects.simple.event.store.AppendToken
-import me.xingzhou.projects.simple.event.store.Event
 import me.xingzhou.projects.simple.event.store.EventStore
 import me.xingzhou.projects.simple.event.store.OccurredOn
 import me.xingzhou.projects.simple.event.store.StreamName
@@ -50,10 +49,43 @@ class GivenSteps(private val context: SpecificationContext) {
     context.streamName = StreamName(name = "stream two")
   }
 
+  @And("it has many events that are not in chronological order")
+  fun itHasManyEventsThatAreNotInChronologicalOrder() {
+    buildList {
+          repeat(5) {
+            add(
+                RetrievedEvent(
+                    event = TypeAEvent(id = "${context.streamName.name}-event-$size"),
+                    occurredOn =
+                        OccurredOn(
+                            instant =
+                                Instant.now()
+                                    .minusSeconds((it * 100).toLong())
+                                    .truncatedTo(ChronoUnit.MILLIS))))
+          }
+        }
+        .let {
+          ExecutionContext(
+                  command = CreateOrAppendToStream(streamName = context.streamName, events = it),
+                  forEventStorage = context.eventStorage,
+                  forEventSerialization = context.eventSerializer)
+              .let { EventStore().handle(context = it) }
+        }
+        .also { context.store(streamName = context.streamName, events = it) }
+  }
+
   @And("it has type \"A\" events")
   @And("it already has many events")
   fun itAlreadyHasManyEvents() {
-    buildList { repeat(5) { add(TypeAEvent(id = "${context.streamName.name}-event-$size")) } }
+    buildList {
+          repeat(5) {
+            add(
+                RetrievedEvent(
+                    event = TypeAEvent(id = "${context.streamName.name}-event-$size"),
+                    occurredOn =
+                        OccurredOn(instant = Instant.now().truncatedTo(ChronoUnit.MILLIS))))
+          }
+        }
         .let {
           ExecutionContext(
                   command = CreateOrAppendToStream(streamName = context.streamName, events = it),
@@ -66,7 +98,15 @@ class GivenSteps(private val context: SpecificationContext) {
 
   @And("it has type \"B\" events")
   fun itHasTypeBEvents() {
-    buildList { repeat(5) { add(TypeBEvent(id = "${context.streamName.name}-event-$size")) } }
+    buildList {
+          repeat(5) {
+            add(
+                RetrievedEvent(
+                    event = TypeBEvent(id = "${context.streamName.name}-event-$size"),
+                    occurredOn =
+                        OccurredOn(instant = Instant.now().truncatedTo(ChronoUnit.MILLIS))))
+          }
+        }
         .let {
           ExecutionContext(
                   command = CreateOrAppendToStream(streamName = context.streamName, events = it),
@@ -178,26 +218,23 @@ private fun String.asInstant(): Instant =
       ZonedDateTime.parse(/* text= */ this, /* formatter= */ it).toInstant()
     }
 
-private data class CreateOrAppendToStream(val streamName: StreamName, val events: List<Event>)
+private data class CreateOrAppendToStream(
+    val streamName: StreamName,
+    val events: List<RetrievedEvent>
+)
 
 private fun EventStore.handle(context: ExecutionContext<CreateOrAppendToStream>) =
-    context.command.events
-        .map {
-          RetrievedEvent(
-              event = it,
-              occurredOn = OccurredOn(instant = Instant.now().truncatedTo(ChronoUnit.MILLIS)))
-        }
-        .apply {
-          forEach { event ->
-            createStream(context = context, event = event).let {
-              when {
-                it is EventStoreResult.Failure.StreamAlreadyExists -> {
-                  appendToStream(context = context, event = event)
-                }
-              }
+    context.command.events.apply {
+      forEach { event ->
+        createStream(context = context, event = event).let {
+          when {
+            it is EventStoreResult.Failure.StreamAlreadyExists -> {
+              appendToStream(context = context, event = event)
             }
           }
         }
+      }
+    }
 
 private fun EventStore.createStream(
     context: ExecutionContext<CreateOrAppendToStream>,

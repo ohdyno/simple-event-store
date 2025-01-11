@@ -2,14 +2,15 @@ package me.xingzhou.projects.simple.event.store.features
 
 import kotlin.reflect.KClass
 import me.xingzhou.projects.simple.event.store.*
+import me.xingzhou.projects.simple.event.store.commands.RetrieveFromSystem
+import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.dependencies.eventserializer.ForEventSerializer
 import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.ForEventStorage
-import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.StreamEvent
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult
 import me.xingzhou.projects.simple.event.store.results.RetrievedEvent
 
 class SpecificationContext {
-  lateinit var eventStorageSnapshot: Map<String, List<StreamEvent>>
+  lateinit var eventStorageSnapshot: EventStoreResult.ForRetrieveFromSystem
   lateinit var result: EventStoreResult
   lateinit var streamName: StreamName
   lateinit var appendToken: AppendToken
@@ -21,12 +22,14 @@ class SpecificationContext {
   val desiredEventTypes = mutableListOf<KClass<out Event>>()
 }
 
-fun SpecificationContext.snapshotEventStorage(): Map<String, List<StreamEvent>> {
-  return eventStorage.retrieveFromSystem().fold(emptyMap()) { map, systemEvent ->
-    map.getOrDefault(systemEvent.streamName, emptyList()).let { streamEvents ->
-      (streamEvents + systemEvent.streamEvent).let { map + (systemEvent.streamName to it) }
-    }
-  }
+fun SpecificationContext.snapshotEventStorage(): EventStoreResult.ForRetrieveFromSystem {
+  return with(
+      ExecutionContext(
+          command = RetrieveFromSystem(),
+          forEventStorage = eventStorage,
+          forEventSerialization = eventSerializer)) {
+        EventStore().handle(this) as EventStoreResult.ForRetrieveFromSystem
+      }
 }
 
 fun SpecificationContext.store(streamName: StreamName, events: List<RetrievedEvent>) {

@@ -22,7 +22,7 @@ interface ForEventStorage {
 
   fun retrieveFromStream(streamName: String, eventTypes: List<String>): StreamEvents
 
-  fun retrieveFromSystem(): List<SystemEvent>
+  fun retrieveFromSystem(eventTypes: List<String>): SystemEvents
 
   fun streamExists(streamName: String): Boolean
 

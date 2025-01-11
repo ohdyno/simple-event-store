@@ -32,7 +32,7 @@ class ThenSteps(private val context: SpecificationContext) {
   @Then("the system is unchanged")
   fun theSystemIsUnchanged() {
     expectThat(context.snapshotEventStorage()) {
-      get { entries }.containsExactly(context.eventStorageSnapshot.entries)
+      get { events }.containsExactly(context.eventStorageSnapshot.events)
     }
   }
 
@@ -142,6 +142,13 @@ class ThenSteps(private val context: SpecificationContext) {
   fun noEventsAreRetrieved() {
     with(context.result as EventStoreResult.ForRetrieveFromStream) {
       expectThat(this.retrievedEvents).isEmpty()
+    }
+  }
+
+  @Then("the events are retrieved in the same order as when they happened")
+  fun theEventsAreRetrievedInTheSameOrderAsWhenTheyHappened() {
+    with(context.result as EventStoreResult.ForRetrieveFromSystem) {
+      expectThat(events).isSorted(Comparator.comparing { it.event.occurredOn })
     }
   }
 }

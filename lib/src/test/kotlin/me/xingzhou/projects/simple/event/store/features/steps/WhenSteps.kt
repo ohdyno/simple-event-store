@@ -6,6 +6,7 @@ import me.xingzhou.projects.simple.event.store.commands.AppendToStream
 import me.xingzhou.projects.simple.event.store.commands.CreateStream
 import me.xingzhou.projects.simple.event.store.commands.RetrieveAppendToken
 import me.xingzhou.projects.simple.event.store.commands.RetrieveFromStream
+import me.xingzhou.projects.simple.event.store.commands.RetrieveFromSystem
 import me.xingzhou.projects.simple.event.store.commands.ValidateAppendToken
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.features.SpecificationContext
@@ -75,6 +76,16 @@ class WhenSteps(private val context: SpecificationContext) {
                 command =
                     RetrieveFromStream(
                         streamName = context.streamName, eventTypes = context.desiredEventTypes),
+                forEventStorage = context.eventStorage,
+                forEventSerialization = context.eventSerializer)
+            .let { EventStore().handle(it) }
+  }
+
+  @When("retrieving events from the system")
+  fun retrievingEventsFromTheSystem() {
+    context.result =
+        ExecutionContext(
+                command = RetrieveFromSystem(eventTypes = context.desiredEventTypes),
                 forEventStorage = context.eventStorage,
                 forEventSerialization = context.eventSerializer)
             .let { EventStore().handle(it) }

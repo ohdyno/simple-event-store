@@ -35,7 +35,7 @@ private class EventSourceSql {
         """SELECT * FROM ${Tables.EVENTS}
            WHERE ${Columns.STREAM_NAME} = ?
            ORDER BY ${Columns.VERSION};"""
-    const val RETRIEVE_SYSTEM = "SELECT * FROM ${Tables.EVENTS};"
+    const val RETRIEVE_SYSTEM = "SELECT * FROM ${Tables.EVENTS} ORDER BY ${Columns.OCCURRED_ON};"
     const val STREAM_EXISTS = "SELECT 1 FROM ${Tables.EVENTS} WHERE ${Columns.STREAM_NAME} = ?;"
     const val RETRIEVE_APPEND_TOKEN =
         "SELECT ${Columns.APPEND_TOKEN} FROM ${Tables.APPEND_TOKENS} WHERE ${Columns.STREAM_NAME} = ?;"
@@ -172,25 +172,26 @@ class PostgresAdapter(private val dataSource: DataSource) : ForEventStorage {
         }
       }
 
-  override fun retrieveFromSystem(): List<SystemEvent> {
+  override fun retrieveFromSystem(eventTypes: List<String>): SystemEvents {
     return dataSource.connection.use {
       it.prepareStatement(EventSourceSql.Query.RETRIEVE_SYSTEM)
           .run { executeQuery() }
           .let {
             buildList {
-              while (it.next()) {
-                add(
-                    SystemEvent(
-                        streamName = it.getString(EventSourceSql.Columns.STREAM_NAME),
-                        streamEvent =
-                            StreamEvent(
-                                eventType = it.getString(EventSourceSql.Columns.EVENT_TYPE),
-                                eventData = it.getString(EventSourceSql.Columns.EVENT_DATA),
-                                occurredOn =
-                                    it.getTimestamp(EventSourceSql.Columns.OCCURRED_ON)
-                                        .toInstant())))
-              }
-            }
+                  while (it.next()) {
+                    add(
+                        SystemEvent(
+                            streamName = it.getString(EventSourceSql.Columns.STREAM_NAME),
+                            streamEvent =
+                                StreamEvent(
+                                    eventType = it.getString(EventSourceSql.Columns.EVENT_TYPE),
+                                    eventData = it.getString(EventSourceSql.Columns.EVENT_DATA),
+                                    occurredOn =
+                                        it.getTimestamp(EventSourceSql.Columns.OCCURRED_ON)
+                                            .toInstant())))
+                  }
+                }
+                .let { SystemEvents(events = it) }
           }
     }
   }
@@ -284,10 +285,13 @@ internal class InMemoryMapAdapter(internal val streams: MutableMap<String, List<
         .let { StreamEvents(events = it, appendToken = retrieveAppendToken(streamName)) }
   }
 
-  override fun retrieveFromSystem(): List<SystemEvent> {
-    return streams.flatMap { (streamName, events) ->
-      events.map { SystemEvent(streamName = streamName, streamEvent = it) }
-    }
+  override fun retrieveFromSystem(eventTypes: List<String>): SystemEvents {
+    return streams
+        .flatMap { (streamName, events) ->
+          events.map { SystemEvent(streamName = streamName, streamEvent = it) }
+        }
+        .sortedBy { it.streamEvent.occurredOn }
+        .let { SystemEvents(events = it) }
   }
 
   override fun streamExists(streamName: String): Boolean {
