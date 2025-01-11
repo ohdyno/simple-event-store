@@ -24,10 +24,17 @@ fun PostgresAdapter.Companion.setupDatabase(connection: Connection) {
 private class EventSourceSql {
   object Query {
     const val INSERT_EVENT =
-        "INSERT INTO ${Tables.EVENTS} (${Columns.STREAM_NAME}, ${Columns.VERSION}, ${Columns.EVENT_ID}, ${Columns.EVENT_TYPE}, ${Columns.EVENT_DATA}, ${Columns.OCCURRED_ON}) VALUES (?, ?, ?, ?, (?::jsonb), ?);"
+        """INSERT INTO ${Tables.EVENTS} (${Columns.STREAM_NAME}, ${Columns.VERSION}, ${Columns.EVENT_ID}, ${Columns.EVENT_TYPE}, ${Columns.EVENT_DATA}, ${Columns.OCCURRED_ON})
+           VALUES                       (           ?,                      ?,                  ?,                  ?,                  (?::jsonb),                 ?         );"""
     const val RETRIEVE_STREAM_WITH_FILTER =
-        "SELECT * FROM ${Tables.EVENTS} WHERE ${Columns.STREAM_NAME} = ? AND ${Columns.EVENT_TYPE} = ANY (?);"
-    const val RETRIEVE_STREAM = "SELECT * FROM ${Tables.EVENTS} WHERE ${Columns.STREAM_NAME} = ?;"
+        """SELECT * FROM ${Tables.EVENTS} 
+           WHERE ${Columns.STREAM_NAME} = ?
+           AND ${Columns.EVENT_TYPE} = ANY (?)
+           ORDER BY ${Columns.VERSION};"""
+    const val RETRIEVE_STREAM =
+        """SELECT * FROM ${Tables.EVENTS}
+           WHERE ${Columns.STREAM_NAME} = ?
+           ORDER BY ${Columns.VERSION};"""
     const val RETRIEVE_SYSTEM = "SELECT * FROM ${Tables.EVENTS};"
     const val STREAM_EXISTS = "SELECT 1 FROM ${Tables.EVENTS} WHERE ${Columns.STREAM_NAME} = ?;"
     const val RETRIEVE_APPEND_TOKEN =
