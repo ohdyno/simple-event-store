@@ -8,6 +8,7 @@ import me.xingzhou.projects.simple.event.store.commands.RetrieveFromStream
 import me.xingzhou.projects.simple.event.store.commands.ValidateAppendToken
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.features.SpecificationContext
+import me.xingzhou.projects.simple.event.store.features.fixtures.TypeAEvent
 import me.xingzhou.projects.simple.event.store.features.snapshotEventStorage
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult
 import strikt.api.*
@@ -124,9 +125,23 @@ class ThenSteps(private val context: SpecificationContext) {
   @Then("only type \"A\" events are retrieved")
   fun onlyTypeAEventsAreRetrieved() {
     with(context.result as EventStoreResult.ForRetrieveFromStream) {
+      expectThat(this.retrievedEvents.map { it.event }).isNotEmpty().all { isA<TypeAEvent>() }
+    }
+  }
+
+  @Then("both event types are retrieved")
+  fun bothEventTypesAreRetrieved() {
+    with(context.result as EventStoreResult.ForRetrieveFromStream) {
       expectThat(this.retrievedEvents.map { it.event::class }).all {
         isContainedIn(context.desiredEventTypes)
       }
+    }
+  }
+
+  @Then("no events are retrieved")
+  fun noEventsAreRetrieved() {
+    with(context.result as EventStoreResult.ForRetrieveFromStream) {
+      expectThat(this.retrievedEvents).isEmpty()
     }
   }
 }

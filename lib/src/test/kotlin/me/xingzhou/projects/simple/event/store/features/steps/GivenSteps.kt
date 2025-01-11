@@ -19,6 +19,7 @@ import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.features.SpecificationContext
 import me.xingzhou.projects.simple.event.store.features.fixtures.TypeAEvent
 import me.xingzhou.projects.simple.event.store.features.fixtures.TypeBEvent
+import me.xingzhou.projects.simple.event.store.features.fixtures.TypeCEvent
 import me.xingzhou.projects.simple.event.store.features.snapshotEventStorage
 import me.xingzhou.projects.simple.event.store.features.store
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult
@@ -164,6 +165,11 @@ class GivenSteps(private val context: SpecificationContext) {
   @And("we want type \"B\" events")
   fun weWantTypeBEvents() {
     context.desiredEventTypes.add(TypeBEvent::class)
+  }
+
+  @And("we want type \"C\" events")
+  fun weWantTypeCEvents() {
+    context.desiredEventTypes.add(TypeCEvent::class)
   }
 }
 

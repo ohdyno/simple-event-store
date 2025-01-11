@@ -125,7 +125,7 @@ class PostgresAdapter(private val dataSource: DataSource) : ForEventStorage {
 
   override fun retrieveFromStream(streamName: String, eventTypes: List<String>): List<StreamEvent> {
     return dataSource.connection.use {
-      prepareQueryStatement(it, streamName, eventTypes)
+      prepareRetrieveQuery(it, streamName, eventTypes)
           .run { executeQuery() }
           .let {
             buildList {
@@ -138,12 +138,16 @@ class PostgresAdapter(private val dataSource: DataSource) : ForEventStorage {
                                 it.getTimestamp(EventSourceSql.Columns.OCCURRED_ON).toInstant()))
                   }
                 }
-                .also { if (it.isEmpty()) throw StreamDoesNotExist(streamName) }
+                .apply {
+                  when {
+                    isEmpty() && !streamExists(streamName) -> throw StreamDoesNotExist(streamName)
+                  }
+                }
           }
     }
   }
 
-  private fun prepareQueryStatement(
+  private fun prepareRetrieveQuery(
       connection: Connection,
       streamName: String,
       eventTypes: List<String>
