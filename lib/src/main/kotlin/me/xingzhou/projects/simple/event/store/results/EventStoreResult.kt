@@ -18,7 +18,10 @@ sealed interface EventStoreResult {
 
   data class ForCreateStream(override val appendToken: AppendToken) : WithAppendToken
 
-  data class ForRetrieveFromStream(val retrievedEvents: List<RetrievedEvent>) : EventStoreResult
+  data class ForRetrieveFromStream(
+      val retrievedEvents: List<RetrievedEvent>,
+      override val appendToken: AppendToken
+  ) : WithAppendToken
 
   data class ForCheckStreamExists(val streamExists: Boolean) : EventStoreResult
 

@@ -5,6 +5,12 @@ Feature: Retrieve Events from A Stream
 
   Rule: Events are retrieved along with an append token denoting the version of the stream
 
+    Example: Retrieving from a stream
+      Given a stream named "one"
+      And it already has many events
+      When retrieving events from the stream
+      Then a valid append token for the stream is returned
+
   Rule: Events retrieved from a stream are in the same order as when they were appended to the stream
 
     Example: Retrieving from a stream when the system only has one stream

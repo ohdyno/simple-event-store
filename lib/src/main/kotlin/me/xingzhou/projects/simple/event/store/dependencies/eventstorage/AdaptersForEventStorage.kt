@@ -123,29 +123,35 @@ class PostgresAdapter(private val dataSource: DataSource) : ForEventStorage {
     }
   }
 
-  override fun retrieveFromStream(streamName: String, eventTypes: List<String>): List<StreamEvent> {
-    return dataSource.connection.use {
-      prepareRetrieveQuery(it, streamName, eventTypes)
+  override fun retrieveFromStream(streamName: String, eventTypes: List<String>): StreamEvents {
+    return dataSource.connection.use { connection ->
+      retrieveAppendToken(connection = connection, streamName = streamName).let { appendToken ->
+        retrieveFromStream(
+                connection = connection, streamName = streamName, eventTypes = eventTypes)
+            .let { events -> StreamEvents(events = events, appendToken = appendToken) }
+      }
+    }
+  }
+
+  private fun retrieveFromStream(
+      connection: Connection,
+      streamName: String,
+      eventTypes: List<String>
+  ): List<StreamEvent> =
+      prepareRetrieveQuery(connection, streamName, eventTypes)
           .run { executeQuery() }
           .let {
             buildList {
-                  while (it.next()) {
-                    add(
-                        StreamEvent(
-                            eventType = it.getString(EventSourceSql.Columns.EVENT_TYPE),
-                            eventData = it.getString(EventSourceSql.Columns.EVENT_DATA),
-                            occurredOn =
-                                it.getTimestamp(EventSourceSql.Columns.OCCURRED_ON).toInstant()))
-                  }
-                }
-                .apply {
-                  when {
-                    isEmpty() && !streamExists(streamName) -> throw StreamDoesNotExist(streamName)
-                  }
-                }
+              while (it.next()) {
+                add(
+                    StreamEvent(
+                        eventType = it.getString(EventSourceSql.Columns.EVENT_TYPE),
+                        eventData = it.getString(EventSourceSql.Columns.EVENT_DATA),
+                        occurredOn =
+                            it.getTimestamp(EventSourceSql.Columns.OCCURRED_ON).toInstant()))
+              }
+            }
           }
-    }
-  }
 
   private fun prepareRetrieveQuery(
       connection: Connection,
@@ -199,16 +205,18 @@ class PostgresAdapter(private val dataSource: DataSource) : ForEventStorage {
   }
 
   override fun retrieveAppendToken(streamName: String): String {
-    return dataSource.connection.use {
-      it.prepareStatement(EventSourceSql.Query.RETRIEVE_APPEND_TOKEN)
+    return dataSource.connection.use { retrieveAppendToken(it, streamName) }
+  }
+
+  private fun retrieveAppendToken(connection: Connection, streamName: String): String =
+      connection
+          .prepareStatement(EventSourceSql.Query.RETRIEVE_APPEND_TOKEN)
           .apply { setString(1, streamName) }
           .run { executeQuery() }
           .run {
             if (next()) getString(EventSourceSql.Columns.APPEND_TOKEN)
             else throw StreamDoesNotExist(streamName)
           }
-    }
-  }
 
   override fun validateAppendToken(streamName: String, token: String): Boolean {
     return retrieveAppendToken(streamName) == token
@@ -269,11 +277,11 @@ internal class InMemoryMapAdapter(internal val streams: MutableMap<String, List<
     }
   }
 
-  override fun retrieveFromStream(streamName: String, eventTypes: List<String>): List<StreamEvent> {
+  override fun retrieveFromStream(streamName: String, eventTypes: List<String>): StreamEvents {
     validateStreamExists(streamName)
-    return with(streams[streamName]!!) {
-      return if (eventTypes.isEmpty()) this else filter { it.eventType in eventTypes }
-    }
+    return streams[streamName]!!
+        .filter { eventTypes.isEmpty() || it.eventType in eventTypes }
+        .let { StreamEvents(events = it, appendToken = retrieveAppendToken(streamName)) }
   }
 
   override fun retrieveFromSystem(): List<SystemEvent> {
@@ -287,7 +295,8 @@ internal class InMemoryMapAdapter(internal val streams: MutableMap<String, List<
   }
 
   override fun retrieveAppendToken(streamName: String): String {
-    return retrieveFromStream(streamName, emptyList()).size.dec().toString()
+    validateStreamExists(streamName)
+    return streams[streamName]!!.size.dec().toString()
   }
 
   override fun validateAppendToken(streamName: String, token: String): Boolean {

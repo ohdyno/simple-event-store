@@ -1,9 +1,12 @@
 package me.xingzhou.projects.simple.event.store
 
 import java.time.Instant
+import kotlin.reflect.KClass
 import me.xingzhou.projects.simple.event.store.commands.*
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
+import me.xingzhou.projects.simple.event.store.dependencies.eventserializer.ForEventSerializer
 import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.ForEventStorage
+import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.StreamEvent
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult.Failure
 import me.xingzhou.projects.simple.event.store.results.RetrievedEvent
@@ -29,21 +32,18 @@ class EventStore {
   @JvmName("handleRetrieveFromStream")
   fun handle(context: ExecutionContext<RetrieveFromStream>): EventStoreResult =
       runCatching {
-            context.forEventStorage
-                .retrieveFromStream(
-                    streamName = context.command.streamName.name,
-                    eventTypes =
-                        context.command.eventTypes.map {
-                          context.forEventSerialization.eventTypeOf(it)
-                        })
-                .map {
-                  RetrievedEvent(
-                      event =
-                          context.forEventSerialization.deserialize(
-                              type = it.eventType, data = it.eventData),
-                      occurredOn = OccurredOn(instant = it.occurredOn))
-                }
-                .let { EventStoreResult.ForRetrieveFromStream(retrievedEvents = it) }
+            context.command.eventTypes.serialize(context.forEventSerialization).let {
+              context.forEventStorage
+                  .retrieveFromStream(streamName = context.command.streamName.name, eventTypes = it)
+                  .run {
+                    events.deserialize(context.forEventSerialization) to
+                        AppendToken(value = appendToken)
+                  }
+                  .let { (events, appendToken) ->
+                    EventStoreResult.ForRetrieveFromStream(
+                        retrievedEvents = events, appendToken = appendToken)
+                  }
+            }
           }
           .getOrElse { it.extractKnownFailure(command = context.command) }
 
@@ -91,6 +91,17 @@ class EventStore {
             }
           }
           .getOrElse { it.extractKnownFailure(command = context.command) }
+}
+
+private fun List<StreamEvent>.deserialize(serializer: ForEventSerializer): List<RetrievedEvent> =
+    map {
+      with(serializer.deserialize(type = it.eventType, data = it.eventData)) {
+        RetrievedEvent(event = this, occurredOn = OccurredOn(instant = it.occurredOn))
+      }
+    }
+
+private fun List<KClass<out Event>>.serialize(serializer: ForEventSerializer): List<String> = map {
+  serializer.eventTypeOf(it)
 }
 
 data class AppendToken(val value: String)
