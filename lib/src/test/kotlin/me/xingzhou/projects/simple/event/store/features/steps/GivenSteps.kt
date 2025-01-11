@@ -155,8 +155,14 @@ class GivenSteps(private val context: SpecificationContext) {
   }
 
   @And("we only want type \"A\" events")
+  @And("we want type \"A\" events")
   fun weOnlyWantTypeAEvents() {
     context.desiredEventTypes.add(TypeAEvent::class)
+  }
+
+  @And("we want type \"B\" events")
+  fun weWantTypeBEvents() {
+    context.desiredEventTypes.add(TypeBEvent::class)
   }
 }
 

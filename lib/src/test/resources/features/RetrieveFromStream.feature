@@ -39,5 +39,12 @@ Feature: Retrieve Events from A Stream
       Then only type "A" events are retrieved
 
     Example: Successfully retrieving multiple types of events
+      Given a stream named "one"
+      And it has type "A" events
+      And it has type "B" events
+      Given we want type "A" events
+      And we want type "B" events
+      When retrieving events from the stream
+      Then only type "A" events are retrieved
 
     Example: Retrieving an event type that does not exist returns no events
