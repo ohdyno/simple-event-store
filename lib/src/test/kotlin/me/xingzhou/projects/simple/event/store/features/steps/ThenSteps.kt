@@ -125,7 +125,7 @@ class ThenSteps(private val context: SpecificationContext) {
   @Then("only type \"A\" events are retrieved")
   fun onlyTypeAEventsAreRetrieved() {
     with(context.result as EventStoreResult.ForRetrieveFromStream) {
-      expectThat(this.retrievedEvents.map { it.event }).isNotEmpty().all { isA<TypeAEvent>() }
+      expectThat(this.retrievedEvents).isNotEmpty().all { get { event }.isA<TypeAEvent>() }
     }
   }
 
