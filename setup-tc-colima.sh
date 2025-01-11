@@ -44,14 +44,20 @@ define_vars() {
 }
 
 print_delimited() {
-	read -r -A env_vars
+	local env_vars="$@"
 	local IFS=";"
 	print -n "${env_vars[*]}" # print without newline at the end; otherwise, cannot directly copy/paste into IntelliJ due to parsing error
 }
 
 # Only print the environment variables. Do not modify the current shell.
 print_for_jetbrains() {
-	define_vars | print_delimited
+	local vars
+	vars=$(define_vars)
+	if [ $? -eq 0 ]; then
+		print_delimited "$vars"
+	else
+		print "$vars"
+	fi
 }
 
 print_for_export() {
@@ -68,22 +74,55 @@ print_help() {
 	print "$script_name" "[--jb | --sh]"
 	print ""
 	print "Flags:"
-	print "\t" "--jb" "\t" "Print semi-colon delimited environment variables that can be copy/pasted into IntelliJ"
-	print "\t\t" "Example: $script_name --jb | pbcopy"
-	print "\t" "--js" "\t" "Print an export command for the environment variables that can be 'eval()' to change current shell"
-	print "\t\t" "Example: eval \$($script_name --sh)"
-	print "\t" "-h" "\t" "Print this message"
+	print "\t" "--start" "\t" "Re/Start Colima correctly"
+	print ""
+	print "\t" "--jb" "\t\t" "Print semi-colon delimited environment variables that can be copy/pasted into IntelliJ"
+	print "\t\t\t" "Example: $script_name --jb | pbcopy"
+	print ""
+	print "\t" "--js" "\t\t" "Print an export command for the environment variables that can be 'eval()' to change current shell"
+	print "\t\t\t" "Example: eval \$($script_name --sh)"
+	print ""
+	print "\t" "-h" "\t\t" "Print this message"
+}
+
+start_colima() {
+	colima stop
+	colima start --network-address
 }
 
 run_script() {
 	local script_name="$1"
-	local flag="$2"
-	if [[ "$flag" == "--jb" ]]; then
-		print_for_jetbrains
-	elif [[ "$flag" == "--sh" ]]; then
-		print_for_export
-	else
+
+	# Parse Flags
+	declare -A flags
+	flags=([help]=true)
+	for flag in "${@:1}"; do
+		if [[ "$flag" == "--jb" ]]; then
+			flags[jetbrains]=true
+			flags[help]=false
+		elif [[ "$flag" == "--sh" ]]; then
+			flags[shell]=true
+			flags[help]=false
+		elif [[ "$flag" == "--start" ]]; then
+			flags[start]=true
+			flags[help]=false
+		fi
+	done
+
+	if [[ true == "${flags[help]}" ]]; then
 		print_help "$script_name"
+	fi
+
+	if [[ true == "${flags[start]}" ]]; then
+		start_colima >"$(tty)"
+	fi
+
+	if [[ true == "${flags[jetbrains]}" ]]; then
+		print_for_jetbrains
+	fi
+
+	if [[ true == "${flags[shell]}" ]]; then
+		print_for_export
 	fi
 }
 
