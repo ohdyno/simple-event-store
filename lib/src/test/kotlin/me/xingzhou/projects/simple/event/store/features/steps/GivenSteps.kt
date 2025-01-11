@@ -5,6 +5,7 @@ import io.cucumber.java.en.Given
 import java.time.Instant
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import me.xingzhou.projects.simple.event.store.AppendToken
 import me.xingzhou.projects.simple.event.store.Event
 import me.xingzhou.projects.simple.event.store.EventStore
@@ -175,7 +176,11 @@ private data class CreateOrAppendToStream(val streamName: StreamName, val events
 
 private fun EventStore.handle(context: ExecutionContext<CreateOrAppendToStream>) =
     context.command.events
-        .map { RetrievedEvent(event = it, occurredOn = OccurredOn.now()) }
+        .map {
+          RetrievedEvent(
+              event = it,
+              occurredOn = OccurredOn(instant = Instant.now().truncatedTo(ChronoUnit.MILLIS)))
+        }
         .apply {
           forEach { event ->
             createStream(context = context, event = event).let {
