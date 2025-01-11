@@ -72,7 +72,9 @@ class WhenSteps(private val context: SpecificationContext) {
   fun retrievingEventsFromTheStream() {
     context.result =
         ExecutionContext(
-                command = RetrieveFromStream(streamName = context.streamName),
+                command =
+                    RetrieveFromStream(
+                        streamName = context.streamName, eventTypes = context.desiredEventTypes),
                 forEventStorage = context.eventStorage,
                 forEventSerialization = context.eventSerializer)
             .let { EventStore().handle(it) }

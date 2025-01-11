@@ -6,6 +6,7 @@ import java.time.Instant
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import me.xingzhou.projects.simple.event.store.AppendToken
+import me.xingzhou.projects.simple.event.store.Event
 import me.xingzhou.projects.simple.event.store.EventStore
 import me.xingzhou.projects.simple.event.store.OccurredOn
 import me.xingzhou.projects.simple.event.store.StreamName
@@ -15,7 +16,8 @@ import me.xingzhou.projects.simple.event.store.commands.CreateStream
 import me.xingzhou.projects.simple.event.store.commands.RetrieveAppendToken
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.features.SpecificationContext
-import me.xingzhou.projects.simple.event.store.features.fixtures.AnEvent
+import me.xingzhou.projects.simple.event.store.features.fixtures.TypeAEvent
+import me.xingzhou.projects.simple.event.store.features.fixtures.TypeBEvent
 import me.xingzhou.projects.simple.event.store.features.snapshotEventStorage
 import me.xingzhou.projects.simple.event.store.features.store
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult
@@ -27,7 +29,7 @@ class GivenSteps(private val context: SpecificationContext) {
   @Given("an event")
   @Given("a valid event of type A")
   fun anEvent() {
-    context.event = AnEvent()
+    context.event = TypeAEvent()
   }
 
   @And("when the event occurred")
@@ -46,9 +48,23 @@ class GivenSteps(private val context: SpecificationContext) {
     context.streamName = StreamName(name = "stream two")
   }
 
+  @And("it has type \"A\" events")
   @And("it already has many events")
   fun itAlreadyHasManyEvents() {
-    buildList { repeat(5) { add(AnEvent(id = "${context.streamName.name}-event-$size")) } }
+    buildList { repeat(5) { add(TypeAEvent(id = "${context.streamName.name}-event-$size")) } }
+        .let {
+          ExecutionContext(
+                  command = CreateOrAppendToStream(streamName = context.streamName, events = it),
+                  forEventStorage = context.eventStorage,
+                  forEventSerialization = context.eventSerializer)
+              .let { EventStore().handle(context = it) }
+        }
+        .also { context.store(streamName = context.streamName, events = it) }
+  }
+
+  @And("it has type \"B\" events")
+  fun itHasTypeBEvents() {
+    buildList { repeat(5) { add(TypeBEvent(id = "${context.streamName.name}-event-$size")) } }
         .let {
           ExecutionContext(
                   command = CreateOrAppendToStream(streamName = context.streamName, events = it),
@@ -91,7 +107,7 @@ class GivenSteps(private val context: SpecificationContext) {
             command =
                 CreateStream(
                     streamName = context.streamName,
-                    event = AnEvent(),
+                    event = TypeAEvent(),
                     occurredOn = OccurredOn(Instant.EPOCH)),
             forEventStorage = context.eventStorage,
             forEventSerialization = context.eventSerializer)
@@ -137,6 +153,11 @@ class GivenSteps(private val context: SpecificationContext) {
   fun anInvalidAppendToken() {
     context.appendToken = AppendToken(value = "an invalid append token")
   }
+
+  @And("we only want type \"A\" events")
+  fun weOnlyWantTypeAEvents() {
+    context.desiredEventTypes.add(TypeAEvent::class)
+  }
 }
 
 private fun String.asInstant(): Instant =
@@ -144,7 +165,7 @@ private fun String.asInstant(): Instant =
       ZonedDateTime.parse(/* text= */ this, /* formatter= */ it).toInstant()
     }
 
-private data class CreateOrAppendToStream(val streamName: StreamName, val events: List<AnEvent>)
+private data class CreateOrAppendToStream(val streamName: StreamName, val events: List<Event>)
 
 private fun EventStore.handle(context: ExecutionContext<CreateOrAppendToStream>) =
     context.command.events

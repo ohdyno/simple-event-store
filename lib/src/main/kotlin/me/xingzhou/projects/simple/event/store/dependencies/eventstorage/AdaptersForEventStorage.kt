@@ -1,6 +1,7 @@
 package me.xingzhou.projects.simple.event.store.dependencies.eventstorage
 
 import java.sql.Connection
+import java.sql.PreparedStatement
 import java.sql.SQLException
 import java.sql.Timestamp
 import java.time.Instant
@@ -24,6 +25,8 @@ private class EventSourceSql {
   object Query {
     const val INSERT_EVENT =
         "INSERT INTO ${Tables.EVENTS} (${Columns.STREAM_NAME}, ${Columns.VERSION}, ${Columns.EVENT_ID}, ${Columns.EVENT_TYPE}, ${Columns.EVENT_DATA}, ${Columns.OCCURRED_ON}) VALUES (?, ?, ?, ?, (?::jsonb), ?);"
+    const val RETRIEVE_STREAM_WITH_FILTER =
+        "SELECT * FROM ${Tables.EVENTS} WHERE ${Columns.STREAM_NAME} = ? AND ${Columns.EVENT_TYPE} = ANY (?);"
     const val RETRIEVE_STREAM = "SELECT * FROM ${Tables.EVENTS} WHERE ${Columns.STREAM_NAME} = ?;"
     const val RETRIEVE_SYSTEM = "SELECT * FROM ${Tables.EVENTS};"
     const val STREAM_EXISTS = "SELECT 1 FROM ${Tables.EVENTS} WHERE ${Columns.STREAM_NAME} = ?;"
@@ -113,10 +116,9 @@ class PostgresAdapter(private val dataSource: DataSource) : ForEventStorage {
     }
   }
 
-  override fun retrieveFromStream(streamName: String): List<StreamEvent> {
+  override fun retrieveFromStream(streamName: String, eventTypes: List<String>): List<StreamEvent> {
     return dataSource.connection.use {
-      it.prepareStatement(EventSourceSql.Query.RETRIEVE_STREAM)
-          .apply { setString(1, streamName) }
+      prepareQueryStatement(it, streamName, eventTypes)
           .run { executeQuery() }
           .let {
             buildList {
@@ -133,6 +135,25 @@ class PostgresAdapter(private val dataSource: DataSource) : ForEventStorage {
           }
     }
   }
+
+  private fun prepareQueryStatement(
+      connection: Connection,
+      streamName: String,
+      eventTypes: List<String>
+  ): PreparedStatement =
+      when {
+        eventTypes.isEmpty() -> {
+          connection.prepareStatement(EventSourceSql.Query.RETRIEVE_STREAM).apply {
+            setString(1, streamName)
+          }
+        }
+        else -> {
+          connection.prepareStatement(EventSourceSql.Query.RETRIEVE_STREAM_WITH_FILTER).apply {
+            setString(1, streamName)
+            setArray(2, connection.createArrayOf("text", eventTypes.toTypedArray()))
+          }
+        }
+      }
 
   override fun retrieveFromSystem(): List<SystemEvent> {
     return dataSource.connection.use {
@@ -237,9 +258,11 @@ internal class InMemoryMapAdapter(internal val streams: MutableMap<String, List<
     }
   }
 
-  override fun retrieveFromStream(streamName: String): List<StreamEvent> {
+  override fun retrieveFromStream(streamName: String, eventTypes: List<String>): List<StreamEvent> {
     validateStreamExists(streamName)
-    return streams[streamName]!!
+    return with(streams[streamName]!!) {
+      return if (eventTypes.isEmpty()) this else filter { it.eventType in eventTypes }
+    }
   }
 
   override fun retrieveFromSystem(): List<SystemEvent> {
@@ -253,7 +276,7 @@ internal class InMemoryMapAdapter(internal val streams: MutableMap<String, List<
   }
 
   override fun retrieveAppendToken(streamName: String): String {
-    return retrieveFromStream(streamName).size.dec().toString()
+    return retrieveFromStream(streamName, emptyList()).size.dec().toString()
   }
 
   override fun validateAppendToken(streamName: String, token: String): Boolean {

@@ -1,5 +1,6 @@
 package me.xingzhou.projects.simple.event.store.dependencies.eventserializer
 
+import kotlin.reflect.KClass
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
@@ -36,6 +37,13 @@ class KotlinXSerializationAdapterBuilder {
 
     override fun deserialize(type: String, data: String): Event {
       return json.decodeFromString(data)
+    }
+
+    override fun eventTypeOf(klass: KClass<out Event>): String {
+      val jsonElement =
+          json.encodeToJsonElement<Event>(
+              klass.constructors.first { it.parameters.isEmpty() }.call())
+      return jsonElement.jsonObject["type"]!!.jsonPrimitive.content
     }
   }
 }

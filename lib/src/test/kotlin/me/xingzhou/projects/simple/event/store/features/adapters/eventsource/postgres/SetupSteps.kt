@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariDataSource
 import io.cucumber.java.AfterAll
 import io.cucumber.java.BeforeAll
 import io.cucumber.java.en.Given
+import javax.sql.DataSource
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
@@ -14,15 +15,26 @@ import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.ForEven
 import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.PostgresAdapter
 import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.setupDatabase
 import me.xingzhou.projects.simple.event.store.features.SpecificationContext
-import me.xingzhou.projects.simple.event.store.features.fixtures.AnEvent
+import me.xingzhou.projects.simple.event.store.features.fixtures.TypeAEvent
+import me.xingzhou.projects.simple.event.store.features.fixtures.TypeBEvent
 import org.testcontainers.containers.PostgreSQLContainer
 
 private lateinit var container: PostgreSQLContainer<Nothing>
+private lateinit var dataSource: DataSource
 
 @Suppress("unused")
 @BeforeAll
 fun setupPostgreSQLContainer() {
   container = PostgreSQLContainer<Nothing>("postgres:17.2").apply { start() }
+  dataSource =
+      HikariConfig()
+          .apply {
+            jdbcUrl = container.jdbcUrl
+            username = container.username
+            password = container.password
+            driverClassName = container.driverClassName
+          }
+          .let { HikariDataSource(it) }
 }
 
 @Suppress("unused")
@@ -35,21 +47,16 @@ class SetupSteps(private val context: SpecificationContext) {
 
   @Given("the event source system is setup for testing")
   fun theEventSourceSystemIsSetupForTesting() {
-    context.eventStorage =
-        HikariConfig()
-            .apply {
-              jdbcUrl = container.jdbcUrl
-              username = container.username
-              password = container.password
-              driverClassName = container.driverClassName
-            }
-            .let { HikariDataSource(it) }
-            .apply { connection.run { PostgresAdapter.setupDatabase(this) } }
-            .let { ForEventStorage(dataSource = it) }
+    dataSource.connection.use { PostgresAdapter.setupDatabase(it) }
+
+    context.eventStorage = ForEventStorage(dataSource = dataSource)
 
     context.eventSerializer = ForEventSerializer {
       serializersModule = SerializersModule {
-        polymorphic(Event::class) { subclass(AnEvent::class) }
+        polymorphic(Event::class) {
+          subclass(TypeAEvent::class)
+          subclass(TypeBEvent::class)
+        }
       }
     }
   }

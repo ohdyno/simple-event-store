@@ -8,7 +8,8 @@ import me.xingzhou.projects.simple.event.store.Event
 import me.xingzhou.projects.simple.event.store.dependencies.eventserializer.ForEventSerializer
 import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.ForEventStorage
 import me.xingzhou.projects.simple.event.store.features.SpecificationContext
-import me.xingzhou.projects.simple.event.store.features.fixtures.AnEvent
+import me.xingzhou.projects.simple.event.store.features.fixtures.TypeAEvent
+import me.xingzhou.projects.simple.event.store.features.fixtures.TypeBEvent
 
 class SetupSteps(private val context: SpecificationContext) {
   @Given("the event source system is setup for testing")
@@ -16,7 +17,10 @@ class SetupSteps(private val context: SpecificationContext) {
     context.eventStorage = ForEventStorage()
     context.eventSerializer = ForEventSerializer {
       serializersModule = SerializersModule {
-        polymorphic(Event::class) { subclass(AnEvent::class) }
+        polymorphic(Event::class) {
+          subclass(TypeAEvent::class)
+          subclass(TypeBEvent::class)
+        }
       }
     }
   }

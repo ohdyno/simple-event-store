@@ -20,7 +20,7 @@ interface ForEventStorage {
       occurredOn: Instant
   ): String
 
-  fun retrieveFromStream(streamName: String): List<StreamEvent>
+  fun retrieveFromStream(streamName: String, eventTypes: List<String>): List<StreamEvent>
 
   fun retrieveFromSystem(): List<SystemEvent>
 

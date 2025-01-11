@@ -5,5 +5,7 @@ import kotlinx.serialization.Serializable
 import me.xingzhou.projects.simple.event.store.Event
 
 @Serializable
-@SerialName("a-test-event")
-data class AnEvent(override val id: String = "event-type-A") : Event
+@SerialName("type-a-event")
+data class TypeAEvent(override val id: String) : Event {
+  constructor() : this("Type-A-Event-id")
+}

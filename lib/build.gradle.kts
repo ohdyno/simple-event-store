@@ -22,6 +22,7 @@ configurations { compileOnly { extendsFrom(configurations.annotationProcessor.ge
 repositories { mavenCentral() }
 
 dependencies {
+  implementation(kotlin("reflect"))
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
   implementation("org.springframework:spring-jdbc:6.2.1")
 

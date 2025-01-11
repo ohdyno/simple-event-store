@@ -30,7 +30,12 @@ class EventStore {
   fun handle(context: ExecutionContext<RetrieveFromStream>): EventStoreResult =
       runCatching {
             context.forEventStorage
-                .retrieveFromStream(streamName = context.command.streamName.name)
+                .retrieveFromStream(
+                    streamName = context.command.streamName.name,
+                    eventTypes =
+                        context.command.eventTypes.map {
+                          context.forEventSerialization.eventTypeOf(it)
+                        })
                 .map {
                   RetrievedEvent(
                       event =

@@ -3,6 +3,8 @@ Feature: Retrieve Events from A Stream
   Background:
     Given the event source system is setup for testing
 
+  Rule: Events are retrieved along with an append token denoting the version of the stream
+
   Rule: Events retrieved from a stream are in the same order as when they were appended to the stream
 
     Example: Retrieving from a stream when the system only has one stream
@@ -29,6 +31,12 @@ Feature: Retrieve Events from A Stream
   Rule: Events can be retrieved by type
 
     Example: Successfully retrieving a single type of event
+      Given a stream named "one"
+      And it has type "A" events
+      And it has type "B" events
+      Given we only want type "A" events
+      When retrieving events from the stream
+      Then only type "A" events are retrieved
 
     Example: Successfully retrieving multiple types of events
 
