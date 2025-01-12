@@ -29,6 +29,14 @@ Feature: Retrieve Events from System
       When retrieving events from the system
       Then a timestamp for the system is returned
 
+    Example: Retrieving from the system after a new event is saved
+      Given a stream named "one"
+      And it already has many events
+      And the current system timestamp has been retrieved
+      Given a new event is appended to the stream
+      When retrieving events from the system
+      Then a new timestamp is returned
+
   Rule: Events can be retrieved by their type
 
     Example: Retrieving one event type

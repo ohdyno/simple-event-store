@@ -50,6 +50,31 @@ class GivenSteps(private val context: SpecificationContext) {
     context.streamName = StreamName(name = "stream two")
   }
 
+  @Given("a new event is appended to the stream")
+  fun aNewEventIsAppendedToTheStream() {
+    buildList {
+          repeat(1) {
+            add(
+                RetrievedEvent(
+                    event = TypeAEvent(id = "${context.streamName.name}-event-$size"),
+                    occurredOn =
+                        OccurredOn(
+                            instant =
+                                Instant.now()
+                                    .minusSeconds((it * 100).toLong())
+                                    .truncatedTo(ChronoUnit.MILLIS))))
+          }
+        }
+        .let {
+          ExecutionContext(
+                  command = CreateOrAppendToStream(streamName = context.streamName, events = it),
+                  forEventStorage = context.eventStorage,
+                  forEventSerialization = context.eventSerializer)
+              .let { EventStore().handle(context = it) }
+        }
+        .also { context.store(streamName = context.streamName, events = it) }
+  }
+
   @And("it has many events that are not in chronological order")
   fun itHasManyEventsThatAreNotInChronologicalOrder() {
     buildList {
@@ -237,6 +262,11 @@ class GivenSteps(private val context: SpecificationContext) {
   @Given("there are no events in the system")
   fun thereAreNoEventsInTheSystem() {
     context.eventStorage.clear()
+  }
+
+  @And("the current system timestamp has been retrieved")
+  fun theCurrentSystemTimestampHasBeenRetrieved() {
+    context.eventStorageSnapshot = context.snapshotEventStorage()
   }
 }
 

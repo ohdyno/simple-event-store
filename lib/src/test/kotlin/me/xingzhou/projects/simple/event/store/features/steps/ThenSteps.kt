@@ -174,4 +174,11 @@ class ThenSteps(private val context: SpecificationContext) {
       expectThat(asOf).isA<Instant>()
     }
   }
+
+  @Then("a new timestamp is returned")
+  fun aNewTimestampIsReturned() {
+    with(context.result as EventStoreResult.ForRetrieveFromSystem) {
+      expectThat(asOf).isGreaterThan(context.eventStorageSnapshot.asOf)
+    }
+  }
 }
