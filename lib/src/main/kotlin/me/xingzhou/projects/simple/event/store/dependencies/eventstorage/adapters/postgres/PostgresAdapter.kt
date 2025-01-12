@@ -49,6 +49,8 @@ internal class EventSourceSql {
     const val STREAM_EXISTS = "SELECT 1 FROM ${Tables.EVENTS} WHERE ${Columns.STREAM_NAME} = ?;"
     const val RETRIEVE_APPEND_TOKEN =
         "SELECT ${Columns.APPEND_TOKEN} FROM ${Tables.APPEND_TOKENS} WHERE ${Columns.STREAM_NAME} = ?;"
+    const val RETRIEVE_SYSTEM_TIMESTAMP =
+        "SELECT COALESCE(MAX(${Columns.TIMESTAMP}), CURRENT_TIMESTAMP) AS timestamp FROM ${Tables.EVENTS};"
   }
 
   object Tables {
@@ -64,6 +66,7 @@ internal class EventSourceSql {
     const val EVENT_DATA = "event_data"
     const val OCCURRED_ON = "occurred_on"
     const val APPEND_TOKEN = "append_token"
+    const val TIMESTAMP = "timestamp"
   }
 }
 
@@ -184,27 +187,37 @@ internal class PostgresAdapter(internal val dataSource: DataSource) : ForEventSt
 
   override fun retrieveFromSystem(eventTypes: List<String>): SystemEvents {
     return dataSource.connection.use { connection ->
-      prepareRetrieveQuery(connection, eventTypes)
-          .run { executeQuery() }
-          .let {
-            buildList {
-                  while (it.next()) {
-                    add(
-                        SystemEvent(
-                            streamName = it.getString(EventSourceSql.Columns.STREAM_NAME),
-                            streamEvent =
-                                StreamEvent(
-                                    eventType = it.getString(EventSourceSql.Columns.EVENT_TYPE),
-                                    eventData = it.getString(EventSourceSql.Columns.EVENT_DATA),
-                                    occurredOn =
-                                        it.getTimestamp(EventSourceSql.Columns.OCCURRED_ON)
-                                            .toInstant())))
+      retrieveSystemTimestamp(connection).let { timestamp ->
+        prepareRetrieveQuery(connection, eventTypes)
+            .run { executeQuery() }
+            .let {
+              buildList {
+                    while (it.next()) {
+                      add(
+                          SystemEvent(
+                              streamName = it.getString(EventSourceSql.Columns.STREAM_NAME),
+                              streamEvent =
+                                  StreamEvent(
+                                      eventType = it.getString(EventSourceSql.Columns.EVENT_TYPE),
+                                      eventData = it.getString(EventSourceSql.Columns.EVENT_DATA),
+                                      occurredOn =
+                                          it.getTimestamp(EventSourceSql.Columns.OCCURRED_ON)
+                                              .toInstant())))
+                    }
                   }
-                }
-                .let { SystemEvents(events = it) }
-          }
+                  .let { SystemEvents(events = it, timestamp = timestamp) }
+            }
+      }
     }
   }
+
+  private fun retrieveSystemTimestamp(connection: Connection): Instant =
+      connection
+          .prepareStatement(EventSourceSql.Query.RETRIEVE_SYSTEM_TIMESTAMP)
+          .run { executeQuery() }
+          .apply { next() }
+          .getTimestamp(EventSourceSql.Columns.TIMESTAMP)
+          .toInstant()
 
   private fun prepareRetrieveQuery(
       connection: Connection,

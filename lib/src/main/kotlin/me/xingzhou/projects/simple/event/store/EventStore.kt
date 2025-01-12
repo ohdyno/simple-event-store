@@ -54,8 +54,10 @@ class EventStore {
       context.command.eventTypes.serialize(context.forEventSerialization).let {
         context.forEventStorage
             .retrieveFromSystem(eventTypes = it)
-            .run { events.map { it.deserialize(context.forEventSerialization) } }
-            .let { EventStoreResult.ForRetrieveFromSystem(events = it) }
+            .run { events.map { it.deserialize(context.forEventSerialization) } to timestamp }
+            .let { (events, timestamp) ->
+              EventStoreResult.ForRetrieveFromSystem(events = events, asOf = timestamp)
+            }
       }
 
   @JvmName("handleCheckStreamExists")

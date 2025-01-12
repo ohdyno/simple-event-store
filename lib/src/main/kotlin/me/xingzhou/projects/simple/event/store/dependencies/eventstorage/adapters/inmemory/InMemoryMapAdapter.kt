@@ -18,6 +18,8 @@ fun ForEventStorage(
 internal class InMemoryMapAdapter(internal val streams: MutableMap<String, List<StreamEvent>>) :
     ForEventStorage {
 
+  private var timestamp: Instant = Instant.now()
+
   override fun createStream(
       streamName: String,
       eventId: String,
@@ -28,6 +30,7 @@ internal class InMemoryMapAdapter(internal val streams: MutableMap<String, List<
     validateStreamDoesNotExist(streamName)
     streams[streamName] =
         listOf(StreamEvent(eventType = eventType, eventData = eventData, occurredOn = occurredOn))
+    timestamp = Instant.now()
     return retrieveAppendToken(streamName)
   }
 
@@ -52,6 +55,7 @@ internal class InMemoryMapAdapter(internal val streams: MutableMap<String, List<
     streams[streamName] =
         streams[streamName]!! +
             StreamEvent(eventType = eventType, eventData = eventData, occurredOn = occurredOn)
+    timestamp = Instant.now()
     return retrieveAppendToken(streamName)
   }
 
@@ -76,7 +80,7 @@ internal class InMemoryMapAdapter(internal val streams: MutableMap<String, List<
               .map { SystemEvent(streamName = streamName, streamEvent = it) }
         }
         .sortedBy { it.streamEvent.occurredOn }
-        .let { SystemEvents(events = it) }
+        .let { SystemEvents(events = it, timestamp = timestamp) }
   }
 
   override fun streamExists(streamName: String): Boolean {

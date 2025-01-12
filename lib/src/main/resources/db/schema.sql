@@ -13,7 +13,7 @@ CREATE
             event_type text NOT NULL,
             event_data jsonb NOT NULL,
             occurred_on TIMESTAMP WITH TIME ZONE,
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            TIMESTAMP TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY(
                 stream_name,
                 version
@@ -46,5 +46,5 @@ CREATE
     eventsource.events(occurred_on);
 
 CREATE
-    INDEX index_created_at ON
-    eventsource.events(created_at)
+    INDEX index_timestamp ON
+    eventsource.events(TIMESTAMP)

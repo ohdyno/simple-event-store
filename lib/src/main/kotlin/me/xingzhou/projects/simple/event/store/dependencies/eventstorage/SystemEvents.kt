@@ -1,3 +1,5 @@
 package me.xingzhou.projects.simple.event.store.dependencies.eventstorage
 
-data class SystemEvents(val events: List<SystemEvent>)
+import java.time.Instant
+
+data class SystemEvents(val events: List<SystemEvent>, val timestamp: Instant)

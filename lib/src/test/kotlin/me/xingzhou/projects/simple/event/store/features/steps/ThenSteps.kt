@@ -2,6 +2,7 @@ package me.xingzhou.projects.simple.event.store.features.steps
 
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
+import java.time.Instant
 import kotlin.test.fail
 import me.xingzhou.projects.simple.event.store.EventStore
 import me.xingzhou.projects.simple.event.store.commands.CheckStreamExists
@@ -164,6 +165,13 @@ class ThenSteps(private val context: SpecificationContext) {
   fun theEventsAreRetrievedInTheSameOrderAsWhenTheyHappened() {
     with(context.result as EventStoreResult.ForRetrieveFromSystem) {
       expectThat(events).isSorted(Comparator.comparing { it.event.occurredOn })
+    }
+  }
+
+  @Then("a timestamp for the system is returned")
+  fun aTimestampForTheSystemIsReturned() {
+    with(context.result as EventStoreResult.ForRetrieveFromSystem) {
+      expectThat(asOf).isA<Instant>()
     }
   }
 }

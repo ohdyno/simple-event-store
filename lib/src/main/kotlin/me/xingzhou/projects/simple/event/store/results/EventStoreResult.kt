@@ -1,5 +1,6 @@
 package me.xingzhou.projects.simple.event.store.results
 
+import java.time.Instant
 import me.xingzhou.projects.simple.event.store.AppendToken
 import me.xingzhou.projects.simple.event.store.StreamName
 
@@ -23,9 +24,8 @@ sealed interface EventStoreResult {
       override val appendToken: AppendToken
   ) : WithAppendToken
 
-  data class ForRetrieveFromSystem(
-      val events: List<RetrievedSystemEvent>,
-  ) : EventStoreResult
+  data class ForRetrieveFromSystem(val events: List<RetrievedSystemEvent>, val asOf: Instant) :
+      EventStoreResult
 
   data class ForCheckStreamExists(val streamExists: Boolean) : EventStoreResult
 

@@ -19,6 +19,16 @@ Feature: Retrieve Events from System
       When retrieving events from the system
       Then the events are retrieved in the same order as when they happened
 
+  Rule: Events are retrieved along with a timestamp denoting the version of the system
+
+    Example: Retrieving from the system
+      Given a stream named "one"
+      And it already has many events
+      Given a stream named "two"
+      And it already has many events
+      When retrieving events from the system
+      Then a timestamp for the system is returned
+
   Rule: Events can be retrieved by their type
 
     Example: Retrieving one event type
