@@ -2,6 +2,7 @@ package me.xingzhou.projects.simple.event.store.features.steps
 
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
+import kotlin.test.fail
 import me.xingzhou.projects.simple.event.store.EventStore
 import me.xingzhou.projects.simple.event.store.commands.CheckStreamExists
 import me.xingzhou.projects.simple.event.store.commands.RetrieveFromStream
@@ -131,9 +132,19 @@ class ThenSteps(private val context: SpecificationContext) {
 
   @Then("both event types are retrieved")
   fun bothEventTypesAreRetrieved() {
-    with(context.result as EventStoreResult.ForRetrieveFromStream) {
-      expectThat(this.retrievedEvents.map { it.event::class }).all {
-        isContainedIn(context.desiredEventTypes)
+    with(context.result) {
+      when (this) {
+        is EventStoreResult.ForRetrieveFromStream ->
+            expectThat(retrievedEvents.map { it.event::class }).all {
+              isContainedIn(context.desiredEventTypes)
+            }
+
+        is EventStoreResult.ForRetrieveFromSystem ->
+            expectThat(events.map { it.event.event::class }).all {
+              isContainedIn(context.desiredEventTypes)
+            }
+
+        else -> fail("Unexpected result: ${this::class}")
       }
     }
   }

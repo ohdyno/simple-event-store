@@ -117,6 +117,27 @@ class GivenSteps(private val context: SpecificationContext) {
         .also { context.store(streamName = context.streamName, events = it) }
   }
 
+  @And("it has type \"C\" events")
+  fun itHasTypeCEvents() {
+    buildList {
+          repeat(5) {
+            add(
+                RetrievedEvent(
+                    event = TypeCEvent(id = "${context.streamName.name}-event-$size"),
+                    occurredOn =
+                        OccurredOn(instant = Instant.now().truncatedTo(ChronoUnit.MILLIS))))
+          }
+        }
+        .let {
+          ExecutionContext(
+                  command = CreateOrAppendToStream(streamName = context.streamName, events = it),
+                  forEventStorage = context.eventStorage,
+                  forEventSerialization = context.eventSerializer)
+              .let { EventStore().handle(context = it) }
+        }
+        .also { context.store(streamName = context.streamName, events = it) }
+  }
+
   @And("a new stream name")
   fun aNewStreamName() {
     context.streamName = StreamName(name = "a new stream name")

@@ -11,7 +11,7 @@ Feature: Retrieve Events from System
       When retrieving events from the system
       Then the events are retrieved in the same order as when they happened
 
-    Example: Retrieving from a system with many streams
+    Example: Retrieving from a system with multiple streams
       Given a stream named "one"
       And it already has many events
       Given a stream named "two"
@@ -19,13 +19,27 @@ Feature: Retrieve Events from System
       When retrieving events from the system
       Then the events are retrieved in the same order as when they happened
 
-    Example: Retrieving from a system with multiple streams
-
   Rule: Events can be retrieved by their type
 
     Example: Retrieving one event type
+      Given a stream named "one"
+      And it has type "A" events
+      Given a stream named "two"
+      And it has type "B" events
+      Given we want type "A" events
+      When retrieving events from the system
+      Then both event types are retrieved
 
     Example: Retrieving multiple event type
+      Given a stream named "one"
+      And it has type "A" events
+      Given a stream named "two"
+      And it has type "B" events
+      And it has type "C" events
+      Given we want type "A" events
+      And we want type "B" events
+      When retrieving events from the system
+      Then both event types are retrieved
 
     Example: Retrieving without specifying any event type
 

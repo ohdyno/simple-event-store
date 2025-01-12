@@ -36,6 +36,10 @@ private class EventSourceSql {
            WHERE ${Columns.STREAM_NAME} = ?
            ORDER BY ${Columns.VERSION};"""
     const val RETRIEVE_SYSTEM = "SELECT * FROM ${Tables.EVENTS} ORDER BY ${Columns.OCCURRED_ON};"
+    const val RETRIEVE_SYSTEM_WITH_FILTER =
+        """SELECT * FROM ${Tables.EVENTS}
+        WHERE ${Columns.EVENT_TYPE} = ANY (?)
+        ORDER BY ${Columns.OCCURRED_ON};"""
     const val STREAM_EXISTS = "SELECT 1 FROM ${Tables.EVENTS} WHERE ${Columns.STREAM_NAME} = ?;"
     const val RETRIEVE_APPEND_TOKEN =
         "SELECT ${Columns.APPEND_TOKEN} FROM ${Tables.APPEND_TOKENS} WHERE ${Columns.STREAM_NAME} = ?;"
@@ -173,8 +177,8 @@ class PostgresAdapter(private val dataSource: DataSource) : ForEventStorage {
       }
 
   override fun retrieveFromSystem(eventTypes: List<String>): SystemEvents {
-    return dataSource.connection.use {
-      it.prepareStatement(EventSourceSql.Query.RETRIEVE_SYSTEM)
+    return dataSource.connection.use { connection ->
+      prepareRetrieveQuery(connection, eventTypes)
           .run { executeQuery() }
           .let {
             buildList {
@@ -193,6 +197,22 @@ class PostgresAdapter(private val dataSource: DataSource) : ForEventStorage {
                 }
                 .let { SystemEvents(events = it) }
           }
+    }
+  }
+
+  private fun prepareRetrieveQuery(
+      connection: Connection,
+      eventTypes: List<String>
+  ): PreparedStatement {
+    return when {
+      eventTypes.isEmpty() -> {
+        connection.prepareStatement(EventSourceSql.Query.RETRIEVE_SYSTEM)
+      }
+      else -> {
+        connection.prepareStatement(EventSourceSql.Query.RETRIEVE_SYSTEM_WITH_FILTER).apply {
+          setArray(1, connection.createArrayOf("text", eventTypes.toTypedArray()))
+        }
+      }
     }
   }
 
@@ -288,7 +308,9 @@ internal class InMemoryMapAdapter(internal val streams: MutableMap<String, List<
   override fun retrieveFromSystem(eventTypes: List<String>): SystemEvents {
     return streams
         .flatMap { (streamName, events) ->
-          events.map { SystemEvent(streamName = streamName, streamEvent = it) }
+          events
+              .filter { it.eventType in eventTypes }
+              .map { SystemEvent(streamName = streamName, streamEvent = it) }
         }
         .sortedBy { it.streamEvent.occurredOn }
         .let { SystemEvents(events = it) }
