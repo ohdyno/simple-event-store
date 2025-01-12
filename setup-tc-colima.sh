@@ -44,17 +44,15 @@ define_vars() {
 }
 
 print_delimited() {
-	local env_vars="$@"
+	read -r -A env_vars
 	local IFS=";"
 	print -n "${env_vars[*]}" # print without newline at the end; otherwise, cannot directly copy/paste into IntelliJ due to parsing error
 }
 
-# Only print the environment variables. Do not modify the current shell.
 print_for_jetbrains() {
 	local vars
-	vars=$(define_vars)
-	if [ $? -eq 0 ]; then
-		print_delimited "$vars"
+	if vars=$(define_vars); then
+		print "$vars" | print_delimited
 	else
 		print "$vars"
 	fi
