@@ -15,6 +15,7 @@ import me.xingzhou.projects.simple.event.store.commands.CheckStreamExists
 import me.xingzhou.projects.simple.event.store.commands.CreateStream
 import me.xingzhou.projects.simple.event.store.commands.RetrieveAppendToken
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
+import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.testsupport.clear
 import me.xingzhou.projects.simple.event.store.features.SpecificationContext
 import me.xingzhou.projects.simple.event.store.features.fixtures.TypeAEvent
 import me.xingzhou.projects.simple.event.store.features.fixtures.TypeBEvent
@@ -231,6 +232,11 @@ class GivenSteps(private val context: SpecificationContext) {
   @And("we want type \"C\" events")
   fun weWantTypeCEvents() {
     context.desiredEventTypes.add(TypeCEvent::class)
+  }
+
+  @Given("there are no events in the system")
+  fun thereAreNoEventsInTheSystem() {
+    context.eventStorage.clear()
   }
 }
 

@@ -15,7 +15,7 @@ fun ForEventStorage(
   return InMemoryMapAdapter(streams)
 }
 
-private class InMemoryMapAdapter(val streams: MutableMap<String, List<StreamEvent>>) :
+internal class InMemoryMapAdapter(internal val streams: MutableMap<String, List<StreamEvent>>) :
     ForEventStorage {
 
   override fun createStream(

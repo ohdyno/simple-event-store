@@ -27,7 +27,7 @@ fun setupDatabase(connection: Connection) {
   }
 }
 
-private class EventSourceSql {
+internal class EventSourceSql {
   object Query {
     const val INSERT_EVENT =
         """INSERT INTO ${Tables.EVENTS} (${Columns.STREAM_NAME}, ${Columns.VERSION}, ${Columns.EVENT_ID}, ${Columns.EVENT_TYPE}, ${Columns.EVENT_DATA}, ${Columns.OCCURRED_ON})
@@ -67,7 +67,7 @@ private class EventSourceSql {
   }
 }
 
-private class PostgresAdapter(private val dataSource: DataSource) : ForEventStorage {
+internal class PostgresAdapter(internal val dataSource: DataSource) : ForEventStorage {
   override fun createStream(
       streamName: String,
       eventId: String,

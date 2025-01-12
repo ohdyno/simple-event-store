@@ -41,8 +41,9 @@ Feature: Retrieve Events from System
       When retrieving events from the system
       Then both event types are retrieved
 
-    Example: Retrieving without specifying any event type
-
   Rule: Retrieving events from an empty system returns no events
 
     Example: Retrieving from an empty system
+      Given there are no events in the system
+      When retrieving events from the system
+      Then no events are retrieved

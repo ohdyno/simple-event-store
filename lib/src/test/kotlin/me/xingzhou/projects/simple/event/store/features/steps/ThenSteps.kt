@@ -151,8 +151,12 @@ class ThenSteps(private val context: SpecificationContext) {
 
   @Then("no events are retrieved")
   fun noEventsAreRetrieved() {
-    with(context.result as EventStoreResult.ForRetrieveFromStream) {
-      expectThat(this.retrievedEvents).isEmpty()
+    with(context.result) {
+      when (this) {
+        is EventStoreResult.ForRetrieveFromStream -> expectThat(this.retrievedEvents).isEmpty()
+        is EventStoreResult.ForRetrieveFromSystem -> expectThat(events).isEmpty()
+        else -> fail("Unexpected result: ${this::class}")
+      }
     }
   }
 
