@@ -2,6 +2,7 @@ package me.xingzhou.projects.simple.event.store.results
 
 import java.time.Instant
 import me.xingzhou.projects.simple.event.store.AppendToken
+import me.xingzhou.projects.simple.event.store.ReplayObserver
 import me.xingzhou.projects.simple.event.store.StreamName
 
 sealed interface EventStoreResult {
@@ -34,6 +35,8 @@ sealed interface EventStoreResult {
   data class ForRetrieveAppendToken(override val appendToken: AppendToken) : WithAppendToken
 
   data class ForAppendToStream(override val appendToken: AppendToken) : WithAppendToken
+
+  data class ForReplayEvents(val observer: ReplayObserver) : EventStoreResult
 
   interface WithAppendToken : EventStoreResult {
     val appendToken: AppendToken

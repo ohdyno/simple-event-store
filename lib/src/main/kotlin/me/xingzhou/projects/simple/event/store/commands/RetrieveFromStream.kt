@@ -1,10 +1,9 @@
 package me.xingzhou.projects.simple.event.store.commands
 
-import kotlin.reflect.KClass
-import me.xingzhou.projects.simple.event.store.Event
+import kotlin.reflect.KType
 import me.xingzhou.projects.simple.event.store.StreamName
 
 data class RetrieveFromStream(
     val streamName: StreamName,
-    val eventTypes: List<KClass<out Event>> = emptyList()
+    val eventTypes: List<KType> = emptyList()
 )

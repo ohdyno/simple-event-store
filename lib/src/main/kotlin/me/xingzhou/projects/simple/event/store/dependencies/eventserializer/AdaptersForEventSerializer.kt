@@ -1,6 +1,10 @@
 package me.xingzhou.projects.simple.event.store.dependencies.eventserializer
 
 import kotlin.reflect.KClass
+import kotlin.reflect.KType
+import kotlin.reflect.full.findAnnotations
+import kotlin.reflect.jvm.jvmErasure
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
@@ -40,10 +44,17 @@ class KotlinXSerializationAdapterBuilder {
     }
 
     override fun eventTypeOf(klass: KClass<out Event>): String {
-      val jsonElement =
-          json.encodeToJsonElement<Event>(
-              klass.constructors.first { it.parameters.isEmpty() }.call())
-      return jsonElement.jsonObject["type"]!!.jsonPrimitive.content
+      return when (val serialName = klass.findAnnotations<SerialName>()) {
+        emptyList<SerialName>() -> klass.toString()
+        else -> serialName.first().value
+      }
+    }
+
+    override fun eventTypeOf(type: KType): String {
+      return when (val serialName = type.jvmErasure.findAnnotations<SerialName>()) {
+        emptyList<SerialName>() -> type.toString()
+        else -> serialName.first().value
+      }
     }
   }
 }

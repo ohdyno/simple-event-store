@@ -1,7 +1,7 @@
 package me.xingzhou.projects.simple.event.store
 
 import java.time.Instant
-import kotlin.reflect.KClass
+import kotlin.reflect.KType
 import me.xingzhou.projects.simple.event.store.commands.*
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.dependencies.eventserializer.ForEventSerializer
@@ -124,7 +124,7 @@ private fun SystemEvent.deserialize(
                   event = this, occurredOn = OccurredOn(instant = streamEvent.occurredOn)))
     }
 
-private fun List<KClass<out Event>>.serialize(serializer: ForEventSerializer): List<String> = map {
+private fun List<KType>.serialize(serializer: ForEventSerializer): List<String> = map {
   serializer.eventTypeOf(it)
 }
 

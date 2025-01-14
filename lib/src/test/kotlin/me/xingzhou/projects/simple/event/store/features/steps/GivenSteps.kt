@@ -6,6 +6,7 @@ import java.time.Instant
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import kotlin.reflect.typeOf
 import me.xingzhou.projects.simple.event.store.AppendToken
 import me.xingzhou.projects.simple.event.store.EventStore
 import me.xingzhou.projects.simple.event.store.OccurredOn
@@ -17,6 +18,7 @@ import me.xingzhou.projects.simple.event.store.commands.RetrieveAppendToken
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.testsupport.clear
 import me.xingzhou.projects.simple.event.store.features.SpecificationContext
+import me.xingzhou.projects.simple.event.store.features.fixtures.AllEventsObserver
 import me.xingzhou.projects.simple.event.store.features.fixtures.TypeAEvent
 import me.xingzhou.projects.simple.event.store.features.fixtures.TypeBEvent
 import me.xingzhou.projects.simple.event.store.features.fixtures.TypeCEvent
@@ -25,6 +27,7 @@ import me.xingzhou.projects.simple.event.store.features.store
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult
 import me.xingzhou.projects.simple.event.store.results.RetrievedEvent
 import strikt.api.expectThat
+import strikt.assertions.isA
 import strikt.assertions.isFalse
 
 class GivenSteps(private val context: SpecificationContext) {
@@ -41,13 +44,14 @@ class GivenSteps(private val context: SpecificationContext) {
 
   @And("a stream name")
   @And("a stream named \"one\"")
+  @And("the stream \"one\"")
   fun aStreamName() {
-    context.streamName = StreamName(name = "stream one")
+    context.streamName = StreamName(name = "one")
   }
 
   @And("a stream named \"two\"")
   fun aStreamNamedTwo() {
-    context.streamName = StreamName(name = "stream two")
+    context.streamName = StreamName(name = "two")
   }
 
   @Given("a new event is appended to the stream")
@@ -246,17 +250,17 @@ class GivenSteps(private val context: SpecificationContext) {
   @And("we only want type \"A\" events")
   @And("we want type \"A\" events")
   fun weOnlyWantTypeAEvents() {
-    context.desiredEventTypes.add(TypeAEvent::class)
+    context.desiredEventTypes.add(typeOf<TypeAEvent>())
   }
 
   @And("we want type \"B\" events")
   fun weWantTypeBEvents() {
-    context.desiredEventTypes.add(TypeBEvent::class)
+    context.desiredEventTypes.add(typeOf<TypeBEvent>())
   }
 
   @And("we want type \"C\" events")
   fun weWantTypeCEvents() {
-    context.desiredEventTypes.add(TypeCEvent::class)
+    context.desiredEventTypes.add(typeOf<TypeCEvent>())
   }
 
   @Given("there are no events in the system")
@@ -267,6 +271,40 @@ class GivenSteps(private val context: SpecificationContext) {
   @And("the current system timestamp has been retrieved")
   fun theCurrentSystemTimestampHasBeenRetrieved() {
     context.eventStorageSnapshot = context.snapshotEventStorage()
+  }
+
+  @And("it has a stream {string} with {int} events")
+  fun itHasAStreamWithEvents(streamName: String, numberOfEvents: Int) {
+    StreamName(name = streamName).let { streamName ->
+      buildList {
+            repeat(numberOfEvents) {
+              add(
+                  RetrievedEvent(
+                      event = TypeAEvent(id = "${streamName.name}-event-$size"),
+                      occurredOn =
+                          OccurredOn(
+                              instant =
+                                  Instant.now()
+                                      .minusSeconds((it * 100).toLong())
+                                      .truncatedTo(ChronoUnit.MILLIS))))
+            }
+          }
+          .let {
+            ExecutionContext(
+                    command = CreateOrAppendToStream(streamName = streamName, events = it),
+                    forEventStorage = context.eventStorage,
+                    forEventSerialization = context.eventSerializer)
+                .let { EventStore().handle(context = it) }
+                .apply { expectThat(it) { not().isA<EventStoreResult.Failure>() } }
+          }
+          .also { context.store(streamName = streamName, events = it) }
+    }
+  }
+
+  @Given("an observer")
+  @Given("an observer that observes all events")
+  fun anObserver() {
+    context.observer = AllEventsObserver()
   }
 }
 

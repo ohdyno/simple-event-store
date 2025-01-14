@@ -3,6 +3,7 @@ package me.xingzhou.projects.simple.event.store.features.steps
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
 import java.time.Instant
+import kotlin.reflect.full.createType
 import kotlin.test.fail
 import me.xingzhou.projects.simple.event.store.EventStore
 import me.xingzhou.projects.simple.event.store.commands.CheckStreamExists
@@ -10,6 +11,7 @@ import me.xingzhou.projects.simple.event.store.commands.RetrieveFromStream
 import me.xingzhou.projects.simple.event.store.commands.ValidateAppendToken
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.features.SpecificationContext
+import me.xingzhou.projects.simple.event.store.features.fixtures.AllEventsObserver
 import me.xingzhou.projects.simple.event.store.features.fixtures.TypeAEvent
 import me.xingzhou.projects.simple.event.store.features.snapshotEventStorage
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult
@@ -136,18 +138,29 @@ class ThenSteps(private val context: SpecificationContext) {
     with(context.result) {
       when (this) {
         is EventStoreResult.ForRetrieveFromStream ->
-            expectThat(retrievedEvents.map { it.event::class }).all {
+            expectThat(retrievedEvents.map { it.event::class.createType() }).all {
               isContainedIn(context.desiredEventTypes)
             }
 
         is EventStoreResult.ForRetrieveFromSystem ->
-            expectThat(events.map { it.event.event::class }).all {
+            expectThat(events.map { it.event.event::class.createType() }).all {
               isContainedIn(context.desiredEventTypes)
             }
 
         else -> fail("Unexpected result: ${this::class}")
       }
     }
+  }
+
+  @Then("the observer receives all the events from the stream in the order")
+  fun theObserverReceivesAllTheEventsFromTheStreamInTheOrder() {
+    context.result
+        .let { it as EventStoreResult.ForReplayEvents }
+        .let { it.observer as AllEventsObserver }
+        .run {
+          expectThat(observedEvents.toList())
+              .isEqualTo(context.expectedStorageContent[context.streamName]!!.map { it.event })
+        }
   }
 
   @Then("no events are retrieved")

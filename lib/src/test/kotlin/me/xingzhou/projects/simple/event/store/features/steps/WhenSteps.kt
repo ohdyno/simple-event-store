@@ -4,11 +4,13 @@ import io.cucumber.java.en.When
 import me.xingzhou.projects.simple.event.store.EventStore
 import me.xingzhou.projects.simple.event.store.commands.AppendToStream
 import me.xingzhou.projects.simple.event.store.commands.CreateStream
+import me.xingzhou.projects.simple.event.store.commands.ReplayEventsFromStream
 import me.xingzhou.projects.simple.event.store.commands.RetrieveAppendToken
 import me.xingzhou.projects.simple.event.store.commands.RetrieveFromStream
 import me.xingzhou.projects.simple.event.store.commands.RetrieveFromSystem
 import me.xingzhou.projects.simple.event.store.commands.ValidateAppendToken
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
+import me.xingzhou.projects.simple.event.store.extensions.handle
 import me.xingzhou.projects.simple.event.store.features.SpecificationContext
 
 class WhenSteps(private val context: SpecificationContext) {
@@ -86,6 +88,18 @@ class WhenSteps(private val context: SpecificationContext) {
     context.result =
         ExecutionContext(
                 command = RetrieveFromSystem(eventTypes = context.desiredEventTypes),
+                forEventStorage = context.eventStorage,
+                forEventSerialization = context.eventSerializer)
+            .let { EventStore().handle(it) }
+  }
+
+  @When("events are replayed from the stream")
+  fun eventsAreReplayedFromTheStream() {
+    context.result =
+        ExecutionContext(
+                command =
+                    ReplayEventsFromStream(
+                        observerFn = { context.observer }, streamName = context.streamName),
                 forEventStorage = context.eventStorage,
                 forEventSerialization = context.eventSerializer)
             .let { EventStore().handle(it) }

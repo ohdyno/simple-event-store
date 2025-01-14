@@ -1,6 +1,6 @@
 package me.xingzhou.projects.simple.event.store.features
 
-import kotlin.reflect.KClass
+import kotlin.reflect.KType
 import me.xingzhou.projects.simple.event.store.*
 import me.xingzhou.projects.simple.event.store.commands.RetrieveFromSystem
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
@@ -18,8 +18,9 @@ class SpecificationContext {
   lateinit var event: Event
   lateinit var eventStorage: ForEventStorage
   lateinit var eventSerializer: ForEventSerializer
+  lateinit var observer: ReplayObserver
   val expectedStorageContent = mutableMapOf<StreamName, List<RetrievedEvent>>()
-  val desiredEventTypes = mutableListOf<KClass<out Event>>()
+  val desiredEventTypes = mutableListOf<KType>()
 }
 
 fun SpecificationContext.snapshotEventStorage(): EventStoreResult.ForRetrieveFromSystem {
