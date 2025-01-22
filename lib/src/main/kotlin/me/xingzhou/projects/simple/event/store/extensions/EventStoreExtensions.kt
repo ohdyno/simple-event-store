@@ -10,7 +10,9 @@ import me.xingzhou.projects.simple.event.store.Event
 import me.xingzhou.projects.simple.event.store.EventStore
 import me.xingzhou.projects.simple.event.store.ReplayObserver
 import me.xingzhou.projects.simple.event.store.commands.ReplayEventsFromStream
+import me.xingzhou.projects.simple.event.store.commands.ReplayEventsFromSystem
 import me.xingzhou.projects.simple.event.store.commands.RetrieveFromStream
+import me.xingzhou.projects.simple.event.store.commands.RetrieveFromSystem
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult
 
@@ -28,6 +30,24 @@ fun EventStore.handle(context: ExecutionContext<ReplayEventsFromStream>): EventS
           when {
             it is EventStoreResult.ForRetrieveFromStream -> {
               it.retrievedEvents.forEach { this.dynamicDispatch(it.event) }
+              EventStoreResult.ForReplayEvents(observer = this)
+            }
+            else -> it
+          }
+        }
+  }
+}
+
+@JvmName("handleReplayEventsFromSystem")
+fun EventStore.handle(context: ExecutionContext<ReplayEventsFromSystem>): EventStoreResult {
+  return with(context.command.observerFn()) {
+    context
+        .copyOf(command = RetrieveFromSystem(eventTypes = extractEventTypes(observer = this)))
+        .let { handle(it) }
+        .let {
+          when {
+            it is EventStoreResult.ForRetrieveFromSystem -> {
+              it.events.forEach { this.dynamicDispatch(it.event.event) }
               EventStoreResult.ForReplayEvents(observer = this)
             }
             else -> it

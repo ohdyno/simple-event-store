@@ -12,6 +12,9 @@ Feature: Replay Events
     Then the observer receives all the events from the stream in the order
 
   Scenario: An observer receives events replayed from the system
+    Given an observer that observes all events
+    When events are replayed from the system
+    Then the observer receives all the events from all streams
 
   Rule: An observer can define types of events it wants to receive
 

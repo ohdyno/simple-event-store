@@ -5,6 +5,7 @@ import me.xingzhou.projects.simple.event.store.EventStore
 import me.xingzhou.projects.simple.event.store.commands.AppendToStream
 import me.xingzhou.projects.simple.event.store.commands.CreateStream
 import me.xingzhou.projects.simple.event.store.commands.ReplayEventsFromStream
+import me.xingzhou.projects.simple.event.store.commands.ReplayEventsFromSystem
 import me.xingzhou.projects.simple.event.store.commands.RetrieveAppendToken
 import me.xingzhou.projects.simple.event.store.commands.RetrieveFromStream
 import me.xingzhou.projects.simple.event.store.commands.RetrieveFromSystem
@@ -100,6 +101,16 @@ class WhenSteps(private val context: SpecificationContext) {
                 command =
                     ReplayEventsFromStream(
                         observerFn = { context.observer }, streamName = context.streamName),
+                forEventStorage = context.eventStorage,
+                forEventSerialization = context.eventSerializer)
+            .let { EventStore().handle(it) }
+  }
+
+  @When("events are replayed from the system")
+  fun eventsAreReplayedFromTheSystem() {
+    context.result =
+        ExecutionContext(
+                command = ReplayEventsFromSystem(observerFn = { context.observer }),
                 forEventStorage = context.eventStorage,
                 forEventSerialization = context.eventSerializer)
             .let { EventStore().handle(it) }

@@ -76,7 +76,7 @@ internal class InMemoryMapAdapter(internal val streams: MutableMap<String, List<
     return streams
         .flatMap { (streamName, events) ->
           events
-              .filter { it.eventType in eventTypes }
+              .filter { eventTypes.isEmpty() || it.eventType in eventTypes }
               .map { SystemEvent(streamName = streamName, streamEvent = it) }
         }
         .sortedBy { it.streamEvent.occurredOn }

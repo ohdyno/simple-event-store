@@ -5,6 +5,7 @@ import io.cucumber.java.en.Then
 import java.time.Instant
 import kotlin.reflect.full.createType
 import kotlin.test.fail
+import me.xingzhou.projects.simple.event.store.Event
 import me.xingzhou.projects.simple.event.store.EventStore
 import me.xingzhou.projects.simple.event.store.commands.CheckStreamExists
 import me.xingzhou.projects.simple.event.store.commands.RetrieveFromStream
@@ -138,12 +139,12 @@ class ThenSteps(private val context: SpecificationContext) {
     with(context.result) {
       when (this) {
         is EventStoreResult.ForRetrieveFromStream ->
-            expectThat(retrievedEvents.map { it.event::class.createType() }).all {
+            expectThat(retrievedEvents.map { it.event::class.createType() }).isNotEmpty().all {
               isContainedIn(context.desiredEventTypes)
             }
 
         is EventStoreResult.ForRetrieveFromSystem ->
-            expectThat(events.map { it.event.event::class.createType() }).all {
+            expectThat(events.map { it.event.event::class.createType() }).isNotEmpty().all {
               isContainedIn(context.desiredEventTypes)
             }
 
@@ -163,6 +164,14 @@ class ThenSteps(private val context: SpecificationContext) {
         }
   }
 
+  @Then("the observer receives all the events from all streams")
+  fun theObserverReceivesAllTheEventsFromAllStreams() {
+    context.result
+        .let { it as EventStoreResult.ForReplayEvents }
+        .let { it.observer as AllEventsObserver }
+        .run { expectThat(observedEvents.toList()) containsExactlyInAnyOrder context.allEvents() }
+  }
+
   @Then("no events are retrieved")
   fun noEventsAreRetrieved() {
     with(context.result) {
@@ -177,7 +186,7 @@ class ThenSteps(private val context: SpecificationContext) {
   @Then("the events are retrieved in the same order as when they happened")
   fun theEventsAreRetrievedInTheSameOrderAsWhenTheyHappened() {
     with(context.result as EventStoreResult.ForRetrieveFromSystem) {
-      expectThat(events).isSorted(Comparator.comparing { it.event.occurredOn })
+      expectThat(events).isNotEmpty().isSorted(Comparator.comparing { it.event.occurredOn })
     }
   }
 
@@ -195,3 +204,6 @@ class ThenSteps(private val context: SpecificationContext) {
     }
   }
 }
+
+private fun SpecificationContext.allEvents(): Collection<Event> =
+    expectedStorageContent.flatMap { it.value }.map { it.event }
