@@ -4,7 +4,26 @@ plugins {
   kotlin("jvm") version "2.1.0"
   kotlin("plugin.serialization") version "2.1.0"
   id("java-library")
+  id("maven-publish")
   id("com.diffplug.spotless") version "7.0.0.BETA4"
+  id("com.github.jmongard.git-semver-plugin") version "0.14.0"
+}
+
+group = "me.xingzhou"
+
+version = semver.version
+
+semver { createReleaseCommit = false }
+
+publishing {
+  publications {
+    create<MavenPublication>("simpleEventStore") {
+      artifactId = "simple-event-store"
+      from(components["java"])
+    }
+  }
+
+  repositories { mavenCentral() }
 }
 
 java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
