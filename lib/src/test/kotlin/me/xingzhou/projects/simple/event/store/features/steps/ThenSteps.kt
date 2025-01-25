@@ -254,6 +254,14 @@ class ThenSteps(private val context: SpecificationContext) {
   fun theObserverReceivesATimestamp() {
     with(context.observer as SystemEventsRecorder) { expectCatching { asOf }.isSuccess() }
   }
+
+  @Then("the observer receives no events")
+  fun theObserverReceivesNoEvents() {
+    with(context.observer as SystemEventsRecorder) {
+      expectCatching { asOf }.isFailure()
+      expectThat(observedEvents).isEmpty()
+    }
+  }
 }
 
 private fun SpecificationContext.allEvents(): Collection<Event> =

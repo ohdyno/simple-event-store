@@ -5,16 +5,32 @@ Feature: Replay Events
     And it has a stream "one" with 5 events of type "A"
     And it has a stream "two" with 10 events of type "B"
 
-  Scenario: An observer receives events replayed from a stream
-    Given an observer that observes all events
-    And the stream "one"
-    When events are replayed from the stream
-    Then the observer receives all the events from the stream in the order
+  Rule: A stream must exist to replay from the stream
 
-  Scenario: An observer receives events replayed from the system
-    Given an observer that observes all events
-    When events are replayed from the system
-    Then the observer receives all the events from all streams
+    Example: An observer receives events replayed from a stream
+      Given an observer that observes all events
+      And the stream "one"
+      When events are replayed from the stream
+      Then the observer receives all the events from the stream in the order
+
+    Example: Attempting to replay from a stream that does not exist
+      Given an observer that observes all events
+      And a stream name for a stream that does not exist
+      When events are replayed from the stream
+      Then it fails because the stream does not exist
+
+  Rule: Replaying from a system that has no events do not result in a failure
+
+    Example: An observer receives events replayed from the system
+      Given an observer that observes all events
+      When events are replayed from the system
+      Then the observer receives all the events from all streams
+
+    Example: An observer receives no events from a system that has no events
+      Given an observer that observes all events
+      And there are no events in the system
+      When events are replayed from the system
+      Then the observer receives no events
 
   Rule: An observer can define types of events it wants to receive
 
