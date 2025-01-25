@@ -14,6 +14,7 @@ import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.features.SpecificationContext
 import me.xingzhou.projects.simple.event.store.features.fixtures.AllEventsObserver
 import me.xingzhou.projects.simple.event.store.features.fixtures.StreamEventsRecorder
+import me.xingzhou.projects.simple.event.store.features.fixtures.SystemEventsRecorder
 import me.xingzhou.projects.simple.event.store.features.fixtures.TypeAEvent
 import me.xingzhou.projects.simple.event.store.features.fixtures.TypeBEvent
 import me.xingzhou.projects.simple.event.store.features.snapshotEventStorage
@@ -247,6 +248,11 @@ class ThenSteps(private val context: SpecificationContext) {
             }
           }
     }
+  }
+
+  @Then("the observer receives a timestamp")
+  fun theObserverReceivesATimestamp() {
+    with(context.observer as SystemEventsRecorder) { expectCatching { asOf }.isSuccess() }
   }
 }
 

@@ -49,6 +49,7 @@ fun EventStore.handle(context: ExecutionContext<ReplayEventsFromSystem>): EventS
           when {
             it is EventStoreResult.ForRetrieveFromSystem -> {
               it.events.forEach { this.dynamicDispatch(it.event.event) }
+              this.asOf = it.asOf
               EventStoreResult.ForReplayEvents(observer = this)
             }
             else -> it

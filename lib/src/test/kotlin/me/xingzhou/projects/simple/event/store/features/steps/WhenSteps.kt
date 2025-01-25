@@ -13,7 +13,6 @@ import me.xingzhou.projects.simple.event.store.commands.ValidateAppendToken
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.extensions.handle
 import me.xingzhou.projects.simple.event.store.features.SpecificationContext
-import me.xingzhou.projects.simple.event.store.features.fixtures.StreamEventsRecorder
 
 class WhenSteps(private val context: SpecificationContext) {
 
@@ -101,8 +100,7 @@ class WhenSteps(private val context: SpecificationContext) {
         ExecutionContext(
                 command =
                     ReplayEventsFromStream(
-                        observerFn = { context.observer as StreamEventsRecorder },
-                        streamName = context.streamName),
+                        observerFn = { context.observer }, streamName = context.streamName),
                 forEventStorage = context.eventStorage,
                 forEventSerialization = context.eventSerializer)
             .let { EventStore().handle(it) }

@@ -390,5 +390,7 @@ private fun EventStore.appendToStream(
                     handle(context = this)
                   }
             }
+
+            else -> throw UnsupportedOperationException()
           }
         }
