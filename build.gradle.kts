@@ -2,7 +2,10 @@ plugins {
   kotlin("jvm") version "2.1.0"
   id("java")
   id("com.diffplug.spotless") version "7.0.0.BETA4"
+  id("com.github.jmongard.git-semver-plugin") version "0.14.0"
 }
+
+semver { createReleaseCommit = false }
 
 java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
 

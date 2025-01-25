@@ -13,8 +13,6 @@ group = "me.xingzhou"
 
 version = semver.version
 
-semver { createReleaseCommit = false }
-
 publishing {
   publications {
     create<MavenPublication>("simpleEventStore") {
