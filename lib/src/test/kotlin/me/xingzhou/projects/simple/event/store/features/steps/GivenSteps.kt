@@ -8,6 +8,7 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import kotlin.reflect.typeOf
 import me.xingzhou.projects.simple.event.store.AppendToken
+import me.xingzhou.projects.simple.event.store.Event
 import me.xingzhou.projects.simple.event.store.EventStore
 import me.xingzhou.projects.simple.event.store.OccurredOn
 import me.xingzhou.projects.simple.event.store.StreamName
@@ -18,10 +19,7 @@ import me.xingzhou.projects.simple.event.store.commands.RetrieveAppendToken
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.testsupport.clear
 import me.xingzhou.projects.simple.event.store.features.SpecificationContext
-import me.xingzhou.projects.simple.event.store.features.fixtures.AllEventsObserver
-import me.xingzhou.projects.simple.event.store.features.fixtures.TypeAEvent
-import me.xingzhou.projects.simple.event.store.features.fixtures.TypeBEvent
-import me.xingzhou.projects.simple.event.store.features.fixtures.TypeCEvent
+import me.xingzhou.projects.simple.event.store.features.fixtures.*
 import me.xingzhou.projects.simple.event.store.features.snapshotEventStorage
 import me.xingzhou.projects.simple.event.store.features.store
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult
@@ -273,14 +271,15 @@ class GivenSteps(private val context: SpecificationContext) {
     context.eventStorageSnapshot = context.snapshotEventStorage()
   }
 
-  @And("it has a stream {string} with {int} events")
-  fun itHasAStreamWithEvents(streamName: String, numberOfEvents: Int) {
+  @And("it has a stream {string} with {int} events of type {string}")
+  fun itHasAStreamWithEvents(streamName: String, numberOfEvents: Int, eventType: String) {
     StreamName(name = streamName).let { streamName ->
       buildList {
             repeat(numberOfEvents) {
               add(
                   RetrievedEvent(
-                      event = TypeAEvent(id = "${streamName.name}-event-$size"),
+                      event =
+                          createEvent(streamName = streamName, size = size, eventType = eventType),
                       occurredOn =
                           OccurredOn(
                               instant =
@@ -301,10 +300,35 @@ class GivenSteps(private val context: SpecificationContext) {
     }
   }
 
+  private fun createEvent(streamName: StreamName, size: Int, eventType: String): Event {
+    with("${streamName.name}-event-$size") {
+      return when (eventType) {
+        "A" -> TypeAEvent(id = this)
+        "B" -> TypeBEvent(id = this)
+        "C" -> TypeCEvent(id = this)
+        else -> throw UnsupportedOperationException("unknown event type")
+      }
+    }
+  }
+
   @Given("an observer")
   @Given("an observer that observes all events")
   fun anObserver() {
     context.observer = AllEventsObserver()
+  }
+
+  @Given("an observer that observes only events of type {string}")
+  fun anObserverThatObservesOnlyEventsOfType(eventType: String) {
+    context.observer =
+        when (eventType) {
+          "A" -> TypeAEventsObserver()
+          else -> throw UnsupportedOperationException("unknown event type for observer")
+        }
+  }
+
+  @Given("an observer that observes events of type \"A\" and type \"B\"")
+  fun anObserverThatObservesEventsOfTypeAndType() {
+    context.observer = TypeABEventsObserver()
   }
 }
 

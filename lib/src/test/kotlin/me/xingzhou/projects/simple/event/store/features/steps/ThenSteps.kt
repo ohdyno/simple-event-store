@@ -14,6 +14,7 @@ import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.features.SpecificationContext
 import me.xingzhou.projects.simple.event.store.features.fixtures.AllEventsObserver
 import me.xingzhou.projects.simple.event.store.features.fixtures.TypeAEvent
+import me.xingzhou.projects.simple.event.store.features.fixtures.TypeBEvent
 import me.xingzhou.projects.simple.event.store.features.snapshotEventStorage
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult
 import strikt.api.*
@@ -202,6 +203,33 @@ class ThenSteps(private val context: SpecificationContext) {
     with(context.result as EventStoreResult.ForRetrieveFromSystem) {
       expectThat(asOf).isGreaterThan(context.eventStorageSnapshot.asOf)
     }
+  }
+
+  @Then("the observer receives only events of type {string}")
+  fun theObserverReceivesOnlyEventsOfType(eventType: String) {
+    expectThat(context.observer.observedEvents).all {
+      when (eventType) {
+        "A" -> isA<TypeAEvent>()
+      }
+    }
+  }
+
+  @Then("the observer receives events of type {string}")
+  fun theObserverReceivesEventsOfType(eventType: String) {
+    expectThat(context.observer.observedEvents)
+        .filter {
+          when (eventType) {
+            "A" -> it is TypeAEvent
+            "B" -> it is TypeBEvent
+            else -> false
+          }
+        }
+        .isNotEmpty()
+  }
+
+  @And("the observer receives {int} events")
+  fun theObserverReceivesEvents(size: Int) {
+    expectThat(context.observer.observedEvents).hasSize(size)
   }
 }
 
