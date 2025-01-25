@@ -32,4 +32,10 @@ Feature: Replay Events
 
   Rule: An observer that receives events from a stream also receives a valid append token
 
+    Example: An observer receives events from a stream
+      Given an observer
+      And the stream "one"
+      When events are replayed from the stream
+      Then the observer receives an append token for the stream
+
   Rule: An observer that receives events from the system also receives a timestamp representing the system state

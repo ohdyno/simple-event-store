@@ -30,6 +30,7 @@ fun EventStore.handle(context: ExecutionContext<ReplayEventsFromStream>): EventS
           when {
             it is EventStoreResult.ForRetrieveFromStream -> {
               it.retrievedEvents.forEach { this.dynamicDispatch(it.event) }
+              this.appendToken = it.appendToken
               EventStoreResult.ForReplayEvents(observer = this)
             }
             else -> it

@@ -13,6 +13,7 @@ import me.xingzhou.projects.simple.event.store.commands.ValidateAppendToken
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.features.SpecificationContext
 import me.xingzhou.projects.simple.event.store.features.fixtures.AllEventsObserver
+import me.xingzhou.projects.simple.event.store.features.fixtures.StreamEventsRecorder
 import me.xingzhou.projects.simple.event.store.features.fixtures.TypeAEvent
 import me.xingzhou.projects.simple.event.store.features.fixtures.TypeBEvent
 import me.xingzhou.projects.simple.event.store.features.snapshotEventStorage
@@ -230,6 +231,22 @@ class ThenSteps(private val context: SpecificationContext) {
   @And("the observer receives {int} events")
   fun theObserverReceivesEvents(size: Int) {
     expectThat(context.observer.observedEvents).hasSize(size)
+  }
+
+  @Then("the observer receives an append token for the stream")
+  fun theObserverReceivesAnAppendTokenForTheStream() {
+    with(context.observer as StreamEventsRecorder) {
+      ExecutionContext(
+              command = ValidateAppendToken(streamName = context.streamName, token = appendToken),
+              forEventStorage = context.eventStorage,
+              forEventSerialization = context.eventSerializer)
+          .let { EventStore().handle(it) }
+          .run {
+            expectThat(this as EventStoreResult.ForValidateAppendToken) {
+              get { appendTokenIsValid }.isTrue()
+            }
+          }
+    }
   }
 }
 
