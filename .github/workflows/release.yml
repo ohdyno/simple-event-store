@@ -20,6 +20,15 @@ jobs:
       uses: "gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582"
     - name: "Publish to Maven Central"
       run: "./gradlew publishAndReleaseToMavenCentral --no-configuration-cache"
+      env:
+        ORG_GRADLE_PROJECT_mavenCentralUsername: "${{ secrets.MAVEN_CENTRAL_USERNAME\
+          \ }}"
+        ORG_GRADLE_PROJECT_mavenCentralPassword: "${{ secrets.MAVEN_CENTRAL_PASSWORD\
+          \ }}"
+        ORG_GRADLE_PROJECT_signingInMemoryKey: "${{ secrets.MAVEN_CENTRAL_SIGNING_KEY\
+          \ }}"
+        ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: "${{ secrets.MAVEN_CENTRAL_SIGNING_KEY_PASSWORD\
+          \ }}"
   dependency-submission:
     runs-on: "ubuntu-latest"
     permissions:
