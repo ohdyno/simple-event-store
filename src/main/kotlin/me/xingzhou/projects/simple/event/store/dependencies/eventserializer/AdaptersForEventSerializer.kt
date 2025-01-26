@@ -9,7 +9,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.modules.SerializersModule
 import me.xingzhou.projects.simple.event.store.Event
 import me.xingzhou.projects.simple.event.store.dependencies.eventserializer.ForEventSerializer.SerializedEvent
 
@@ -22,15 +21,13 @@ fun ForEventSerializer(
 }
 
 class KotlinXSerializationAdapterBuilder {
-  lateinit var serializersModule: SerializersModule
+  lateinit var json: Json
 
   fun build(): ForEventSerializer {
-    return KotlinXSerializationAdapter(serializersModule)
+    return KotlinXSerializationAdapter(json)
   }
 
-  private class KotlinXSerializationAdapter(serializerModule: SerializersModule) :
-      ForEventSerializer {
-    private val json: Json by lazy { Json { this.serializersModule = serializerModule } }
+  private class KotlinXSerializationAdapter(private val json: Json) : ForEventSerializer {
 
     override fun serialize(event: Event): SerializedEvent {
       val jsonElement = json.encodeToJsonElement<Event>(event)
