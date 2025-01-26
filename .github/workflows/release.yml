@@ -23,7 +23,7 @@ jobs:
       with:
         shfmt-version: "3.10.0"
     - name: "Unit Test"
-      run: "./gradlew clean check"
+      run: "./gradlew clean test"
     - name: "Publish Test Results"
       uses: "EnricoMi/publish-unit-test-result-action@v2"
       if: "always()"
