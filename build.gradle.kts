@@ -61,7 +61,7 @@ repositories { mavenCentral() }
 dependencies {
   implementation(kotlin("reflect"))
   api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
-  implementation("org.springframework:spring-jdbc:6.2.1")
+  implementation("org.springframework:spring-jdbc:6.2.2")
 
   testImplementation("org.postgresql:postgresql:42.7.5")
   testImplementation("com.zaxxer:HikariCP:6.2.1")
