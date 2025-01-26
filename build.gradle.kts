@@ -6,7 +6,7 @@ plugins {
   kotlin("plugin.serialization") version "2.1.0"
   id("java-library")
   id("com.vanniktech.maven.publish") version "0.30.0"
-  id("com.diffplug.spotless") version "7.0.0.BETA4"
+  id("com.diffplug.spotless") version "7.0.2"
   id("com.github.jmongard.git-semver-plugin") version "0.14.0"
 }
 
