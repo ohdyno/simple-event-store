@@ -63,7 +63,7 @@ dependencies {
   api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
   implementation("org.springframework:spring-jdbc:6.2.1")
 
-  testImplementation("org.postgresql:postgresql:42.7.4")
+  testImplementation("org.postgresql:postgresql:42.7.5")
   testImplementation("com.zaxxer:HikariCP:6.2.1")
 
   testImplementation(platform("io.strikt:strikt-bom:0.35.1")) {
