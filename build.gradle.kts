@@ -44,30 +44,7 @@ mavenPublishing {
   }
 }
 
-// jreleaser {
-//  dryrun.set(true)
-//  signing {
-//    active.set(Active.ALWAYS)
-//    armored.set(true)
-//  }
-//  deploy {
-//    maven {
-//      mavenCentral {
-//        create("sonatype") {
-//          active.set(Active.ALWAYS)
-//          url.set("https://central.sonatype.com/api/v1/publisher")
-//          stagingRepository("build/staging-deploy")
-//        }
-//      }
-//    }
-//  }
-// }
-
-java {
-  withJavadocJar()
-  withSourcesJar()
-  toolchain { languageVersion = JavaLanguageVersion.of(21) }
-}
+java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
 
 kotlin {
   compilerOptions {
