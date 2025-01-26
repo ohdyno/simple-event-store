@@ -1,12 +1,11 @@
+import com.vanniktech.maven.publish.SonatypeHost
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
-import org.jreleaser.model.Active
 
 plugins {
   kotlin("jvm") version "2.1.0"
   kotlin("plugin.serialization") version "2.1.0"
   id("java-library")
-  id("maven-publish")
-  id("org.jreleaser") version "1.16.0"
+  id("com.vanniktech.maven.publish") version "0.30.0"
   id("com.diffplug.spotless") version "7.0.0.BETA4"
   id("com.github.jmongard.git-semver-plugin") version "0.14.0"
 }
@@ -15,60 +14,54 @@ semver { createReleaseCommit = false }
 
 version = semver.version
 
-publishing {
-  publications {
-    create<MavenPublication>("simpleEventStore") {
-      groupId = "me.xingzhou"
-      artifactId = "simple-event-store"
+mavenPublishing {
+  publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+  signAllPublications()
 
-      from(components["java"])
+  coordinates(groupId = "me.xingzhou", artifactId = "simple-event-store", version = semver.version)
 
-      pom {
-        name.set("simple-event-store")
-        description.set("Simple Event Store")
-        url.set("https://github.com/ohdyno/simple-event-store/")
-        licenses {
-          license {
-            name.set("MIT License")
-            url.set("http://www.opensource.org/licenses/mit-license.php")
-          }
-        }
-        developers {
-          developer {
-            name.set("Xing Zhou")
-            organizationUrl.set("https://github.com/ohdyno/")
-          }
-        }
-        scm {
-          connection.set("scm:git:https://github.com/ohdyno/simple-event-store.git")
-          developerConnection.set("scm:git:ssh://github.com/ohdyno/simple-event-store.git")
-          url.set("https://github.com/ohdyno/simple-event-store/")
-        }
+  pom {
+    name.set("simple-event-store")
+    description.set("Simple Event Store")
+    url.set("https://github.com/ohdyno/simple-event-store/")
+    licenses {
+      license {
+        name.set("MIT License")
+        url.set("http://www.opensource.org/licenses/mit-license.php")
       }
     }
-  }
-
-  repositories { maven { url = uri(layout.buildDirectory.dir("staging-deploy")) } }
-}
-
-jreleaser {
-  dryrun.set(true)
-  signing {
-    active.set(Active.ALWAYS)
-    armored.set(true)
-  }
-  deploy {
-    maven {
-      mavenCentral {
-        create("sonatype") {
-          active.set(Active.ALWAYS)
-          url.set("https://central.sonatype.com/api/v1/publisher")
-          stagingRepository("build/staging-deploy")
-        }
+    developers {
+      developer {
+        name.set("Xing Zhou")
+        organizationUrl.set("https://github.com/ohdyno/")
       }
+    }
+    scm {
+      connection.set("scm:git:https://github.com/ohdyno/simple-event-store.git")
+      developerConnection.set("scm:git:ssh://github.com/ohdyno/simple-event-store.git")
+      url.set("https://github.com/ohdyno/simple-event-store/")
     }
   }
 }
+
+// jreleaser {
+//  dryrun.set(true)
+//  signing {
+//    active.set(Active.ALWAYS)
+//    armored.set(true)
+//  }
+//  deploy {
+//    maven {
+//      mavenCentral {
+//        create("sonatype") {
+//          active.set(Active.ALWAYS)
+//          url.set("https://central.sonatype.com/api/v1/publisher")
+//          stagingRepository("build/staging-deploy")
+//        }
+//      }
+//    }
+//  }
+// }
 
 java {
   withJavadocJar()
