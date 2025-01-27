@@ -1,6 +1,5 @@
 package me.xingzhou.projects.simple.event.store
 
-import java.time.Instant
 import kotlin.reflect.KType
 import me.xingzhou.projects.simple.event.store.commands.*
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
@@ -8,42 +7,38 @@ import me.xingzhou.projects.simple.event.store.dependencies.eventserializer.ForE
 import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.ForEventStorage
 import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.StreamEvent
 import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.SystemEvent
-import me.xingzhou.projects.simple.event.store.results.EventStoreResult
+import me.xingzhou.projects.simple.event.store.results.*
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult.Failure
-import me.xingzhou.projects.simple.event.store.results.RetrievedEvent
-import me.xingzhou.projects.simple.event.store.results.RetrievedSystemEvent
 
 class EventStore {
   @JvmName("handleCreateStream")
   fun handle(context: ExecutionContext<CreateStream>): EventStoreResult =
       runCatching {
-            context.forEventSerialization.serialize(event = context.command.event).run {
-              context.forEventStorage
-                  .createStream(
+            context.forEventSerialization
+                .serialize(event = context.command.event)
+                .let { (eventType, eventData) ->
+                  context.forEventStorage.createStream(
                       streamName = context.command.streamName.name,
                       eventId = context.command.event.id,
                       eventType = eventType,
                       eventData = eventData,
                       occurredOn = context.command.occurredOn.instant)
-                  .let { AppendToken(value = it) }
-                  .let { EventStoreResult.ForCreateStream(appendToken = it) }
-            }
+                }
+                .let { EventStoreResult.forCreateStream(appendToken = it) }
           }
           .getOrElse { it.extractKnownFailure(command = context.command) }
 
   @JvmName("handleRetrieveFromStream")
   fun handle(context: ExecutionContext<RetrieveFromStream>): EventStoreResult =
       runCatching {
-            context.command.eventTypes.serialize(context.forEventSerialization).let {
+            context.command.eventTypes.serialize(context.forEventSerialization).let { eventTypes ->
               context.forEventStorage
-                  .retrieveFromStream(streamName = context.command.streamName.name, eventTypes = it)
-                  .run {
-                    events.map { it.deserialize(context.forEventSerialization) } to
-                        AppendToken(value = appendToken)
-                  }
+                  .retrieveFromStream(
+                      streamName = context.command.streamName.name, eventTypes = eventTypes)
                   .let { (events, appendToken) ->
-                    EventStoreResult.ForRetrieveFromStream(
-                        retrievedEvents = events, appendToken = appendToken)
+                    EventStoreResult.forRetrieveFromStream(
+                        events = events.deserialize(context.forEventSerialization),
+                        appendToken = appendToken)
                   }
             }
           }
@@ -51,19 +46,18 @@ class EventStore {
 
   @JvmName("handleRetrieveFromSystem")
   fun handle(context: ExecutionContext<RetrieveFromSystem>): EventStoreResult =
-      context.command.eventTypes.serialize(context.forEventSerialization).let {
-        context.forEventStorage
-            .retrieveFromSystem(eventTypes = it)
-            .run { events.map { it.deserialize(context.forEventSerialization) } to timestamp }
-            .let { (events, timestamp) ->
-              EventStoreResult.ForRetrieveFromSystem(events = events, asOf = timestamp)
-            }
+      context.command.eventTypes.serialize(context.forEventSerialization).let { eventTypes ->
+        context.forEventStorage.retrieveFromSystem(eventTypes = eventTypes).let {
+            (events, timestamp) ->
+          EventStoreResult.forRetrieveFromSystem(
+              events = events.deserialize(context.forEventSerialization), asOf = timestamp)
+        }
       }
 
   @JvmName("handleCheckStreamExists")
   fun handle(context: ExecutionContext<CheckStreamExists>): EventStoreResult =
       context.forEventStorage.streamExists(streamName = context.command.streamName.name).let {
-        EventStoreResult.ForCheckStreamExists(streamExists = it)
+        EventStoreResult.forCheckStreamExists(streamExists = it)
       }
 
   @JvmName("handleValidateAppendToken")
@@ -73,7 +67,7 @@ class EventStore {
                 .validateAppendToken(
                     streamName = context.command.streamName.name,
                     token = context.command.token.value)
-                .let { EventStoreResult.ForValidateAppendToken(appendTokenIsValid = it) }
+                .let { EventStoreResult.forValidateAppendToken(appendTokenIsValid = it) }
           }
           .getOrElse { it.extractKnownFailure(command = context.command) }
 
@@ -82,15 +76,15 @@ class EventStore {
       runCatching {
             context.forEventStorage
                 .retrieveAppendToken(streamName = context.command.streamName.name)
-                .let { AppendToken(value = it) }
-                .let { EventStoreResult.ForRetrieveAppendToken(appendToken = it) }
+                .let { EventStoreResult.forRetrieveAppendToken(appendToken = it) }
           }
           .getOrElse { it.extractKnownFailure(command = context.command) }
 
   @JvmName("handleAppendToStream")
   fun handle(context: ExecutionContext<AppendToStream>): EventStoreResult =
       runCatching {
-            context.forEventSerialization.serialize(event = context.command.event).run {
+            context.forEventSerialization.serialize(event = context.command.event).let {
+                (eventType, eventData) ->
               context.forEventStorage
                   .appendToStream(
                       streamName = context.command.streamName.name,
@@ -99,49 +93,39 @@ class EventStore {
                       eventType = eventType,
                       eventData = eventData,
                       occurredOn = context.command.occurredOn.instant)
-                  .let { AppendToken(value = it) }
-                  .let { EventStoreResult.ForAppendToStream(appendToken = it) }
+                  .let { EventStoreResult.forAppendToStream(appendToken = it) }
             }
           }
           .getOrElse { it.extractKnownFailure(command = context.command) }
 }
 
-private fun StreamEvent.deserialize(
-    serializer: ForEventSerializer,
-): RetrievedEvent =
-    with(serializer.deserialize(type = eventType, data = eventData)) {
-      RetrievedEvent(event = this, occurredOn = OccurredOn(instant = occurredOn))
-    }
-
-private fun SystemEvent.deserialize(
-    serializer: ForEventSerializer,
-): RetrievedSystemEvent =
-    with(serializer.deserialize(type = streamEvent.eventType, data = streamEvent.eventData)) {
-      RetrievedSystemEvent(
-          streamName = StreamName(name = streamName),
-          event =
-              RetrievedEvent(
-                  event = this, occurredOn = OccurredOn(instant = streamEvent.occurredOn)))
-    }
-
-private fun List<KType>.serialize(serializer: ForEventSerializer): List<String> = map {
-  serializer.eventTypeOf(it)
-}
-
-data class AppendToken(val value: String)
-
-data class OccurredOn(val instant: Instant) : Comparable<OccurredOn> {
-  override fun compareTo(other: OccurredOn): Int = instant.compareTo(other.instant)
-
-  companion object {
-    fun now() = OccurredOn(instant = Instant.now())
+@JvmName("deserializeStreamEvents")
+private fun List<StreamEvent>.deserialize(serializer: ForEventSerializer): List<RetrievedEvent> {
+  return map { (eventType, eventData, occurredOn) ->
+    RetrievedEvent(
+        event = serializer.deserialize(type = eventType, data = eventData),
+        occurredOn = OccurredOn(instant = occurredOn))
   }
 }
 
-data class StreamName(val name: String)
+@JvmName("deserializeSystemEvents")
+private fun List<SystemEvent>.deserialize(
+    serializer: ForEventSerializer
+): List<RetrievedSystemEvent> {
+  return map { (streamName, streamEvent) ->
+    RetrievedSystemEvent(
+        streamName = StreamName(name = streamName),
+        event =
+            RetrievedEvent(
+                event =
+                    serializer.deserialize(
+                        type = streamEvent.eventType, data = streamEvent.eventData),
+                occurredOn = OccurredOn(instant = streamEvent.occurredOn)))
+  }
+}
 
-interface Event {
-  val id: String
+private fun List<KType>.serialize(serializer: ForEventSerializer): List<String> = map {
+  serializer.eventTypeOf(it)
 }
 
 // Extension Functions

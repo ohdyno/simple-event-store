@@ -41,4 +41,51 @@ sealed interface EventStoreResult {
   interface WithAppendToken : EventStoreResult {
     val appendToken: AppendToken
   }
+
+  companion object
+}
+
+fun EventStoreResult.Companion.forCreateStream(
+    appendToken: String
+): EventStoreResult.ForCreateStream {
+  return EventStoreResult.ForCreateStream(AppendToken(value = appendToken))
+}
+
+fun EventStoreResult.Companion.forRetrieveFromStream(
+    events: List<RetrievedEvent>,
+    appendToken: String
+): EventStoreResult.ForRetrieveFromStream {
+  return EventStoreResult.ForRetrieveFromStream(
+      retrievedEvents = events, appendToken = AppendToken(value = appendToken))
+}
+
+fun EventStoreResult.Companion.forRetrieveFromSystem(
+    events: List<RetrievedSystemEvent>,
+    asOf: Instant
+): EventStoreResult.ForRetrieveFromSystem {
+  return EventStoreResult.ForRetrieveFromSystem(events = events, asOf = asOf)
+}
+
+fun EventStoreResult.Companion.forCheckStreamExists(
+    streamExists: Boolean
+): EventStoreResult.ForCheckStreamExists {
+  return EventStoreResult.ForCheckStreamExists(streamExists = streamExists)
+}
+
+fun EventStoreResult.Companion.forValidateAppendToken(
+    appendTokenIsValid: Boolean
+): EventStoreResult.ForValidateAppendToken {
+  return EventStoreResult.ForValidateAppendToken(appendTokenIsValid = appendTokenIsValid)
+}
+
+fun EventStoreResult.Companion.forRetrieveAppendToken(
+    appendToken: String
+): EventStoreResult.ForRetrieveAppendToken {
+  return EventStoreResult.ForRetrieveAppendToken(appendToken = AppendToken(value = appendToken))
+}
+
+fun EventStoreResult.Companion.forAppendToStream(
+    appendToken: String
+): EventStoreResult.ForAppendToStream {
+  return EventStoreResult.ForAppendToStream(appendToken = AppendToken(value = appendToken))
 }
