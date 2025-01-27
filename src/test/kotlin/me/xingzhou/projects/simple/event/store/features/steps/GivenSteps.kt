@@ -15,7 +15,13 @@ import me.xingzhou.projects.simple.event.store.commands.RetrieveAppendToken
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.testsupport.clear
 import me.xingzhou.projects.simple.event.store.features.SpecificationContext
-import me.xingzhou.projects.simple.event.store.features.fixtures.*
+import me.xingzhou.projects.simple.event.store.features.events.EventWithId
+import me.xingzhou.projects.simple.event.store.features.events.TypeAEvent
+import me.xingzhou.projects.simple.event.store.features.events.TypeBEvent
+import me.xingzhou.projects.simple.event.store.features.events.TypeCEvent
+import me.xingzhou.projects.simple.event.store.features.replayobservers.AllEventsObserver
+import me.xingzhou.projects.simple.event.store.features.replayobservers.TypeABEventsObserver
+import me.xingzhou.projects.simple.event.store.features.replayobservers.TypeAEventsObserver
 import me.xingzhou.projects.simple.event.store.features.snapshotEventStorage
 import me.xingzhou.projects.simple.event.store.features.store
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult

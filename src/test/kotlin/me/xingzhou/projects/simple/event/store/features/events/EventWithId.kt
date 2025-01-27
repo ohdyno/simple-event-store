@@ -1,4 +1,4 @@
-package me.xingzhou.projects.simple.event.store.features.fixtures
+package me.xingzhou.projects.simple.event.store.features.events
 
 import me.xingzhou.projects.simple.event.store.Event
 

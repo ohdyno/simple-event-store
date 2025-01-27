@@ -9,7 +9,7 @@ import javax.sql.DataSource
 import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.adapters.postgres.ForEventStorage
 import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.adapters.postgres.setupDatabase
 import me.xingzhou.projects.simple.event.store.features.SpecificationContext
-import me.xingzhou.projects.simple.event.store.features.fixtures.TestEventsSerializer
+import me.xingzhou.projects.simple.event.store.features.adapters.eventserializer.TestEventsSerializer
 import org.testcontainers.containers.PostgreSQLContainer
 
 private lateinit var container: PostgreSQLContainer<Nothing>

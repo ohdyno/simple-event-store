@@ -12,11 +12,11 @@ import me.xingzhou.projects.simple.event.store.commands.RetrieveFromStream
 import me.xingzhou.projects.simple.event.store.commands.ValidateAppendToken
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.features.SpecificationContext
-import me.xingzhou.projects.simple.event.store.features.fixtures.AllEventsObserver
-import me.xingzhou.projects.simple.event.store.features.fixtures.StreamEventsRecorder
-import me.xingzhou.projects.simple.event.store.features.fixtures.SystemEventsRecorder
-import me.xingzhou.projects.simple.event.store.features.fixtures.TypeAEvent
-import me.xingzhou.projects.simple.event.store.features.fixtures.TypeBEvent
+import me.xingzhou.projects.simple.event.store.features.events.TypeAEvent
+import me.xingzhou.projects.simple.event.store.features.events.TypeBEvent
+import me.xingzhou.projects.simple.event.store.features.replayobservers.AllEventsObserver
+import me.xingzhou.projects.simple.event.store.features.replayobservers.StreamEventsRecorder
+import me.xingzhou.projects.simple.event.store.features.replayobservers.SystemEventsRecorder
 import me.xingzhou.projects.simple.event.store.features.snapshotEventStorage
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult
 import strikt.api.*

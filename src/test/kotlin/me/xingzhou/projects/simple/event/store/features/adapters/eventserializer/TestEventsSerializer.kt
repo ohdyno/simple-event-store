@@ -1,4 +1,4 @@
-package me.xingzhou.projects.simple.event.store.features.fixtures
+package me.xingzhou.projects.simple.event.store.features.adapters.eventserializer
 
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -15,6 +15,9 @@ import kotlinx.serialization.modules.subclass
 import me.xingzhou.projects.simple.event.store.Event
 import me.xingzhou.projects.simple.event.store.dependencies.eventserializer.ForEventSerializer
 import me.xingzhou.projects.simple.event.store.dependencies.eventserializer.ForEventSerializer.SerializedEvent
+import me.xingzhou.projects.simple.event.store.features.events.TypeAEvent
+import me.xingzhou.projects.simple.event.store.features.events.TypeBEvent
+import me.xingzhou.projects.simple.event.store.features.events.TypeCEvent
 
 val TestEventsSerializer: ForEventSerializer =
     KotlinXSerializationAdapter(

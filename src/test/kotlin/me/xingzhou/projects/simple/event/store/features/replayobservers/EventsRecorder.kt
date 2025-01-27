@@ -1,4 +1,4 @@
-package me.xingzhou.projects.simple.event.store.features.fixtures
+package me.xingzhou.projects.simple.event.store.features.replayobservers
 
 import me.xingzhou.projects.simple.event.store.Event
 import me.xingzhou.projects.simple.event.store.ReplayObserver
