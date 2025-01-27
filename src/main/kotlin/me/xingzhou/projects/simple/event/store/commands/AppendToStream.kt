@@ -1,13 +1,11 @@
 package me.xingzhou.projects.simple.event.store.commands
 
-import me.xingzhou.projects.simple.event.store.AppendToken
-import me.xingzhou.projects.simple.event.store.Event
-import me.xingzhou.projects.simple.event.store.OccurredOn
-import me.xingzhou.projects.simple.event.store.StreamName
+import me.xingzhou.projects.simple.event.store.*
 
 data class AppendToStream(
     val streamName: StreamName,
     val event: Event,
+    val eventId: EventId,
     val occurredOn: OccurredOn,
     val appendToken: AppendToken
 )

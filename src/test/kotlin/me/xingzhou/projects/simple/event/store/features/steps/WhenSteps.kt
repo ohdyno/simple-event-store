@@ -1,6 +1,7 @@
 package me.xingzhou.projects.simple.event.store.features.steps
 
 import io.cucumber.java.en.When
+import me.xingzhou.projects.simple.event.store.EventId
 import me.xingzhou.projects.simple.event.store.EventStore
 import me.xingzhou.projects.simple.event.store.commands.AppendToStream
 import me.xingzhou.projects.simple.event.store.commands.CreateStream
@@ -26,6 +27,7 @@ class WhenSteps(private val context: SpecificationContext) {
                     CreateStream(
                         streamName = context.streamName,
                         event = context.event,
+                        eventId = EventId(context.event.id),
                         occurredOn = context.occurredOn),
                 forEventStorage = context.eventStorage,
                 forEventSerialization = context.eventSerializer,
@@ -42,6 +44,7 @@ class WhenSteps(private val context: SpecificationContext) {
                     AppendToStream(
                         streamName = context.streamName,
                         event = context.event,
+                        eventId = EventId(context.event.id),
                         occurredOn = context.occurredOn,
                         appendToken = context.appendToken),
                 forEventStorage = context.eventStorage,

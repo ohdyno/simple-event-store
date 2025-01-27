@@ -7,11 +7,7 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import kotlin.reflect.typeOf
-import me.xingzhou.projects.simple.event.store.AppendToken
-import me.xingzhou.projects.simple.event.store.Event
-import me.xingzhou.projects.simple.event.store.EventStore
-import me.xingzhou.projects.simple.event.store.OccurredOn
-import me.xingzhou.projects.simple.event.store.StreamName
+import me.xingzhou.projects.simple.event.store.*
 import me.xingzhou.projects.simple.event.store.commands.AppendToStream
 import me.xingzhou.projects.simple.event.store.commands.CheckStreamExists
 import me.xingzhou.projects.simple.event.store.commands.CreateStream
@@ -186,6 +182,7 @@ class GivenSteps(private val context: SpecificationContext) {
                 CreateStream(
                     streamName = StreamName("stream two"),
                     event = context.event,
+                    eventId = EventId(value = context.event.id),
                     occurredOn = context.occurredOn),
             forEventStorage = context.eventStorage,
             forEventSerialization = context.eventSerializer)
@@ -194,11 +191,13 @@ class GivenSteps(private val context: SpecificationContext) {
 
   @And("the stream already exists in the system")
   fun theStreamAlreadyExistsInTheSystem() {
+    val event = TypeAEvent()
     ExecutionContext(
             command =
                 CreateStream(
                     streamName = context.streamName,
-                    event = TypeAEvent(),
+                    event = event,
+                    eventId = EventId(event.id),
                     occurredOn = OccurredOn(Instant.EPOCH)),
             forEventStorage = context.eventStorage,
             forEventSerialization = context.eventSerializer)
@@ -230,6 +229,7 @@ class GivenSteps(private val context: SpecificationContext) {
                 AppendToStream(
                     streamName = context.streamName,
                     event = context.event,
+                    eventId = EventId(context.event.id),
                     occurredOn = context.occurredOn,
                     appendToken = context.appendToken),
             forEventStorage = context.eventStorage,
@@ -365,6 +365,7 @@ private fun EventStore.createStream(
                 CreateStream(
                     streamName = context.command.streamName,
                     event = event.event,
+                    eventId = EventId(event.event.id),
                     occurredOn = event.occurredOn))) {
           handle(context = this)
         }
@@ -386,6 +387,7 @@ private fun EventStore.appendToStream(
                               streamName = context.command.streamName,
                               appendToken = appendToken,
                               event = event.event,
+                              eventId = EventId(event.event.id),
                               occurredOn = event.occurredOn))) {
                     handle(context = this)
                   }

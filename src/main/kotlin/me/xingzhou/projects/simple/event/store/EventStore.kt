@@ -19,7 +19,7 @@ class EventStore {
                 .let { (eventType, eventData) ->
                   context.forEventStorage.createStream(
                       streamName = context.command.streamName.name,
-                      eventId = context.command.event.id,
+                      eventId = context.command.eventId.value,
                       eventType = eventType,
                       eventData = eventData,
                       occurredOn = context.command.occurredOn.instant)
@@ -89,7 +89,7 @@ class EventStore {
                   .appendToStream(
                       streamName = context.command.streamName.name,
                       appendToken = context.command.appendToken.value,
-                      eventId = context.command.event.id,
+                      eventId = context.command.eventId.value,
                       eventType = eventType,
                       eventData = eventData,
                       occurredOn = context.command.occurredOn.instant)
@@ -124,11 +124,12 @@ private fun List<SystemEvent>.deserialize(
   }
 }
 
+// Extension Functions
+
 private fun List<KType>.serialize(serializer: ForEventSerializer): List<String> = map {
   serializer.eventTypeOf(it)
 }
 
-// Extension Functions
 private fun Throwable.extractKnownFailure(command: CreateStream): EventStoreResult =
     when (this) {
       is ForEventStorage.Failure.StreamAlreadyExists ->
