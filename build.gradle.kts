@@ -2,7 +2,7 @@ import com.vanniktech.maven.publish.SonatypeHost
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
-  kotlin("jvm") version "2.1.0"
+  kotlin("jvm") version "2.1.10"
   kotlin("plugin.serialization") version "2.1.0"
   id("java-library")
   id("com.vanniktech.maven.publish") version "0.30.0"
