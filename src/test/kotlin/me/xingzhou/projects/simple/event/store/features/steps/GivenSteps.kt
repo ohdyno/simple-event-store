@@ -365,7 +365,7 @@ private fun EventStore.createStream(
                 CreateStream(
                     streamName = context.command.streamName,
                     event = event.event,
-                    eventId = EventId(event.event.id),
+                    eventId = EventId((event.event as EventWithId).id),
                     occurredOn = event.occurredOn))) {
           handle(context = this)
         }
@@ -387,7 +387,7 @@ private fun EventStore.appendToStream(
                               streamName = context.command.streamName,
                               appendToken = appendToken,
                               event = event.event,
-                              eventId = EventId(event.event.id),
+                              eventId = EventId((event.event as EventWithId).id),
                               occurredOn = event.occurredOn))) {
                     handle(context = this)
                   }

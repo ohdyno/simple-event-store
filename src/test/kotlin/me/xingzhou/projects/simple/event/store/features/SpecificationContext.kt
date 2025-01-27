@@ -6,6 +6,7 @@ import me.xingzhou.projects.simple.event.store.commands.RetrieveFromSystem
 import me.xingzhou.projects.simple.event.store.dependencies.ExecutionContext
 import me.xingzhou.projects.simple.event.store.dependencies.eventserializer.ForEventSerializer
 import me.xingzhou.projects.simple.event.store.dependencies.eventstorage.ForEventStorage
+import me.xingzhou.projects.simple.event.store.features.fixtures.EventWithId
 import me.xingzhou.projects.simple.event.store.features.fixtures.StreamAndSystemEventsRecorder
 import me.xingzhou.projects.simple.event.store.results.EventStoreResult
 import me.xingzhou.projects.simple.event.store.results.RetrievedEvent
@@ -16,7 +17,7 @@ class SpecificationContext {
   lateinit var streamName: StreamName
   lateinit var appendToken: AppendToken
   lateinit var occurredOn: OccurredOn
-  lateinit var event: Event
+  lateinit var event: EventWithId
   lateinit var eventStorage: ForEventStorage
   lateinit var eventSerializer: ForEventSerializer
   lateinit var observer: StreamAndSystemEventsRecorder
