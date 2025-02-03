@@ -7,7 +7,7 @@ plugins {
   id("java-library")
   id("com.vanniktech.maven.publish") version "0.30.0"
   id("com.diffplug.spotless") version "7.0.2"
-  id("com.github.jmongard.git-semver-plugin") version "0.14.0"
+  id("com.github.jmongard.git-semver-plugin") version "0.15.0"
 }
 
 semver { createReleaseCommit = false }
