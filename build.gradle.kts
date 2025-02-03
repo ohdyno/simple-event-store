@@ -73,7 +73,7 @@ dependencies {
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
   // Cucumber Support
-  testImplementation(platform("io.cucumber:cucumber-bom:7.20.1"))
+  testImplementation(platform("io.cucumber:cucumber-bom:7.21.0"))
   testImplementation("io.cucumber:cucumber-junit-platform-engine")
   testImplementation("io.cucumber:cucumber-java")
   testImplementation("io.cucumber:cucumber-picocontainer")
