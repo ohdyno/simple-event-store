@@ -1,21 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-
   <groupId>me.xingzhou.projects</groupId>
   <artifactId>simple-event-store</artifactId>
   <version>1.0-SNAPSHOT</version>
-
   <name>simple-event-store</name>
   <!-- FIXME change it to the project's website -->
   <url>http://www.example.com</url>
-
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>17</maven.compiler.release>
   </properties>
-
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -27,7 +22,6 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-
   <dependencies>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
@@ -41,9 +35,9 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-
   <build>
-    <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
+    <pluginManagement>
+      <!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
       <plugins>
         <!-- clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
         <plugin>
@@ -83,6 +77,65 @@
         <plugin>
           <artifactId>maven-project-info-reports-plugin</artifactId>
           <version>3.6.1</version>
+        </plugin>
+        <plugin>
+          <groupId>com.diffplug.spotless</groupId>
+          <artifactId>spotless-maven-plugin</artifactId>
+          <version>2.43.0</version>
+          <configuration>
+            <java>
+              <includes>
+                <include>/**/*.java</include>
+              </includes>
+              <toggleOffOn/>
+              <cleanthat>
+                <version>2.22</version>
+              </cleanthat>
+              <googleJavaFormat>
+                <version>1.25.2</version>
+              </googleJavaFormat>
+              <importOrder/>
+              <removeUnusedImports/>
+              <formatAnnotations/>
+            </java>
+            <pom>
+              <includes>
+                <include>pom.xml</include>
+              </includes>
+              <sortPom>
+                <expandEmptyElements>false</expandEmptyElements>
+                <keepBlankLines>false</keepBlankLines>
+              </sortPom>
+            </pom>
+            <markdown>
+              <includes>
+                <include>**/*.md</include>
+              </includes>
+              <flexmark/>
+            </markdown>
+            <sql>
+              <includes>
+                <include>src/**/resources/**/*.sql</include>
+              </includes>
+              <dbeaver/>
+            </sql>
+            <shell>
+              <includes>
+                <include>scripts/**/*.sh</include>
+              </includes>
+              <shfmt>
+                <version>3.11.0</version>
+              </shfmt>
+            </shell>
+            <gherkin>
+              <includes>
+                <include>src/**/*.feature</include>
+              </includes>
+              <gherkinUtils>
+                <version>9.2.0</version>
+              </gherkinUtils>
+            </gherkin>
+          </configuration>
         </plugin>
       </plugins>
     </pluginManagement>
