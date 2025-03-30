@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-../mvnw spotless:apply && git add --update
+./mvnw spotless:apply && git add --update

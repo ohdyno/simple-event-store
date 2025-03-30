@@ -113,7 +113,7 @@
           <version>3.5.0</version>
           <configuration>
             <gitConfig>
-              <core.hooksPath>/githooks/</core.hooksPath>
+              <core.hooksPath>githooks/</core.hooksPath>
             </gitConfig>
           </configuration>
           <executions>
@@ -169,16 +169,16 @@
     </pluginManagement>
     <plugins>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>versions-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
-      <groupId>com.diffplug.spotless</groupId>
-      <artifactId>spotless-maven-plugin</artifactId>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
       </plugin>
       <plugin>
         <groupId>com.rudikershaw.gitbuildhook</groupId>
         <artifactId>git-build-hook-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>versions-maven-plugin</artifactId>
       </plugin>
     </plugins>
   </build>
