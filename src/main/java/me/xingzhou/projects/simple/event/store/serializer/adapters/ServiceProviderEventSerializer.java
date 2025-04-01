@@ -2,6 +2,7 @@ package me.xingzhou.projects.simple.event.store.serializer.adapters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ServiceLoader;
+import java.util.stream.StreamSupport;
 import me.xingzhou.projects.simple.event.store.Event;
 import me.xingzhou.projects.simple.event.store.internal.tooling.ThrowableSupplier;
 import me.xingzhou.projects.simple.event.store.serializer.EventSerializer;
@@ -33,6 +34,10 @@ public class ServiceProviderEventSerializer implements EventSerializer {
 
     @Override
     public Event deserialize(String eventType, String eventJson) {
-        return null;
+        return StreamSupport.stream(serviceProvider.spliterator(), false)
+                .filter(e -> e.getClass().getSimpleName().equals(eventType))
+                .findFirst()
+                .map(event -> handleExceptions(() -> objectMapper.readValue(eventJson, event.getClass())))
+                .orElseThrow(DeserializationFailure::new);
     }
 }

@@ -16,4 +16,14 @@ public class ServiceProviderEventSerializerTest {
                 {"id":"foo-event-id"}
                 """.trim());
     }
+
+    @Test
+    void deserialize() {
+        var event = new FooEvent("foo-event-id");
+        var serialized = subject.serialize(event);
+
+        var result = subject.deserialize(serialized.eventType(), serialized.eventJson());
+
+        assertThat(result).isEqualTo(event);
+    }
 }
