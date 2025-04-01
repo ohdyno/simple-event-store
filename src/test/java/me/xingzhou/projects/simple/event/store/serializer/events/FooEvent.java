@@ -1,4 +1,4 @@
-package me.xingzhou.projects.simple.event.store.serializer.adapters.events;
+package me.xingzhou.projects.simple.event.store.serializer.events;
 
 import com.google.auto.service.AutoService;
 import me.xingzhou.projects.simple.event.store.Event;
