@@ -3,6 +3,7 @@ package me.xingzhou.projects.simple.event.store.serializer.adapters;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import me.xingzhou.projects.simple.event.store.serializer.UnknownEventTypeFailure;
 import me.xingzhou.projects.simple.event.store.serializer.adapters.events.FooEvent;
 import org.junit.jupiter.api.Test;
 
@@ -40,9 +41,9 @@ public class ServiceProviderEventSerializerTest {
 
     @Test
     void deserializeAnUnknownEvent() {
-        var result = assertThrows(DeserializationFailure.class, () -> subject.deserialize("unknown-event-type", "{}"));
+        var result = assertThrows(UnknownEventTypeFailure.class, () -> subject.deserialize("unknown-event-type", "{}"));
         assertThat(result.getMessage())
                 .isEqualTo("""
-                Unable to deserialize "unknown-event-type" to a known type.""");
+                        Unknown event type: 'unknown-event-type'""");
     }
 }

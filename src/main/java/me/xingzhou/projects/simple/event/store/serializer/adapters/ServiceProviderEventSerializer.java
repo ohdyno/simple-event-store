@@ -7,6 +7,7 @@ import me.xingzhou.projects.simple.event.store.Event;
 import me.xingzhou.projects.simple.event.store.internal.tooling.ThrowableSupplier;
 import me.xingzhou.projects.simple.event.store.serializer.EventSerializer;
 import me.xingzhou.projects.simple.event.store.serializer.SerializedEvent;
+import me.xingzhou.projects.simple.event.store.serializer.UnknownEventTypeFailure;
 
 public class ServiceProviderEventSerializer implements EventSerializer {
     private final ServiceLoader<Event> serviceProvider = ServiceLoader.load(Event.class);
@@ -38,6 +39,6 @@ public class ServiceProviderEventSerializer implements EventSerializer {
                 .filter(e -> getTypeName(e.getClass()).equals(eventType))
                 .findFirst()
                 .map(event -> handleExceptions(() -> objectMapper.readValue(eventJson, event.getClass())))
-                .orElseThrow(() -> new DeserializationFailure(eventType));
+                .orElseThrow(() -> new UnknownEventTypeFailure(eventType));
     }
 }

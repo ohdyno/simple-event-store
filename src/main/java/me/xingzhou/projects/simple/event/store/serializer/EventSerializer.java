@@ -7,5 +7,6 @@ public interface EventSerializer {
 
     String getTypeName(Class<? extends Event> klass);
 
+    /** @throws UnknownEventTypeFailure if the eventType is unknown */
     Event deserialize(String eventType, String eventJson);
 }
