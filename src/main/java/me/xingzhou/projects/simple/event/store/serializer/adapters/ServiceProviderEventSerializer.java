@@ -38,6 +38,6 @@ public class ServiceProviderEventSerializer implements EventSerializer {
                 .filter(e -> getTypeName(e.getClass()).equals(eventType))
                 .findFirst()
                 .map(event -> handleExceptions(() -> objectMapper.readValue(eventJson, event.getClass())))
-                .orElseThrow(DeserializationFailure::new);
+                .orElseThrow(() -> new DeserializationFailure(eventType));
     }
 }
