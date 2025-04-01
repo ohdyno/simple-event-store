@@ -4,6 +4,8 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import me.xingzhou.projects.simple.event.store.serializer.EventSerializer;
+import me.xingzhou.projects.simple.event.store.storage.EventStorage;
 
 public class EventStore {
     private final EventStorage storage;

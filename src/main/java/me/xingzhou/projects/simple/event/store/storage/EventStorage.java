@@ -1,4 +1,4 @@
-package me.xingzhou.projects.simple.event.store;
+package me.xingzhou.projects.simple.event.store.storage;
 
 import java.time.Instant;
 import java.util.List;
@@ -11,10 +11,4 @@ public interface EventStorage {
     VersionedRecords retrieveEvents(String streamName, List<String> eventTypes, String begin, String end);
 
     TimestampedRecords retrieveEvents(String streamName, List<String> eventTypes, Instant start, Instant end);
-
-    record VersionedRecords(List<StoredRecord> records, String version) {}
-
-    record TimestampedRecords(List<StoredRecord> records, Instant timestamp) {}
-
-    record StoredRecord(String eventType, String eventJson, String streamName, String version) {}
 }

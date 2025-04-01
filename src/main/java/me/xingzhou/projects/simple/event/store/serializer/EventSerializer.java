@@ -1,4 +1,6 @@
-package me.xingzhou.projects.simple.event.store;
+package me.xingzhou.projects.simple.event.store.serializer;
+
+import me.xingzhou.projects.simple.event.store.Event;
 
 public interface EventSerializer {
     SerializedEvent serialize(Event event);
