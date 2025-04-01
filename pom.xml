@@ -75,12 +75,20 @@
               <toggleOffOn/>
               <cleanthat>
                 <version>2.22</version>
+                <mutators>
+                  <!-- Mutators at: https://github.com/solven-eu/cleanthat/blob/v2.22.RELEASE/MUTATORS.generated.MD -->
+                  <mutator>SafeAndConsensual</mutator>
+                  <mutator>SafeButControversial</mutator>
+                  <mutator>SafeButNotConsensual</mutator>
+                </mutators>
+                <includeDraft>true</includeDraft>
               </cleanthat>
-              <googleJavaFormat>
-                <version>1.25.2</version>
-              </googleJavaFormat>
+              <palantirJavaFormat>
+                <version>2.61.0</version>
+                <style>PALANTIR</style>
+                <formatJavadoc>true</formatJavadoc>
+              </palantirJavaFormat>
               <importOrder/>
-              <removeUnusedImports/>
               <formatAnnotations/>
             </java>
             <pom>

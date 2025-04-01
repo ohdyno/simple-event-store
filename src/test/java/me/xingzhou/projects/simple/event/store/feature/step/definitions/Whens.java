@@ -4,12 +4,12 @@ import io.cucumber.java.en.When;
 import me.xingzhou.projects.simple.event.store.feature.states.TestState;
 
 public class Whens {
-  private final TestState state;
+    private final TestState state;
 
-  public Whens(TestState state) {
-    this.state = state;
-  }
+    public Whens(TestState state) {
+        this.state = state;
+    }
 
-  @When("creating the stream with the event")
-  public void creatingTheStreamWithTheEvent() {}
+    @When("creating the stream with the event")
+    public void creatingTheStreamWithTheEvent() {}
 }
