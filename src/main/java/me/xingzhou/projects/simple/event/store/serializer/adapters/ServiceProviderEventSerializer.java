@@ -15,7 +15,7 @@ public class ServiceProviderEventSerializer implements EventSerializer {
     @Override
     public SerializedEvent serialize(Event event) {
         var eventJson = handleExceptions(() -> objectMapper.writeValueAsString(event));
-        var eventType = event.getClass().getSimpleName();
+        var eventType = getTypeName(event.getClass());
         return new SerializedEvent(eventType, eventJson);
     }
 
@@ -35,7 +35,7 @@ public class ServiceProviderEventSerializer implements EventSerializer {
     @Override
     public Event deserialize(String eventType, String eventJson) {
         return StreamSupport.stream(serviceProvider.spliterator(), false)
-                .filter(e -> e.getClass().getSimpleName().equals(eventType))
+                .filter(e -> getTypeName(e.getClass()).equals(eventType))
                 .findFirst()
                 .map(event -> handleExceptions(() -> objectMapper.readValue(eventJson, event.getClass())))
                 .orElseThrow(DeserializationFailure::new);
