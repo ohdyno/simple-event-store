@@ -1,5 +1,8 @@
 package me.xingzhou.projects.simple.event.store;
 
+import java.util.Collections;
+import java.util.List;
+
 public class EventStore {
   private final EventStorage storage;
   private final EventSerializer serializer;
@@ -13,26 +16,50 @@ public class EventStore {
     return new EventStore(storage, serializer);
   }
 
-  public AppendToken createStream(StreamName streamName, Event event) {
+  public Version createStream(StreamName streamName, Event event) {
     var serializedEvent = serializer.serialize(event);
-    var token =
+    var current =
         storage.createStream(
             streamName.value(),
             event.id(),
-            serializedEvent.eventName(),
+            serializedEvent.eventType(),
             serializedEvent.eventJson());
-    return new AppendToken(token);
+    return new Version(current);
   }
 
-  public AppendToken appendEvent(StreamName streamName, Event event, AppendToken token) {
+  public Version appendEvent(StreamName streamName, Event event, Version current) {
     var serializedEvent = serializer.serialize(event);
     var next =
         storage.appendEvent(
             streamName.value(),
-            token.value(),
+            current.value(),
             event.id(),
-            serializedEvent.eventName(),
+            serializedEvent.eventType(),
             serializedEvent.eventJson());
-    return new AppendToken(next);
+    return new Version(next);
+  }
+
+  public VersionedEvents retrieveEvents(StreamName streamName) {
+    return retrieveEvents(streamName, Collections.emptyList(), Version.start(), Version.end());
+  }
+
+  public VersionedEvents retrieveEventsStartingAfter(StreamName streamName, Version version) {
+    return retrieveEvents(streamName, Collections.emptyList(), version, Version.end());
+  }
+
+  public VersionedEvents retrieveEventsUpToExclusive(StreamName streamName, Version version) {
+    return retrieveEvents(streamName, Collections.emptyList(), Version.start(), version);
+  }
+
+  private VersionedEvents retrieveEvents(
+      StreamName streamName, List<Class<? extends Event>> eventTypes, Version start, Version end) {
+    var typeNames = eventTypes.stream().map(serializer::getTypeName).toList();
+    var versionedRecords =
+        storage.retrieveEvents(streamName.value(), typeNames, start.value(), end.value());
+    var events =
+        versionedRecords.records().stream()
+            .map(record -> VersionedEvent.from(record, serializer))
+            .toList();
+    return new VersionedEvents(events, new Version(versionedRecords.version()));
   }
 }
