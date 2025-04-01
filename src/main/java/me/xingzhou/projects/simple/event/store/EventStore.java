@@ -23,4 +23,16 @@ public class EventStore {
             serializedEvent.eventJson());
     return new AppendToken(token);
   }
+
+  public AppendToken appendEvent(StreamName streamName, Event event, AppendToken token) {
+    var serializedEvent = serializer.serialize(event);
+    var next =
+        storage.appendEvent(
+            streamName.value(),
+            token.value(),
+            event.id(),
+            serializedEvent.eventName(),
+            serializedEvent.eventJson());
+    return new AppendToken(next);
+  }
 }
