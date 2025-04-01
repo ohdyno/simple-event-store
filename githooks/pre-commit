@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
 
-files=$(git diff --cached --name-only) \
-&& ./mvnw spotless:apply \
-&& printf "%s" "$files" | xargs -I {} git add {}
+./mvnw spotless:apply \
+&& git add --update

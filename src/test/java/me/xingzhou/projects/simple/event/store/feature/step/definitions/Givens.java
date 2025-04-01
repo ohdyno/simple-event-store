@@ -5,29 +5,21 @@ import io.cucumber.java.en.Given;
 import me.xingzhou.projects.simple.event.store.feature.states.TestState;
 
 public class Givens {
-    private final TestState state;
+  private final TestState state;
 
-    public Givens(TestState state) {
-        this.state = state;
-    }
+  public Givens(TestState state) {
+    this.state = state;
+  }
 
-    @Given("the event store is operational")
-    public void theEventStoreIsOperational() {
+  @Given("the event store is operational")
+  public void theEventStoreIsOperational() {}
 
-    }
+  @And("it has no events")
+  public void itHasNoEvents() {}
 
-    @And("it has no events")
-    public void itHasNoEvents() {
+  @Given("the stream name {string}")
+  public void theStreamName(String streamName) {}
 
-    }
-
-    @Given("the stream name {string}")
-    public void theStreamName(String streamName) {
-
-    }
-
-    @And("an event")
-    public void anEvent() {
-
-    }
+  @And("an event")
+  public void anEvent() {}
 }

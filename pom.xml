@@ -70,7 +70,7 @@
           <configuration>
             <java>
               <includes>
-                <include>/**/*.java</include>
+                <include>**/*.java</include>
               </includes>
               <toggleOffOn/>
               <cleanthat>
