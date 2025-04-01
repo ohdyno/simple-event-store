@@ -29,7 +29,7 @@ public class ServiceProviderEventSerializer implements EventSerializer {
 
     @Override
     public String getTypeName(Class<? extends Event> klass) {
-        return "";
+        return klass.getSimpleName();
     }
 
     @Override

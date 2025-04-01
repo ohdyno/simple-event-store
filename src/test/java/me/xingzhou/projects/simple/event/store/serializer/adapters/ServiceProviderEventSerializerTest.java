@@ -26,4 +26,14 @@ public class ServiceProviderEventSerializerTest {
 
         assertThat(result).isEqualTo(event);
     }
+
+    @Test
+    void getTypeName() {
+        var event = new FooEvent("foo-event-id");
+        var serialized = subject.serialize(event);
+
+        var result = subject.getTypeName(event.getClass());
+
+        assertThat(result).isEqualTo(serialized.eventType());
+    }
 }
