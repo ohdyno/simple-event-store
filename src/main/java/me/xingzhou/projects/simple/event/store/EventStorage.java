@@ -1,5 +1,6 @@
 package me.xingzhou.projects.simple.event.store;
 
+import java.time.Instant;
 import java.util.List;
 
 public interface EventStorage {
@@ -11,24 +12,32 @@ public interface EventStorage {
   VersionedRecords retrieveEvents(
       String streamName, List<String> eventTypes, String begin, String end);
 
-  record VersionedRecords(
-      List<EventStorage.VersionedRecords.VersionedRecord> records, String version) {
-    public record VersionedRecord() {
-      public String eventType() {
-        return null;
-      }
+  TimestampedRecords retrieveEvents(
+      String streamName, List<String> eventTypes, Instant start, Instant end);
 
-      public String eventJson() {
-        return null;
-      }
+  record VersionedRecords(List<StoredRecord> records, String version) {}
 
-      public String streamName() {
-        return null;
-      }
+  record TimestampedRecords(List<StoredRecord> records, Instant timestamp) {}
 
-      public String version() {
-        return null;
-      }
+  record StoredRecord() {
+    public String eventType() {
+      return null;
+    }
+
+    public String eventJson() {
+      return null;
+    }
+
+    public String streamName() {
+      return null;
+    }
+
+    public String version() {
+      return null;
+    }
+
+    public Instant timestamp() {
+      return null;
     }
   }
 }
