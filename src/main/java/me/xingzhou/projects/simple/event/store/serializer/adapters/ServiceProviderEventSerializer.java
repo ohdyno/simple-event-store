@@ -1,10 +1,11 @@
 package me.xingzhou.projects.simple.event.store.serializer.adapters;
 
+import static me.xingzhou.projects.simple.event.store.internal.tooling.CheckedExceptionHandlers.handleExceptions;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ServiceLoader;
 import java.util.stream.StreamSupport;
 import me.xingzhou.projects.simple.event.store.Event;
-import me.xingzhou.projects.simple.event.store.internal.tooling.ThrowableSupplier;
 import me.xingzhou.projects.simple.event.store.serializer.EventSerializer;
 import me.xingzhou.projects.simple.event.store.serializer.SerializedEvent;
 import me.xingzhou.projects.simple.event.store.serializer.UnknownEventTypeFailure;
@@ -18,14 +19,6 @@ public class ServiceProviderEventSerializer implements EventSerializer {
         var eventJson = handleExceptions(() -> objectMapper.writeValueAsString(event));
         var eventType = getTypeName(event.getClass());
         return new SerializedEvent(eventType, eventJson);
-    }
-
-    private <R> R handleExceptions(ThrowableSupplier<R> fn) {
-        try {
-            return fn.execute();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Override
