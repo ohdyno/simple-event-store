@@ -3,16 +3,24 @@ package me.xingzhou.projects.simple.event.store.serializer.adapters;
 import static me.xingzhou.projects.simple.event.store.internal.tooling.CheckedExceptionHandlers.handleExceptions;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.ServiceLoader;
-import java.util.stream.StreamSupport;
+import java.util.*;
+import java.util.stream.Collectors;
 import me.xingzhou.projects.simple.event.store.Event;
 import me.xingzhou.projects.simple.event.store.serializer.EventSerializer;
 import me.xingzhou.projects.simple.event.store.serializer.SerializedEvent;
 import me.xingzhou.projects.simple.event.store.serializer.UnknownEventTypeFailure;
 
 public class ServiceProviderEventSerializer implements EventSerializer {
-    private final ServiceLoader<Event> serviceProvider = ServiceLoader.load(Event.class);
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final HashMap<String, Class<? extends Event>> definedEvents = new HashMap<>();
+
+    public ServiceProviderEventSerializer() {
+        var serviceLoader = ServiceLoader.load(Event.class);
+        for (var event : serviceLoader) {
+            var klass = event.getClass();
+            definedEvents.put(getTypeName(klass), klass);
+        }
+    }
 
     @Override
     public SerializedEvent serialize(Event event) {
@@ -28,10 +36,22 @@ public class ServiceProviderEventSerializer implements EventSerializer {
 
     @Override
     public Event deserialize(String eventType, String eventJson) {
-        return StreamSupport.stream(serviceProvider.spliterator(), false)
-                .filter(e -> getTypeName(e.getClass()).equals(eventType))
-                .findFirst()
-                .map(event -> handleExceptions(() -> objectMapper.readValue(eventJson, event.getClass())))
-                .orElseThrow(() -> new UnknownEventTypeFailure(eventType));
+        if (definedEvents.containsKey(eventType)) {
+            return handleExceptions(() -> objectMapper.readValue(eventJson, definedEvents.get(eventType)));
+        }
+        throw new UnknownEventTypeFailure(eventType);
+    }
+
+    @Override
+    public List<String> extractDefinedEventsFromApplyMethods(Object object) {
+        var allTypes = Arrays.stream(object.getClass().getMethods())
+                .filter(method -> "apply".equals(method.getName()) && method.getParameterCount() > 0)
+                .map(method -> method.getParameters()[0].getType().getSimpleName())
+                .filter(typeName -> definedEvents.containsKey(typeName) || "Event".equals(typeName))
+                .collect(Collectors.toSet());
+        if (allTypes.contains("Event")) {
+            return Collections.emptyList();
+        }
+        return List.copyOf(allTypes);
     }
 }
