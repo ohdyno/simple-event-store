@@ -3,7 +3,7 @@ Feature: Create Stream
 
   Background:
     Given the event store is operational
-    And it has no events
+    And the event store is empty
 
   Rule: A stream must have at least one event
 

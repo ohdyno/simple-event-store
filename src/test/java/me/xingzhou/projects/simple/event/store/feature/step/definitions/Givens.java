@@ -14,8 +14,8 @@ public class Givens {
     @Given("the event store is operational")
     public void theEventStoreIsOperational() {}
 
-    @And("it has no events")
-    public void itHasNoEvents() {}
+    @And("the event store is empty")
+    public void theEventStoreIsEmpty() {}
 
     @Given("the stream name {string}")
     public void theStreamName(String streamName) {}
