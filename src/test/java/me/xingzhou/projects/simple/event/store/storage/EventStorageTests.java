@@ -79,7 +79,7 @@ public abstract class EventStorageTests {
                             storage.undefinedVersion()),
                     new RequestEvent(
                             "second-event-id",
-                            "event-type-b",
+                            "event-type-b", // must be unique from the other event type
                             """
                             {"key2", "value"}""",
                             storage.undefinedVersion()),
@@ -195,6 +195,20 @@ public abstract class EventStorageTests {
                     Collections.emptyList(),
                     events.getFirst().version(),
                     events.getLast().version());
+
+            assertThat(records.records()).containsExactlyElementsOf(expected);
+            assertThat(records.version()).isEqualTo(events.getLast().version());
+        }
+
+        @Test
+        @DisplayName("Retrieve events from the stream with an event type and range filter successfully.")
+        void retrieveEventsWithEventTypeAndRangeFilter() {
+            var event = events.get(1);
+            var expected =
+                    List.of(new StoredRecord(event.eventType(), event.eventContent(), streamName, event.version()));
+
+            var records = storage.retrieveEvents(
+                    streamName, List.of(event.eventType()), events.getFirst().version(), storage.exclusiveMaxVersion());
 
             assertThat(records.records()).containsExactlyElementsOf(expected);
             assertThat(records.version()).isEqualTo(events.getLast().version());

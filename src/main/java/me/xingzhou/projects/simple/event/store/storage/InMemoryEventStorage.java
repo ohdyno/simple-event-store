@@ -49,18 +49,18 @@ public class InMemoryEventStorage implements EventStorage {
             String streamName, List<String> eventTypes, long beginVersion, long endVersion) {
         var eventStream = getEventStream(streamName);
         var version = eventStream.size();
-        var maxSize = Math.max(endVersion - (beginVersion + 1), 0);
         var records = eventStream.stream()
-                .skip(beginVersion)
-                .limit(maxSize)
-                .filter(event -> shouldIncludeEvent(eventTypes, event))
+                .filter(event -> shouldIncludeEvent(eventTypes, event, beginVersion, endVersion))
                 .map(EventRecord::toStoredRecord)
                 .toList();
         return new VersionedRecords(records, version);
     }
 
-    private static boolean shouldIncludeEvent(List<String> eventTypes, EventRecord event) {
-        return eventTypes.isEmpty() || eventTypes.contains(event.eventType());
+    private static boolean shouldIncludeEvent(
+            List<String> eventTypes, EventRecord event, long beginVersion, long endVersion) {
+        var isCorrectType = eventTypes.isEmpty() || eventTypes.contains(event.eventType());
+        var isWithinRange = beginVersion < event.version() && event.version() < endVersion;
+        return isCorrectType && isWithinRange;
     }
 
     private List<EventRecord> getEventStream(String streamName) {
