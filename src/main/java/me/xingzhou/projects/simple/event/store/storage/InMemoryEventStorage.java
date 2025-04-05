@@ -30,9 +30,13 @@ public class InMemoryEventStorage implements EventStorage {
     @Override
     public long appendEvent(
             String streamName, long currentVersion, String eventId, String eventType, String eventContent) {
-        var record = new EventRecord(streamName, eventId, eventType, eventContent, currentVersion + 1, Instant.now());
-        save(streamName, record);
-        return record.version();
+        if (streamNamesIndex.contains(streamName)) {
+            var record =
+                    new EventRecord(streamName, eventId, eventType, eventContent, currentVersion + 1, Instant.now());
+            save(streamName, record);
+            return record.version();
+        }
+        throw new NoSuchStreamFailure(streamName);
     }
 
     @Override

@@ -47,6 +47,18 @@ public abstract class EventStorageTests {
                             storage.exclusiveMaxVersion()))
                     .isInstanceOf(NoSuchStreamFailure.class);
         }
+
+        @Test
+        @DisplayName("Append to a stream that does not exist fails.")
+        void appendToStreamThatDoesNotExist() {
+            assertThatThrownBy(() -> storage.appendEvent(
+                            "a-stream-that-does-not-exist",
+                            storage.newStreamVersion(),
+                            "anything",
+                            "anything",
+                            "anything"))
+                    .isInstanceOf(NoSuchStreamFailure.class);
+        }
     }
 
     @Nested
@@ -90,7 +102,7 @@ public abstract class EventStorageTests {
         }
 
         @Test
-        @DisplayName("Retrieve the event from the stream.")
+        @DisplayName("Retrieve events from the stream successfully.")
         void retrieveEvents() {
             var expected = events.stream()
                     .map(event ->
