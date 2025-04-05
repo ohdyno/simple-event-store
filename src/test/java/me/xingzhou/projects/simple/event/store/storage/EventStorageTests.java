@@ -72,19 +72,19 @@ public abstract class EventStorageTests {
             this.events = List.of(
                     new RequestEvent(
                             "first-event-id",
-                            "an-event-type",
+                            "event-type-a",
                             """
                             {"key1", "value"}""",
                             storage.undefinedVersion()),
                     new RequestEvent(
                             "second-event-id",
-                            "an-event-type",
+                            "event-type-b",
                             """
                             {"key2", "value"}""",
                             storage.undefinedVersion()),
                     new RequestEvent(
                             "third-event-id",
-                            "an-event-type",
+                            "event-type-a",
                             """
                             {"key3", "value"}""",
                             storage.undefinedVersion()));
@@ -102,6 +102,39 @@ public abstract class EventStorageTests {
 
             var records = storage.retrieveEvents(
                     streamName, Collections.emptyList(), storage.undefinedVersion(), storage.exclusiveMaxVersion());
+
+            assertThat(records.records()).containsExactlyElementsOf(expected);
+        }
+
+        @Test
+        @DisplayName("Retrieve specific one event type from the stream successfully.")
+        void retrieveSpecificEventType() {
+            var eventTypes = List.of(events.getFirst().eventType());
+            var expected = events.stream()
+                    .filter(event -> eventTypes.contains(event.eventType()))
+                    .map(event ->
+                            new StoredRecord(event.eventType(), event.eventContent(), streamName, event.version()))
+                    .toList();
+
+            var records = storage.retrieveEvents(
+                    streamName, eventTypes, storage.undefinedVersion(), storage.exclusiveMaxVersion());
+
+            assertThat(records.records()).containsExactlyElementsOf(expected);
+        }
+
+        @Test
+        @DisplayName("Retrieve specific multiple event types from the stream successfully.")
+        void retrieveSpecificMultipleEventTypes() {
+            var eventTypes =
+                    List.of(events.getFirst().eventType(), events.getLast().eventType());
+            var expected = events.stream()
+                    .filter(event -> eventTypes.contains(event.eventType()))
+                    .map(event ->
+                            new StoredRecord(event.eventType(), event.eventContent(), streamName, event.version()))
+                    .toList();
+
+            var records = storage.retrieveEvents(
+                    streamName, eventTypes, storage.undefinedVersion(), storage.exclusiveMaxVersion());
 
             assertThat(records.records()).containsExactlyElementsOf(expected);
         }
