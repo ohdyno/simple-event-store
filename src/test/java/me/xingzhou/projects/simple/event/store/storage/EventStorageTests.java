@@ -81,6 +81,12 @@ public abstract class EventStorageTests {
                             "an-event-type",
                             """
                             {"key2", "value"}""",
+                            storage.undefinedVersion()),
+                    new RequestEvent(
+                            "third-event-id",
+                            "an-event-type",
+                            """
+                            {"key3", "value"}""",
                             storage.undefinedVersion()));
 
             save(this.events, streamName);
@@ -96,6 +102,60 @@ public abstract class EventStorageTests {
 
             var records = storage.retrieveEvents(
                     streamName, Collections.emptyList(), storage.undefinedVersion(), storage.exclusiveMaxVersion());
+
+            assertThat(records.records()).containsExactlyElementsOf(expected);
+        }
+
+        @Test
+        @DisplayName("Retrieve events from the stream after a specific version successfully.")
+        void retrieveEventsAfterVersion() {
+            var expected = events.stream()
+                    .skip(1)
+                    .map(event ->
+                            new StoredRecord(event.eventType(), event.eventContent(), streamName, event.version()))
+                    .toList();
+
+            var records = storage.retrieveEvents(
+                    streamName, Collections.emptyList(), events.getFirst().version(), storage.exclusiveMaxVersion());
+
+            assertThat(records.records()).containsExactlyElementsOf(expected);
+        }
+
+        @Test
+        @DisplayName("Retrieve events from the stream up to a specific version successfully.")
+        void retrieveEventsUpToVersion() {
+            var expected = events.stream()
+                    .limit(events.size() - 1) // skip the last one
+                    .map(event ->
+                            new StoredRecord(event.eventType(), event.eventContent(), streamName, event.version()))
+                    .toList();
+
+            var records = storage.retrieveEvents(
+                    streamName,
+                    Collections.emptyList(),
+                    storage.undefinedVersion(),
+                    events.getLast().version());
+
+            assertThat(records.records()).containsExactlyElementsOf(expected);
+        }
+
+        @Test
+        @DisplayName(
+                "Retrieve events from the stream after a specific version and up to a specific version successfully.")
+        void retrieveEventsAfterSpecificVersionAndUpToVersion() {
+            var skipped = 1;
+            var expected = events.stream()
+                    .skip(skipped) // skip the first one
+                    .limit(events.size() - 1 - skipped) // skip the last one
+                    .map(event ->
+                            new StoredRecord(event.eventType(), event.eventContent(), streamName, event.version()))
+                    .toList();
+
+            var records = storage.retrieveEvents(
+                    streamName,
+                    Collections.emptyList(),
+                    events.getFirst().version(),
+                    events.getLast().version());
 
             assertThat(records.records()).containsExactlyElementsOf(expected);
         }
@@ -122,8 +182,8 @@ public abstract class EventStorageTests {
         first.setVersion(version);
 
         for (var event : events.stream().skip(1).toList()) {
-            version = storage.appendEvent(
-                    streamName, storage.newStreamVersion(), event.eventId(), event.eventType(), event.eventContent());
+            version =
+                    storage.appendEvent(streamName, version, event.eventId(), event.eventType(), event.eventContent());
             event.setVersion(version);
         }
     }

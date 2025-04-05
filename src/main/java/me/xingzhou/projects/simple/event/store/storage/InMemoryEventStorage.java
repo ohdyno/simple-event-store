@@ -41,7 +41,7 @@ public class InMemoryEventStorage implements EventStorage {
     }
 
     private boolean isCurrent(long currentVersion, String streamName) {
-        return getEventStream(streamName).size() == currentVersion + 1;
+        return getEventStream(streamName).size() == currentVersion;
     }
 
     @Override
@@ -49,7 +49,12 @@ public class InMemoryEventStorage implements EventStorage {
             String streamName, List<String> eventTypes, long beginVersion, long endVersion) {
         var eventStream = getEventStream(streamName);
         var version = eventStream.size();
-        var records = eventStream.stream().map(EventRecord::toStoredRecord).toList();
+        var maxSize = endVersion - (beginVersion + 1);
+        var records = eventStream.stream()
+                .skip(beginVersion)
+                .limit(maxSize)
+                .map(EventRecord::toStoredRecord)
+                .toList();
         return new VersionedRecords(records, version);
     }
 
@@ -63,8 +68,13 @@ public class InMemoryEventStorage implements EventStorage {
     }
 
     @Override
+    public long undefinedVersion() {
+        return 0;
+    }
+
+    @Override
     public long newStreamVersion() {
-        return 0L;
+        return 1;
     }
 
     private void save(String streamName, EventRecord record) {
