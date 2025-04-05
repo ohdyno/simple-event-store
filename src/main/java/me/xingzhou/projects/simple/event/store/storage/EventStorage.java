@@ -27,9 +27,16 @@ public interface EventStorage {
             @Nonnull String eventType,
             @Nonnull String eventContent);
 
-    long appendEvent(String streamName, long currentVersion, String eventId, String eventType, String eventContent);
+    long appendEvent(
+            @Nonnull String streamName,
+            long currentVersion,
+            @Nonnull String eventId,
+            @Nonnull String eventType,
+            @Nonnull String eventContent);
 
-    VersionedRecords retrieveEvents(String streamName, List<String> eventTypes, long beginVersion, long endVersion);
+    @Nonnull
+    VersionedRecords retrieveEvents(
+            @Nonnull String streamName, @Nonnull List<String> eventTypes, long beginVersion, long endVersion);
 
     default TimestampedRecords retrieveEvents(String streamName, List<String> eventTypes, Instant start, Instant end) {
         throw new UnsupportedOperationException("Not implemented yet");

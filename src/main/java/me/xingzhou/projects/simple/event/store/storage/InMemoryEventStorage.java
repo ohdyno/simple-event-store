@@ -30,7 +30,11 @@ public class InMemoryEventStorage implements EventStorage {
 
     @Override
     public long appendEvent(
-            String streamName, long currentVersion, String eventId, String eventType, String eventContent) {
+            @Nonnull String streamName,
+            long currentVersion,
+            @Nonnull String eventId,
+            @Nonnull String eventType,
+            @Nonnull String eventContent) {
         if (isCurrent(currentVersion, streamName)) {
             var record =
                     new EventRecord(streamName, eventId, eventType, eventContent, currentVersion + 1, Instant.now());
@@ -45,8 +49,8 @@ public class InMemoryEventStorage implements EventStorage {
     }
 
     @Override
-    public VersionedRecords retrieveEvents(
-            String streamName, List<String> eventTypes, long beginVersion, long endVersion) {
+    public @Nonnull VersionedRecords retrieveEvents(
+            @Nonnull String streamName, @Nonnull List<String> eventTypes, long beginVersion, long endVersion) {
         var eventStream = getEventStream(streamName);
         var version = eventStream.size();
         var records = eventStream.stream()
