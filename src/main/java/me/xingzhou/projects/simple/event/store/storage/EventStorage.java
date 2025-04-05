@@ -4,6 +4,7 @@ import jakarta.annotation.Nonnull;
 import java.time.Instant;
 import java.util.List;
 import me.xingzhou.projects.simple.event.store.Version;
+import me.xingzhou.projects.simple.event.store.storage.failures.DuplicateEventStreamFailure;
 
 public interface EventStorage {
     /**

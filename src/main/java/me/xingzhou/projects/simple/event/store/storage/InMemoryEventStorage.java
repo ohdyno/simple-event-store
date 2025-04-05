@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import me.xingzhou.projects.simple.event.store.storage.failures.DuplicateEventStreamFailure;
+import me.xingzhou.projects.simple.event.store.storage.failures.NoSuchStreamFailure;
 
 public class InMemoryEventStorage implements EventStorage {
     private final List<EventRecord> storage = new ArrayList<>();
@@ -28,10 +30,13 @@ public class InMemoryEventStorage implements EventStorage {
     @Override
     public VersionedRecords retrieveEvents(
             String streamName, List<String> eventTypes, long beginVersion, long endVersion) {
-        var eventStream = getEventStream(streamName);
-        var version = eventStream.size();
-        var records = eventStream.stream().map(EventRecord::toStoredRecord).toList();
-        return new VersionedRecords(records, version);
+        if (streamNamesIndex.contains(streamName)) {
+            var eventStream = getEventStream(streamName);
+            var version = eventStream.size();
+            var records = eventStream.stream().map(EventRecord::toStoredRecord).toList();
+            return new VersionedRecords(records, version);
+        }
+        throw new NoSuchStreamFailure(streamName);
     }
 
     private List<EventRecord> getEventStream(String streamName) {

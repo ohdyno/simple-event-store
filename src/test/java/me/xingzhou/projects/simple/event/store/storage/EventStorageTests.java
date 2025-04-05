@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Collections;
+import me.xingzhou.projects.simple.event.store.storage.failures.DuplicateEventStreamFailure;
+import me.xingzhou.projects.simple.event.store.storage.failures.NoSuchStreamFailure;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -31,6 +33,17 @@ public abstract class EventStorageTests {
                     {"key", "value"}""");
 
             assertThat(version).isEqualTo(storage.newStreamVersion());
+        }
+
+        @Test
+        @DisplayName("Retrieve the event from a stream that does not exist.")
+        void retrieveEvents() {
+            assertThatThrownBy(() -> storage.retrieveEvents(
+                            streamName,
+                            Collections.emptyList(),
+                            storage.undefinedVersion(),
+                            storage.exclusiveMaxVersion()))
+                    .isInstanceOf(NoSuchStreamFailure.class);
         }
     }
 
