@@ -20,8 +20,9 @@ public class InMemoryEventStorage implements EventStorage {
         if (streamNamesIndex.contains(streamName)) {
             throw new DuplicateEventStreamFailure();
         }
-        save(streamName, new EventRecord(streamName, eventId, eventType, eventContent, Instant.now()));
-        return newStreamVersion();
+        var record = new EventRecord(streamName, eventId, eventType, eventContent, newStreamVersion(), Instant.now());
+        save(streamName, record);
+        return record.version();
     }
 
     @Override
@@ -50,9 +51,9 @@ public class InMemoryEventStorage implements EventStorage {
     }
 
     private record EventRecord(
-            String streamName, String eventId, String eventType, String eventContent, Instant timestamp) {
+            String streamName, String eventId, String eventType, String eventContent, long version, Instant timestamp) {
         private StoredRecord toStoredRecord() {
-            return null;
+            return new StoredRecord(eventType, eventContent, streamName, version);
         }
     }
 }

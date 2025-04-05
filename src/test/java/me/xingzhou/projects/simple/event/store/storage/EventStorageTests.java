@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Collections;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -38,14 +37,13 @@ public abstract class EventStorageTests {
     @Nested
     class OneStreamStorageTests {
         private final String streamName = "a-stream-name";
-        private final List<RequestEvent> events =
-                List.of(new RequestEvent("an-event-id", "an-event-type", """
-                    {"key", "value"}"""));
+        private final RequestEvent event =
+                new RequestEvent("an-event-id", "an-event-type", """
+                {"key", "value"}""");
 
         @BeforeEach
         void setUp() {
-            events.forEach(event ->
-                    storage.createStream(streamName, event.eventId(), event.eventType(), event.eventContent()));
+            storage.createStream(streamName, event.eventId(), event.eventType(), event.eventContent());
         }
 
         @Test
@@ -54,13 +52,16 @@ public abstract class EventStorageTests {
             var records = storage.retrieveEvents(
                     streamName, Collections.emptyList(), storage.undefinedVersion(), storage.exclusiveMaxVersion());
 
-            assertThat(records.records()).hasSize(1);
+            assertThat(records.records())
+                    .containsOnly(new StoredRecord(
+                            event.eventType(), event.eventContent(), streamName, storage.newStreamVersion()));
         }
 
         @Test
         @DisplayName("Create a duplicate stream fails.")
         void createDuplicateStream() {
-            assertThatThrownBy(() -> storage.createStream(streamName, "an-event-id", "an-event-type", "{}"))
+            assertThatThrownBy(() ->
+                            storage.createStream(streamName, event.eventId(), event.eventType(), event.eventContent))
                     .isInstanceOf(DuplicateEventStreamFailure.class);
         }
     }

@@ -38,9 +38,9 @@ public interface EventStorage {
     }
 
     /**
-     * @return the initial version. This is the same as the value returned from {@link #createStream(String, String,
-     *     String, String)}. The value is guaranteed to be between {@link #undefinedVersion()} and
-     *     {@link #exclusiveMaxVersion()}.
+     * @return the version indicating a new event stream. This is the same as the value returned from
+     *     {@link #createStream(String, String, String, String)}. The value is guaranteed to be between
+     *     {@link #undefinedVersion()} and {@link #exclusiveMaxVersion()}.
      * @apiNote The possible value returned is an internal detail of this class. Interpreting and manipulating the value
      *     is unsupported and could result in undefined behavior.
      */
