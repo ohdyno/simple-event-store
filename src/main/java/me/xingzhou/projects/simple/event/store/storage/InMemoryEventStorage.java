@@ -21,11 +21,26 @@ public class InMemoryEventStorage implements EventStorage {
             throw new DuplicateEventStreamFailure();
         }
         save(streamName, new EventRecord(streamName, eventId, eventType, eventContent, Instant.now()));
-        return initialVersion();
+        return newStreamVersion();
     }
 
     @Override
-    public long initialVersion() {
+    public VersionedRecords retrieveEvents(
+            String streamName, List<String> eventTypes, long beginVersion, long endVersion) {
+        var eventStream = getEventStream(streamName);
+        var version = eventStream.size();
+        var records = eventStream.stream().map(EventRecord::toStoredRecord).toList();
+        return new VersionedRecords(records, version);
+    }
+
+    private List<EventRecord> getEventStream(String streamName) {
+        return storage.stream()
+                .filter(record -> record.streamName.equals(streamName))
+                .toList();
+    }
+
+    @Override
+    public long newStreamVersion() {
         return 0L;
     }
 
@@ -35,5 +50,9 @@ public class InMemoryEventStorage implements EventStorage {
     }
 
     private record EventRecord(
-            String streamName, String eventId, String eventType, String eventContent, Instant timestamp) {}
+            String streamName, String eventId, String eventType, String eventContent, Instant timestamp) {
+        private StoredRecord toStoredRecord() {
+            return null;
+        }
+    }
 }

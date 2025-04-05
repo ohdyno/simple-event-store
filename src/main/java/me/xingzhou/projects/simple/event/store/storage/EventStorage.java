@@ -31,10 +31,7 @@ public interface EventStorage {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
-    default VersionedRecords retrieveEvents(
-            String streamName, List<String> eventTypes, long beginVersion, long endVersion) {
-        throw new UnsupportedOperationException("Not implemented yet");
-    }
+    VersionedRecords retrieveEvents(String streamName, List<String> eventTypes, long beginVersion, long endVersion);
 
     default TimestampedRecords retrieveEvents(String streamName, List<String> eventTypes, Instant start, Instant end) {
         throw new UnsupportedOperationException("Not implemented yet");
@@ -47,7 +44,7 @@ public interface EventStorage {
      * @apiNote The possible value returned is an internal detail of this class. Interpreting and manipulating the value
      *     is unsupported and could result in undefined behavior.
      */
-    long initialVersion();
+    long newStreamVersion();
 
     /**
      * @return the exclusive lower bound for the version.

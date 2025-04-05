@@ -3,6 +3,7 @@ package me.xingzhou.projects.simple.event.store.storage;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,7 +31,7 @@ public abstract class EventStorageTests {
                     streamName, "an-event-id", "an-event-type", """
                     {"key", "value"}""");
 
-            assertThat(version).isEqualTo(storage.initialVersion());
+            assertThat(version).isEqualTo(storage.newStreamVersion());
         }
     }
 
@@ -45,6 +46,15 @@ public abstract class EventStorageTests {
         void setUp() {
             events.forEach(event ->
                     storage.createStream(streamName, event.eventId(), event.eventType(), event.eventContent()));
+        }
+
+        @Test
+        @DisplayName("Retrieve the event from the stream.")
+        void retrieveEvents() {
+            var records = storage.retrieveEvents(
+                    streamName, Collections.emptyList(), storage.undefinedVersion(), storage.exclusiveMaxVersion());
+
+            assertThat(records.records()).hasSize(1);
         }
 
         @Test
