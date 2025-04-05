@@ -2,6 +2,7 @@ package me.xingzhou.projects.simple.event.store.storage;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 import java.util.Collections;
 import java.util.List;
@@ -104,6 +105,7 @@ public abstract class EventStorageTests {
                     streamName, Collections.emptyList(), storage.undefinedVersion(), storage.exclusiveMaxVersion());
 
             assertThat(records.records()).containsExactlyElementsOf(expected);
+            assertThat(records.version()).isEqualTo(events.getLast().version());
         }
 
         @Test
@@ -120,6 +122,7 @@ public abstract class EventStorageTests {
                     streamName, eventTypes, storage.undefinedVersion(), storage.exclusiveMaxVersion());
 
             assertThat(records.records()).containsExactlyElementsOf(expected);
+            assertThat(records.version()).isEqualTo(events.getLast().version());
         }
 
         @Test
@@ -137,6 +140,7 @@ public abstract class EventStorageTests {
                     streamName, eventTypes, storage.undefinedVersion(), storage.exclusiveMaxVersion());
 
             assertThat(records.records()).containsExactlyElementsOf(expected);
+            assertThat(records.version()).isEqualTo(events.getLast().version());
         }
 
         @Test
@@ -152,6 +156,7 @@ public abstract class EventStorageTests {
                     streamName, Collections.emptyList(), events.getFirst().version(), storage.exclusiveMaxVersion());
 
             assertThat(records.records()).containsExactlyElementsOf(expected);
+            assertThat(records.version()).isEqualTo(events.getLast().version());
         }
 
         @Test
@@ -170,6 +175,7 @@ public abstract class EventStorageTests {
                     events.getLast().version());
 
             assertThat(records.records()).containsExactlyElementsOf(expected);
+            assertThat(records.version()).isEqualTo(events.getLast().version());
         }
 
         @Test
@@ -191,50 +197,69 @@ public abstract class EventStorageTests {
                     events.getLast().version());
 
             assertThat(records.records()).containsExactlyElementsOf(expected);
+            assertThat(records.version()).isEqualTo(events.getLast().version());
         }
 
         @Test
         @DisplayName("Retrieve events from the stream with version range edge cases return no events successfully.")
         void retrieveEventsVersionRange() {
-            assertThat(storage.retrieveEvents(
-                                    streamName,
-                                    Collections.emptyList(),
-                                    events.getLast().version(),
-                                    storage.exclusiveMaxVersion())
-                            .records())
-                    .isEmpty(); // skipping all events
+            assertAll(
+                    "",
+                    () -> {
+                        // skipping all events
+                        var record = storage.retrieveEvents(
+                                streamName,
+                                Collections.emptyList(),
+                                events.getLast().version(),
+                                storage.exclusiveMaxVersion());
 
-            assertThat(storage.retrieveEvents(
-                                    streamName,
-                                    Collections.emptyList(),
-                                    events.getLast().version(),
-                                    events.getFirst().version())
-                            .records())
-                    .isEmpty(); // end > begin
+                        assertThat(record.records()).isEmpty();
+                        assertThat(record.version()).isEqualTo(events.getLast().version());
+                    },
+                    () -> {
+                        // end > begin
+                        var record = storage.retrieveEvents(
+                                streamName,
+                                Collections.emptyList(),
+                                events.getLast().version(),
+                                events.getFirst().version());
 
-            assertThat(storage.retrieveEvents(
-                                    streamName,
-                                    Collections.emptyList(),
-                                    events.getFirst().version(),
-                                    events.getFirst().version())
-                            .records())
-                    .isEmpty(); // end = begin
+                        assertThat(record.records()).isEmpty();
+                        assertThat(record.version()).isEqualTo(events.getLast().version());
+                    },
+                    () -> {
+                        // end = begin
+                        var record = storage.retrieveEvents(
+                                streamName,
+                                Collections.emptyList(),
+                                events.getFirst().version(),
+                                events.getFirst().version());
 
-            assertThat(storage.retrieveEvents(
-                                    streamName,
-                                    Collections.emptyList(),
-                                    events.getFirst().version(),
-                                    events.get(1).version())
-                            .records())
-                    .isEmpty(); // end = begin + 1
+                        assertThat(record.records()).isEmpty();
+                        assertThat(record.version()).isEqualTo(events.getLast().version());
+                    },
+                    () -> {
+                        // end = begin + 1
+                        var record = storage.retrieveEvents(
+                                streamName,
+                                Collections.emptyList(),
+                                events.getFirst().version(),
+                                events.get(1).version());
 
-            assertThat(storage.retrieveEvents(
-                                    streamName,
-                                    Collections.emptyList(),
-                                    storage.exclusiveMaxVersion(),
-                                    storage.exclusiveMaxVersion())
-                            .records())
-                    .isEmpty(); // max version
+                        assertThat(record.records()).isEmpty();
+                        assertThat(record.version()).isEqualTo(events.getLast().version());
+                    },
+                    () -> {
+                        // max version
+                        var record = storage.retrieveEvents(
+                                streamName,
+                                Collections.emptyList(),
+                                storage.exclusiveMaxVersion(),
+                                storage.exclusiveMaxVersion());
+
+                        assertThat(record.records()).isEmpty();
+                        assertThat(record.version()).isEqualTo(events.getLast().version());
+                    });
         }
 
         @Test
