@@ -49,7 +49,7 @@ public class InMemoryEventStorage implements EventStorage {
             String streamName, List<String> eventTypes, long beginVersion, long endVersion) {
         var eventStream = getEventStream(streamName);
         var version = eventStream.size();
-        var maxSize = endVersion - (beginVersion + 1);
+        var maxSize = Math.max(endVersion - (beginVersion + 1), 0);
         var records = eventStream.stream()
                 .skip(beginVersion)
                 .limit(maxSize)

@@ -161,6 +161,50 @@ public abstract class EventStorageTests {
         }
 
         @Test
+        @DisplayName("Retrieve events from the stream with version range edge cases return no events successfully.")
+        void retrieveEventsVersionRange() {
+            assertThat(storage.retrieveEvents(
+                                    streamName,
+                                    Collections.emptyList(),
+                                    events.getLast().version(),
+                                    storage.exclusiveMaxVersion())
+                            .records())
+                    .isEmpty(); // skipping all events
+
+            assertThat(storage.retrieveEvents(
+                                    streamName,
+                                    Collections.emptyList(),
+                                    events.getLast().version(),
+                                    events.getFirst().version())
+                            .records())
+                    .isEmpty(); // end > begin
+
+            assertThat(storage.retrieveEvents(
+                                    streamName,
+                                    Collections.emptyList(),
+                                    events.getFirst().version(),
+                                    events.getFirst().version())
+                            .records())
+                    .isEmpty(); // end = begin
+
+            assertThat(storage.retrieveEvents(
+                                    streamName,
+                                    Collections.emptyList(),
+                                    events.getFirst().version(),
+                                    events.get(1).version())
+                            .records())
+                    .isEmpty(); // end = begin + 1
+
+            assertThat(storage.retrieveEvents(
+                                    streamName,
+                                    Collections.emptyList(),
+                                    storage.exclusiveMaxVersion(),
+                                    storage.exclusiveMaxVersion())
+                            .records())
+                    .isEmpty(); // max version
+        }
+
+        @Test
         @DisplayName("Create a duplicate stream fails.")
         void createDuplicateStream() {
             assertThatThrownBy(() -> storage.createStream(streamName, "anything", "anything", "anything"))
