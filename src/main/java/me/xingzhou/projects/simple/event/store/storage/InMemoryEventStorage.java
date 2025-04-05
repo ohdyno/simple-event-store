@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 import me.xingzhou.projects.simple.event.store.storage.failures.DuplicateEventStreamFailure;
 import me.xingzhou.projects.simple.event.store.storage.failures.NoSuchStreamFailure;
+import me.xingzhou.projects.simple.event.store.storage.failures.StaleVersionFailure;
 
 public class InMemoryEventStorage implements EventStorage {
     private final List<EventRecord> storage = new ArrayList<>();
@@ -30,31 +31,35 @@ public class InMemoryEventStorage implements EventStorage {
     @Override
     public long appendEvent(
             String streamName, long currentVersion, String eventId, String eventType, String eventContent) {
-        if (streamNamesIndex.contains(streamName)) {
+        if (isCurrent(currentVersion, streamName)) {
             var record =
                     new EventRecord(streamName, eventId, eventType, eventContent, currentVersion + 1, Instant.now());
             save(streamName, record);
             return record.version();
         }
-        throw new NoSuchStreamFailure(streamName);
+        throw new StaleVersionFailure();
+    }
+
+    private boolean isCurrent(long currentVersion, String streamName) {
+        return getEventStream(streamName).size() == currentVersion + 1;
     }
 
     @Override
     public VersionedRecords retrieveEvents(
             String streamName, List<String> eventTypes, long beginVersion, long endVersion) {
-        if (streamNamesIndex.contains(streamName)) {
-            var eventStream = getEventStream(streamName);
-            var version = eventStream.size();
-            var records = eventStream.stream().map(EventRecord::toStoredRecord).toList();
-            return new VersionedRecords(records, version);
-        }
-        throw new NoSuchStreamFailure(streamName);
+        var eventStream = getEventStream(streamName);
+        var version = eventStream.size();
+        var records = eventStream.stream().map(EventRecord::toStoredRecord).toList();
+        return new VersionedRecords(records, version);
     }
 
     private List<EventRecord> getEventStream(String streamName) {
-        return storage.stream()
-                .filter(record -> record.streamName.equals(streamName))
-                .toList();
+        if (streamNamesIndex.contains(streamName)) {
+            return storage.stream()
+                    .filter(record -> record.streamName.equals(streamName))
+                    .toList();
+        }
+        throw new NoSuchStreamFailure(streamName);
     }
 
     @Override

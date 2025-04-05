@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Objects;
 import me.xingzhou.projects.simple.event.store.storage.failures.DuplicateEventStreamFailure;
 import me.xingzhou.projects.simple.event.store.storage.failures.NoSuchStreamFailure;
+import me.xingzhou.projects.simple.event.store.storage.failures.StaleVersionFailure;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -68,7 +69,7 @@ public abstract class EventStorageTests {
 
         @BeforeEach
         void setUp() {
-            var events = List.of(
+            this.events = List.of(
                     new RequestEvent(
                             "first-event-id",
                             "an-event-type",
@@ -82,23 +83,7 @@ public abstract class EventStorageTests {
                             {"key2", "value"}""",
                             storage.undefinedVersion()));
 
-            events.forEach(event -> {
-                try {
-                    var version =
-                            storage.createStream(streamName, event.eventId(), event.eventType(), event.eventContent());
-                    event.setVersion(version);
-                } catch (DuplicateEventStreamFailure ignored) {
-                    var version = storage.appendEvent(
-                            streamName,
-                            storage.newStreamVersion(),
-                            event.eventId(),
-                            event.eventType(),
-                            event.eventContent());
-                    event.setVersion(version);
-                }
-            });
-
-            this.events = events;
+            save(this.events, streamName);
         }
 
         @Test
@@ -120,6 +105,26 @@ public abstract class EventStorageTests {
         void createDuplicateStream() {
             assertThatThrownBy(() -> storage.createStream(streamName, "anything", "anything", "anything"))
                     .isInstanceOf(DuplicateEventStreamFailure.class);
+        }
+
+        @Test
+        @DisplayName("Append to stream with stale version fails.")
+        void appendEventWithStaleVersion() {
+            assertThatThrownBy(() -> storage.appendEvent(
+                            streamName, storage.newStreamVersion(), "anything", "anything", "anything"))
+                    .isInstanceOf(StaleVersionFailure.class);
+        }
+    }
+
+    private void save(List<RequestEvent> events, String streamName) {
+        var first = events.get(0);
+        var version = storage.createStream(streamName, first.eventId(), first.eventType(), first.eventContent());
+        first.setVersion(version);
+
+        for (var event : events.stream().skip(1).toList()) {
+            version = storage.appendEvent(
+                    streamName, storage.newStreamVersion(), event.eventId(), event.eventType(), event.eventContent());
+            event.setVersion(version);
         }
     }
 
