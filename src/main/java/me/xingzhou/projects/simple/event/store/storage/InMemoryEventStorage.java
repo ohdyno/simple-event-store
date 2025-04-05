@@ -11,9 +11,8 @@ public class InMemoryEventStorage implements EventStorage {
     private final List<EventRecord> storage = new ArrayList<>();
     private final Set<String> streamNamesIndex = new HashSet<>();
 
-    @Nonnull
     @Override
-    public String createStream(
+    public long createStream(
             @Nonnull String streamName,
             @Nonnull String eventId,
             @Nonnull String eventType,
@@ -26,8 +25,8 @@ public class InMemoryEventStorage implements EventStorage {
     }
 
     @Override
-    public String initialVersion() {
-        return "0";
+    public long initialVersion() {
+        return 0L;
     }
 
     private void save(String streamName, EventRecord record) {

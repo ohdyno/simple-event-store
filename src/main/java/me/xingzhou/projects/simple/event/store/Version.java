@@ -1,6 +1,6 @@
 package me.xingzhou.projects.simple.event.store;
 
-public record Version(String value) {
+public record Version(long value) {
     public static Version start() {
         return null;
     }
