@@ -8,6 +8,21 @@ import me.xingzhou.projects.simple.event.store.storage.failures.DuplicateEventSt
 
 public interface EventStorage {
     /**
+     * Define contractual version constants.
+     *
+     * @apiNote The values can be considered stable across major releases. Therefore, the version can be safely
+     *     persisted and read regardless of the release.
+     * @implSpec Since the other methods rely on the value of version, all implementations should use these constants
+     *     when appropriate.
+     */
+    interface VersionConstants {
+        long NEW_STREAM = 0;
+        long UNDEFINED_STREAM = -1;
+        long RANGE_MIN_EXCLUSIVE = UNDEFINED_STREAM;
+        long RANGE_MAX_EXCLUSIVE = Long.MAX_VALUE;
+    }
+
+    /**
      * Create an event stream with the given streamName containing the event defined by (eventId, eventType,
      * eventContent).
      *
@@ -17,7 +32,7 @@ public interface EventStorage {
      *     {@link #retrieveEvents(String, List, long, long)} or {@link #retrieveEvents(String, List, Instant, Instant)}
      *     to reduce the number of events retrieved.
      * @param eventContent is the content of the event serialized to JSON.
-     * @return a version reflecting the state of the event stream.
+     * @return {@link VersionConstants#NEW_STREAM}
      * @throws DuplicateEventStreamFailure if another stream with the same name already exists.
      * @see Version
      */
@@ -40,30 +55,5 @@ public interface EventStorage {
 
     default TimestampedRecords retrieveEvents(String streamName, List<String> eventTypes, Instant start, Instant end) {
         throw new UnsupportedOperationException("Not implemented yet");
-    }
-
-    /**
-     * @return the version indicating a new event stream. This is the same as the value returned from
-     *     {@link #createStream(String, String, String, String)}. The value is guaranteed to be between
-     *     {@link #undefinedVersion()} and {@link #exclusiveMaxVersion()}.
-     * @apiNote The possible value returned is an internal detail of this class. Interpreting and manipulating the value
-     *     is unsupported and could result in undefined behavior.
-     */
-    long newStreamVersion();
-
-    /**
-     * @return the exclusive lower bound for the version.
-     * @apiNote The specific value is an internal detail of this class. It could be changed in unexpected ways.
-     */
-    default long undefinedVersion() {
-        return -1;
-    }
-
-    /**
-     * @return the exclusive upper bound for the version.
-     * @apiNote The specific value is an internal detail of this class. It could be changed in unexpected ways.
-     */
-    default long exclusiveMaxVersion() {
-        return Long.MAX_VALUE;
     }
 }

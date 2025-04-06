@@ -23,7 +23,8 @@ public class InMemoryEventStorage implements EventStorage {
         if (streamNamesIndex.contains(streamName)) {
             throw new DuplicateEventStreamFailure();
         }
-        var record = new EventRecord(streamName, eventId, eventType, eventContent, newStreamVersion(), Instant.now());
+        var record = new EventRecord(
+                streamName, eventId, eventType, eventContent, VersionConstants.NEW_STREAM, Instant.now());
         save(streamName, record);
         return record.version();
     }
@@ -35,7 +36,7 @@ public class InMemoryEventStorage implements EventStorage {
             @Nonnull String eventId,
             @Nonnull String eventType,
             @Nonnull String eventContent) {
-        if (isCurrent(currentVersion, streamName)) {
+        if (getCurrentVersion(streamName) == currentVersion) {
             var record =
                     new EventRecord(streamName, eventId, eventType, eventContent, currentVersion + 1, Instant.now());
             save(streamName, record);
@@ -44,29 +45,39 @@ public class InMemoryEventStorage implements EventStorage {
         throw new StaleVersionFailure();
     }
 
-    private boolean isCurrent(long currentVersion, String streamName) {
-        return getEventStream(streamName).size() == currentVersion;
+    /**
+     * @param streamName is the name of a stream within {@link #storage}.
+     * @throws NoSuchStreamFailure if the stream does not exist.
+     * @return the current version for the stream, accounting for the value of {@link VersionConstants#NEW_STREAM}
+     */
+    private int getCurrentVersion(String streamName) {
+        return getEventStream(streamName).size() - 1;
     }
 
     @Override
     public @Nonnull VersionedRecords retrieveEvents(
             @Nonnull String streamName, @Nonnull List<String> eventTypes, long beginVersion, long endVersion) {
         var eventStream = getEventStream(streamName);
-        var version = eventStream.size();
+        var version = getCurrentVersion(streamName);
         var records = eventStream.stream()
-                .filter(event -> shouldIncludeEvent(eventTypes, event, beginVersion, endVersion))
+                .filter(event -> shouldIncludeEvent(event, eventTypes, beginVersion, endVersion))
                 .map(EventRecord::toStoredRecord)
                 .toList();
         return new VersionedRecords(records, version);
     }
 
     private static boolean shouldIncludeEvent(
-            List<String> eventTypes, EventRecord event, long beginVersion, long endVersion) {
+            EventRecord event, List<String> eventTypes, long beginVersion, long endVersion) {
         var isCorrectType = eventTypes.isEmpty() || eventTypes.contains(event.eventType());
         var isWithinRange = beginVersion < event.version() && event.version() < endVersion;
         return isCorrectType && isWithinRange;
     }
 
+    /**
+     * @param streamName is the name of a stream within {@link #storage}.
+     * @throws NoSuchStreamFailure if the stream does not exist.
+     * @return the records for the stream in insertion order.
+     */
     private List<EventRecord> getEventStream(String streamName) {
         if (streamNamesIndex.contains(streamName)) {
             return storage.stream()
@@ -74,16 +85,6 @@ public class InMemoryEventStorage implements EventStorage {
                     .toList();
         }
         throw new NoSuchStreamFailure(streamName);
-    }
-
-    @Override
-    public long undefinedVersion() {
-        return 0;
-    }
-
-    @Override
-    public long newStreamVersion() {
-        return 1;
     }
 
     private void save(String streamName, EventRecord record) {

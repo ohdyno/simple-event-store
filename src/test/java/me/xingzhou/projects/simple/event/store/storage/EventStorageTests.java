@@ -36,7 +36,7 @@ public abstract class EventStorageTests {
                     streamName, "an-event-id", "an-event-type", """
                             {"key", "value"}""");
 
-            assertThat(version).isEqualTo(storage.newStreamVersion());
+            assertThat(version).isEqualTo(EventStorage.VersionConstants.NEW_STREAM);
         }
 
         @Test
@@ -45,8 +45,8 @@ public abstract class EventStorageTests {
             assertThatThrownBy(() -> storage.retrieveEvents(
                             streamName,
                             Collections.emptyList(),
-                            storage.undefinedVersion(),
-                            storage.exclusiveMaxVersion()))
+                            EventStorage.VersionConstants.UNDEFINED_STREAM,
+                            EventStorage.VersionConstants.RANGE_MAX_EXCLUSIVE))
                     .isInstanceOf(NoSuchStreamFailure.class);
         }
 
@@ -55,7 +55,7 @@ public abstract class EventStorageTests {
         void appendToStreamThatDoesNotExist() {
             assertThatThrownBy(() -> storage.appendEvent(
                             "a-stream-that-does-not-exist",
-                            storage.newStreamVersion(),
+                            EventStorage.VersionConstants.NEW_STREAM,
                             "anything",
                             "anything",
                             "anything"))
@@ -76,19 +76,19 @@ public abstract class EventStorageTests {
                             "event-type-a",
                             """
                             {"key1", "value"}""",
-                            storage.undefinedVersion()),
+                            EventStorage.VersionConstants.UNDEFINED_STREAM),
                     new RequestEvent(
                             "second-event-id",
                             "event-type-b", // must be unique from the other event type
                             """
                             {"key2", "value"}""",
-                            storage.undefinedVersion()),
+                            EventStorage.VersionConstants.UNDEFINED_STREAM),
                     new RequestEvent(
                             "third-event-id",
                             "event-type-a",
                             """
                             {"key3", "value"}""",
-                            storage.undefinedVersion()));
+                            EventStorage.VersionConstants.UNDEFINED_STREAM));
 
             save(this.events, streamName);
         }
@@ -102,7 +102,10 @@ public abstract class EventStorageTests {
                     .toList();
 
             var records = storage.retrieveEvents(
-                    streamName, Collections.emptyList(), storage.undefinedVersion(), storage.exclusiveMaxVersion());
+                    streamName,
+                    Collections.emptyList(),
+                    EventStorage.VersionConstants.UNDEFINED_STREAM,
+                    EventStorage.VersionConstants.RANGE_MAX_EXCLUSIVE);
 
             assertThat(records.records()).containsExactlyElementsOf(expected);
             assertThat(records.version()).isEqualTo(events.getLast().version());
@@ -119,7 +122,10 @@ public abstract class EventStorageTests {
                     .toList();
 
             var records = storage.retrieveEvents(
-                    streamName, eventTypes, storage.undefinedVersion(), storage.exclusiveMaxVersion());
+                    streamName,
+                    eventTypes,
+                    EventStorage.VersionConstants.UNDEFINED_STREAM,
+                    EventStorage.VersionConstants.RANGE_MAX_EXCLUSIVE);
 
             assertThat(records.records()).containsExactlyElementsOf(expected);
             assertThat(records.version()).isEqualTo(events.getLast().version());
@@ -137,7 +143,10 @@ public abstract class EventStorageTests {
                     .toList();
 
             var records = storage.retrieveEvents(
-                    streamName, eventTypes, storage.undefinedVersion(), storage.exclusiveMaxVersion());
+                    streamName,
+                    eventTypes,
+                    EventStorage.VersionConstants.UNDEFINED_STREAM,
+                    EventStorage.VersionConstants.RANGE_MAX_EXCLUSIVE);
 
             assertThat(records.records()).containsExactlyElementsOf(expected);
             assertThat(records.version()).isEqualTo(events.getLast().version());
@@ -153,7 +162,10 @@ public abstract class EventStorageTests {
                     .toList();
 
             var records = storage.retrieveEvents(
-                    streamName, Collections.emptyList(), events.getFirst().version(), storage.exclusiveMaxVersion());
+                    streamName,
+                    Collections.emptyList(),
+                    events.getFirst().version(),
+                    EventStorage.VersionConstants.RANGE_MAX_EXCLUSIVE);
 
             assertThat(records.records()).containsExactlyElementsOf(expected);
             assertThat(records.version()).isEqualTo(events.getLast().version());
@@ -171,7 +183,7 @@ public abstract class EventStorageTests {
             var records = storage.retrieveEvents(
                     streamName,
                     Collections.emptyList(),
-                    storage.undefinedVersion(),
+                    EventStorage.VersionConstants.UNDEFINED_STREAM,
                     events.getLast().version());
 
             assertThat(records.records()).containsExactlyElementsOf(expected);
@@ -208,7 +220,10 @@ public abstract class EventStorageTests {
                     List.of(new StoredRecord(event.eventType(), event.eventContent(), streamName, event.version()));
 
             var records = storage.retrieveEvents(
-                    streamName, List.of(event.eventType()), events.getFirst().version(), storage.exclusiveMaxVersion());
+                    streamName,
+                    List.of(event.eventType()),
+                    events.getFirst().version(),
+                    EventStorage.VersionConstants.RANGE_MAX_EXCLUSIVE);
 
             assertThat(records.records()).containsExactlyElementsOf(expected);
             assertThat(records.version()).isEqualTo(events.getLast().version());
@@ -225,7 +240,7 @@ public abstract class EventStorageTests {
                                 streamName,
                                 Collections.emptyList(),
                                 events.getLast().version(),
-                                storage.exclusiveMaxVersion());
+                                EventStorage.VersionConstants.RANGE_MAX_EXCLUSIVE);
 
                         assertThat(record.records()).isEmpty();
                         assertThat(record.version()).isEqualTo(events.getLast().version());
@@ -268,8 +283,8 @@ public abstract class EventStorageTests {
                         var record = storage.retrieveEvents(
                                 streamName,
                                 Collections.emptyList(),
-                                storage.exclusiveMaxVersion(),
-                                storage.exclusiveMaxVersion());
+                                EventStorage.VersionConstants.RANGE_MAX_EXCLUSIVE,
+                                EventStorage.VersionConstants.RANGE_MAX_EXCLUSIVE);
 
                         assertThat(record.records()).isEmpty();
                         assertThat(record.version()).isEqualTo(events.getLast().version());
@@ -287,7 +302,7 @@ public abstract class EventStorageTests {
         @DisplayName("Append to stream with stale version fails.")
         void appendEventWithStaleVersion() {
             assertThatThrownBy(() -> storage.appendEvent(
-                            streamName, storage.newStreamVersion(), "anything", "anything", "anything"))
+                            streamName, EventStorage.VersionConstants.NEW_STREAM, "anything", "anything", "anything"))
                     .isInstanceOf(StaleVersionFailure.class);
         }
     }
