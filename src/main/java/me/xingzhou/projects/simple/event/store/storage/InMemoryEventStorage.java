@@ -69,14 +69,14 @@ public class InMemoryEventStorage implements EventStorage {
         return new VersionedRecords(records, version);
     }
 
-    @Nonnull
     @Override
-    public TimestampedRecords retrieveEvents(
+    public @Nonnull TimestampedRecords retrieveEvents(
             @Nonnull Instant exclusiveStart,
             @Nonnull Instant exclusiveEnd,
             @Nonnull List<String> streamNames,
             @Nonnull List<String> eventTypes) {
-        return null;
+        return new TimestampedRecords(
+                storage.stream().map(EventRecord::toStoredRecord).toList(), Instant.now());
     }
 
     private static boolean shouldIncludeEvent(

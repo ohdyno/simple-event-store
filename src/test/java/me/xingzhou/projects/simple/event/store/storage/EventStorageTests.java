@@ -350,7 +350,16 @@ public abstract class EventStorageTests {
         @Test
         @DisplayName("Retrieve events from all streams and all types")
         void retrieveEventsFromAllStreamsAndTypes() {
-            storage.retrieveEvents(Instant.MIN, Instant.MAX, Collections.emptyList(), Collections.emptyList());
+            var expected = events.entrySet().stream()
+                    .flatMap(entry -> entry.getValue().stream()
+                            .map(event -> new StoredRecord(
+                                    event.eventType(), event.eventContent(), entry.getKey(), event.version())))
+                    .toList();
+
+            var records =
+                    storage.retrieveEvents(Instant.MIN, Instant.MAX, Collections.emptyList(), Collections.emptyList());
+
+            assertThat(records.records()).containsAll(expected);
         }
     }
 
