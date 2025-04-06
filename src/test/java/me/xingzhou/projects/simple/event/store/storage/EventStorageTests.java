@@ -40,6 +40,17 @@ public abstract class EventStorageTests {
         }
 
         @Test
+        @DisplayName("Create a duplicate stream fails.")
+        void createDuplicateStream() {
+            storage.createStream(
+                    streamName, "an-event-id", "an-event-type", """
+                            {"key", "value"}""");
+
+            assertThatThrownBy(() -> storage.createStream(streamName, "anything", "anything", "anything"))
+                    .isInstanceOf(DuplicateEventStreamFailure.class);
+        }
+
+        @Test
         @DisplayName("Retrieve the event from a stream that does not exist fails.")
         void retrieveEvents() {
             assertThatThrownBy(() -> storage.retrieveEvents(
@@ -289,13 +300,6 @@ public abstract class EventStorageTests {
                         assertThat(record.records()).isEmpty();
                         assertThat(record.version()).isEqualTo(events.getLast().version());
                     });
-        }
-
-        @Test
-        @DisplayName("Create a duplicate stream fails.")
-        void createDuplicateStream() {
-            assertThatThrownBy(() -> storage.createStream(streamName, "anything", "anything", "anything"))
-                    .isInstanceOf(DuplicateEventStreamFailure.class);
         }
 
         @Test
