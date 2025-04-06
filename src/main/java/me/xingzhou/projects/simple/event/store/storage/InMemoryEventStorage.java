@@ -76,8 +76,20 @@ public class InMemoryEventStorage implements EventStorage {
             @Nonnull Instant exclusiveEnd,
             @Nonnull List<String> streamNames,
             @Nonnull List<String> eventTypes) {
-        return new TimestampedRecords(
-                storage.stream().map(EventRecord::toStoredRecord).toList(), lastUpdateAt());
+        var records = storage.stream()
+                .filter(event -> shouldIncludeEvent(event, exclusiveStart, exclusiveEnd, streamNames, eventTypes))
+                .map(EventRecord::toStoredRecord)
+                .toList();
+        return new TimestampedRecords(records, lastUpdateAt());
+    }
+
+    private boolean shouldIncludeEvent(
+            EventRecord event,
+            Instant exclusiveStart,
+            Instant exclusiveEnd,
+            List<String> streamNames,
+            List<String> eventTypes) {
+        return streamNames.isEmpty() || streamNames.contains(event.streamName());
     }
 
     @Override

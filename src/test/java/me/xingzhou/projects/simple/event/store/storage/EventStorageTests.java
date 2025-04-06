@@ -115,7 +115,7 @@ public abstract class EventStorageTests {
 
             var actualEvents = records.records().stream().map(RequestEvent::fromStoredRecord);
 
-            assertThat(actualEvents).containsAll(events);
+            assertThat(actualEvents).containsExactlyInAnyOrderElementsOf(events);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::version));
             assertThat(records.version()).isEqualTo(events.getLast().version());
         }
@@ -136,7 +136,7 @@ public abstract class EventStorageTests {
 
             var actualEvents = records.records().stream().map(RequestEvent::fromStoredRecord);
 
-            assertThat(actualEvents).containsAll(expected);
+            assertThat(actualEvents).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::version));
             assertThat(records.version()).isEqualTo(events.getLast().version());
         }
@@ -157,7 +157,7 @@ public abstract class EventStorageTests {
 
             var actualEvents = records.records().stream().map(RequestEvent::fromStoredRecord);
 
-            assertThat(actualEvents).containsAll(expected);
+            assertThat(actualEvents).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::version));
             assertThat(records.version()).isEqualTo(events.getLast().version());
         }
@@ -175,7 +175,7 @@ public abstract class EventStorageTests {
 
             var actualEvents = records.records().stream().map(RequestEvent::fromStoredRecord);
 
-            assertThat(actualEvents).containsAll(expected);
+            assertThat(actualEvents).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::version));
             assertThat(records.version()).isEqualTo(events.getLast().version());
         }
@@ -193,7 +193,7 @@ public abstract class EventStorageTests {
 
             var actualEvents = records.records().stream().map(RequestEvent::fromStoredRecord);
 
-            assertThat(actualEvents).containsAll(expected);
+            assertThat(actualEvents).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::version));
             assertThat(records.version()).isEqualTo(events.getLast().version());
         }
@@ -212,7 +212,7 @@ public abstract class EventStorageTests {
 
             var actualEvents = records.records().stream().map(RequestEvent::fromStoredRecord);
 
-            assertThat(actualEvents).containsAll(expected);
+            assertThat(actualEvents).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::version));
             assertThat(records.version()).isEqualTo(events.getLast().version());
         }
@@ -230,7 +230,7 @@ public abstract class EventStorageTests {
 
             var actualEvents = records.records().stream().map(RequestEvent::fromStoredRecord);
 
-            assertThat(actualEvents).containsAll(expected);
+            assertThat(actualEvents).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::version));
             assertThat(records.version()).isEqualTo(events.getLast().version());
         }
@@ -297,8 +297,10 @@ public abstract class EventStorageTests {
 
     @Nested
     class MultipleStreamsStorageTests {
+        private static final String STREAM_ONE = "stream-one";
+        private static final String STREAM_TWO = "stream-two";
         private final Map<String, List<RequestEvent>> streams = Map.of(
-                "stream-one",
+                STREAM_ONE,
                         List.of(
                                 new RequestEvent(
                                         "first-event-id",
@@ -318,7 +320,7 @@ public abstract class EventStorageTests {
                                         """
                         {"key3", "in-stream-one"}""",
                                         EventStorage.VersionConstants.UNDEFINED_STREAM)),
-                "stream-two",
+                STREAM_TWO,
                         List.of(
                                 new RequestEvent(
                                         "first-event-id",
@@ -359,7 +361,37 @@ public abstract class EventStorageTests {
 
             var actualEvents = records.records().stream().map(RequestEvent::fromStoredRecord);
 
-            assertThat(actualEvents).containsAll(expected);
+            assertThat(actualEvents).containsExactlyInAnyOrderElementsOf(expected);
+            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::timestamp));
+            assertThat(records.timestamp()).isEqualTo(storage.lastUpdateAt());
+        }
+
+        @Test
+        @DisplayName("Retrieve events from one stream and all types")
+        void retrieveEventsFromOneStreamAndTypes() {
+            var streamNames = List.of(STREAM_ONE);
+            var expected = streams.get(STREAM_ONE);
+
+            var records = storage.retrieveEvents(Instant.MIN, Instant.MAX, streamNames, Collections.emptyList());
+
+            var actualEvents = records.records().stream().map(RequestEvent::fromStoredRecord);
+
+            assertThat(actualEvents).containsExactlyInAnyOrderElementsOf(expected);
+            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::timestamp));
+            assertThat(records.timestamp()).isEqualTo(storage.lastUpdateAt());
+        }
+
+        @Test
+        @DisplayName("Retrieve events from multiple streams and all types")
+        void retrieveEventsFromMultipleStreamsAndTypes() {
+            var streamNames = List.of(STREAM_ONE, STREAM_TWO);
+            var expected = allEvents;
+
+            var records = storage.retrieveEvents(Instant.MIN, Instant.MAX, streamNames, Collections.emptyList());
+
+            var actualEvents = records.records().stream().map(RequestEvent::fromStoredRecord);
+
+            assertThat(actualEvents).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::timestamp));
             assertThat(records.timestamp()).isEqualTo(storage.lastUpdateAt());
         }
