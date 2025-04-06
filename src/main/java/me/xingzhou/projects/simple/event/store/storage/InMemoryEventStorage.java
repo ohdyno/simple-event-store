@@ -108,7 +108,7 @@ public class InMemoryEventStorage implements EventStorage {
     private record EventRecord(
             String streamName, String eventId, String eventType, String eventContent, long version, Instant timestamp) {
         private StoredRecord toStoredRecord() {
-            return new StoredRecord(eventType, eventContent, streamName, version);
+            return new StoredRecord(streamName, eventId, eventType, eventContent, version, timestamp);
         }
     }
 }

@@ -1,3 +1,6 @@
 package me.xingzhou.projects.simple.event.store.storage;
 
-public record StoredRecord(String eventType, String eventContent, String streamName, long version) {}
+import java.time.Instant;
+
+public record StoredRecord(
+        String streamName, String eventId, String eventType, String eventContent, long version, Instant timestamp) {}
