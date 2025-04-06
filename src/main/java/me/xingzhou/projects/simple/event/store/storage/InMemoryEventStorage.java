@@ -24,18 +24,6 @@ public class InMemoryEventStorage implements EventStorage {
     }
 
     @Override
-    public @Nonnull TimestampedRecords retrieveEvents(
-            @Nonnull Instant inclusiveStart,
-            @Nonnull Instant inclusiveEnd,
-            @Nonnull List<String> streamNames,
-            @Nonnull List<String> eventTypes) {
-        var records = storage.stream()
-                .filter(event -> shouldIncludeEvent(event, inclusiveStart, inclusiveEnd, streamNames, eventTypes))
-                .toList();
-        return new TimestampedRecords(records, lastUpdateAt);
-    }
-
-    @Override
     public @Nonnull VersionedRecords retrieveEvents(
             @Nonnull String streamName,
             @Nonnull List<String> eventTypes,
@@ -49,6 +37,18 @@ public class InMemoryEventStorage implements EventStorage {
         return new VersionedRecords(records, version);
     }
 
+    @Override
+    public @Nonnull TimestampedRecords retrieveEvents(
+            long exclusiveStart,
+            long inclusiveEnd,
+            @Nonnull List<String> streamNames,
+            @Nonnull List<String> eventTypes) {
+        var records = storage.stream()
+                .filter(event -> shouldIncludeEvent(event, exclusiveStart, inclusiveEnd, streamNames, eventTypes))
+                .toList();
+        return new TimestampedRecords(records, lastUpdateAt);
+    }
+
     private StoredRecord appendToStream(String streamName, long currentVersion, String eventType, String eventContent) {
         if (getCurrentVersion(streamName) == currentVersion) {
             var record = new StoredRecord(
@@ -59,8 +59,8 @@ public class InMemoryEventStorage implements EventStorage {
         throw new StaleVersionFailure();
     }
 
-    private int createEventId() {
-        return storage.size() + 1;
+    private long createEventId() {
+        return storage.size() + Constants.Ids.START;
     }
 
     private StoredRecord createStream(String streamName, String eventType, String eventContent) {
@@ -107,20 +107,20 @@ public class InMemoryEventStorage implements EventStorage {
     }
 
     private boolean shouldIncludeEvent(
+            StoredRecord event, List<String> eventTypes, long exclusiveStartVersion, long inclusiveEndVersion) {
+        var isCorrectType = eventTypes.isEmpty() || eventTypes.contains(event.eventType());
+        var isWithinRange = exclusiveStartVersion < event.version() && event.version() <= inclusiveEndVersion;
+        return isCorrectType && isWithinRange;
+    }
+
+    private boolean shouldIncludeEvent(
             StoredRecord event,
-            Instant exclusiveStart,
-            Instant exclusiveEnd,
+            long exclusiveStart,
+            long exclusiveEnd,
             List<String> streamNames,
             List<String> eventTypes) {
         var isInStreams = streamNames.isEmpty() || streamNames.contains(event.streamName());
         var isCorrectType = eventTypes.isEmpty() || eventTypes.contains(event.eventType());
         return isInStreams && isCorrectType;
-    }
-
-    private boolean shouldIncludeEvent(
-            StoredRecord event, List<String> eventTypes, long exclusiveStartVersion, long inclusiveEndVersion) {
-        var isCorrectType = eventTypes.isEmpty() || eventTypes.contains(event.eventType());
-        var isWithinRange = exclusiveStartVersion < event.version() && event.version() <= inclusiveEndVersion;
-        return isCorrectType && isWithinRange;
     }
 }

@@ -8,13 +8,6 @@ public interface EventStorage {
     StoredRecord appendEvent(
             @Nonnull String streamName, long currentVersion, @Nonnull String eventType, @Nonnull String eventContent);
 
-    @Nonnull
-    TimestampedRecords retrieveEvents(
-            @Nonnull Instant inclusiveStart,
-            @Nonnull Instant inclusiveEnd,
-            @Nonnull List<String> streamNames,
-            @Nonnull List<String> eventTypes);
-
     /**
      * Supports the following most common scenarios: - Given a version, retrieve all events after this version. - Given
      * a version, retrieve all events led to this version.
@@ -25,6 +18,21 @@ public interface EventStorage {
             @Nonnull List<String> eventTypes,
             long exclusiveStartVersion,
             long inclusiveEndVersion);
+
+    @Nonnull
+    TimestampedRecords retrieveEvents(
+            long exclusiveStart,
+            long inclusiveEnd,
+            @Nonnull List<String> streamNames,
+            @Nonnull List<String> eventTypes);
+
+    interface Constants {
+        interface Ids {
+            long MIN = 0L;
+            long START = 1L;
+            long MAX = Long.MAX_VALUE;
+        }
+    }
 
     interface TimestampConstants {
         Instant NEVER = Instant.EPOCH;

@@ -79,7 +79,8 @@ public class EventStore {
             StreamName streamName, List<Class<? extends Event>> eventTypes, Instant start, Instant end) {
         var typeNames = eventTypes.stream().map(serializer::getTypeName).toList();
         var stream = Objects.nonNull(streamName) ? streamName.value() : null;
-        var timestampedRecords = storage.retrieveEvents(start, end, List.of(stream), typeNames);
+        var timestampedRecords =
+                storage.retrieveEvents(start.toEpochMilli(), end.toEpochMilli(), List.of(stream), typeNames);
         var events = timestampedRecords.records().stream()
                 .map(record -> DeserializedRecord.from(record, serializer))
                 .toList();
