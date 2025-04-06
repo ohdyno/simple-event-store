@@ -56,11 +56,14 @@ public class InMemoryEventStorage implements EventStorage {
 
     @Override
     public @Nonnull VersionedRecords retrieveEvents(
-            @Nonnull String streamName, @Nonnull List<String> eventTypes, long beginVersion, long endVersion) {
+            @Nonnull String streamName,
+            @Nonnull List<String> eventTypes,
+            long exclusiveStartVersion,
+            long inclusiveEndVersion) {
         var eventStream = getEventStream(streamName);
         var version = getCurrentVersion(streamName);
         var records = eventStream.stream()
-                .filter(event -> shouldIncludeEvent(event, eventTypes, beginVersion, endVersion))
+                .filter(event -> shouldIncludeEvent(event, eventTypes, exclusiveStartVersion, inclusiveEndVersion))
                 .map(EventRecord::toStoredRecord)
                 .toList();
         return new VersionedRecords(records, version);
@@ -77,9 +80,9 @@ public class InMemoryEventStorage implements EventStorage {
     }
 
     private static boolean shouldIncludeEvent(
-            EventRecord event, List<String> eventTypes, long beginVersion, long endVersion) {
+            EventRecord event, List<String> eventTypes, long exclusiveStartVersion, long inclusiveEndVersion) {
         var isCorrectType = eventTypes.isEmpty() || eventTypes.contains(event.eventType());
-        var isWithinRange = beginVersion < event.version() && event.version() < endVersion;
+        var isWithinRange = exclusiveStartVersion < event.version() && event.version() <= inclusiveEndVersion;
         return isCorrectType && isWithinRange;
     }
 
