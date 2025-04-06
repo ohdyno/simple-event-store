@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import java.util.*;
+import me.xingzhou.projects.simple.event.store.storage.EventStorage.Constants.Ids;
+import me.xingzhou.projects.simple.event.store.storage.EventStorage.Constants.Versions;
 import me.xingzhou.projects.simple.event.store.storage.failures.DuplicateEventStreamFailure;
 import me.xingzhou.projects.simple.event.store.storage.failures.NoSuchStreamFailure;
 import me.xingzhou.projects.simple.event.store.storage.failures.StaleVersionFailure;
@@ -28,8 +30,8 @@ public abstract class EventStorageTests {
     private List<StoredRecord> save(List<RequestEvent> events, String streamName) {
         var records = new ArrayList<StoredRecord>();
         var first = events.get(0);
-        var record = storage.appendEvent(
-                streamName, EventStorage.VersionConstants.UNDEFINED_STREAM, first.eventType(), first.eventContent());
+        var record =
+                storage.appendEvent(streamName, Versions.UNDEFINED_STREAM, first.eventType(), first.eventContent());
         records.add(record);
 
         for (var event : events.stream().skip(1).toList()) {
@@ -48,25 +50,17 @@ public abstract class EventStorageTests {
         @DisplayName("Append to a stream that does not exist fails.")
         void appendToStreamThatDoesNotExist() {
             assertThatThrownBy(() -> storage.appendEvent(
-                            "a-stream-that-does-not-exist",
-                            EventStorage.VersionConstants.NEW_STREAM,
-                            "anything",
-                            "anything"))
+                            "a-stream-that-does-not-exist", Versions.NEW_STREAM, "anything", "anything"))
                     .isInstanceOf(NoSuchStreamFailure.class);
         }
 
         @Test
         @DisplayName("Create a duplicate stream fails.")
         void createDuplicateStream() {
-            storage.appendEvent(
-                    streamName,
-                    EventStorage.VersionConstants.UNDEFINED_STREAM,
-                    "an-event-type",
-                    """
+            storage.appendEvent(streamName, Versions.UNDEFINED_STREAM, "an-event-type", """
 					{"key", "value"}""");
 
-            assertThatThrownBy(() -> storage.appendEvent(
-                            streamName, EventStorage.VersionConstants.UNDEFINED_STREAM, "anything", "anything"))
+            assertThatThrownBy(() -> storage.appendEvent(streamName, Versions.UNDEFINED_STREAM, "anything", "anything"))
                     .isInstanceOf(DuplicateEventStreamFailure.class);
         }
 
@@ -77,24 +71,20 @@ public abstract class EventStorageTests {
             var eventContent = """
 					{"key", "value"}""";
 
-            var record = storage.appendEvent(
-                    streamName, EventStorage.VersionConstants.UNDEFINED_STREAM, eventType, eventContent);
+            var record = storage.appendEvent(streamName, Versions.UNDEFINED_STREAM, eventType, eventContent);
 
             assertThat(record.streamName()).isEqualTo(streamName);
             assertThat(record.eventType()).isEqualTo(eventType);
             assertThat(record.eventContent()).isEqualTo(eventContent);
             assertThat(record.eventId()).isPositive();
-            assertThat(record.version()).isEqualTo(EventStorage.VersionConstants.NEW_STREAM);
+            assertThat(record.version()).isEqualTo(Versions.NEW_STREAM);
         }
 
         @Test
         @DisplayName("Retrieve the event from a stream that does not exist fails.")
         void retrieveEvents() {
-            assertThatThrownBy(() -> storage.retrieveEvents(
-                            streamName,
-                            Collections.emptyList(),
-                            EventStorage.VersionConstants.RANGE_MIN_EXCLUSIVE,
-                            EventStorage.VersionConstants.RANGE_MAX_INCLUSIVE))
+            assertThatThrownBy(() ->
+                            storage.retrieveEvents(streamName, Collections.emptyList(), Versions.MIN, Versions.MAX))
                     .isInstanceOf(NoSuchStreamFailure.class);
         }
     }
@@ -135,11 +125,7 @@ public abstract class EventStorageTests {
             var eventTypes = List.of(EVENT_TYPE_A, EVENT_TYPE_B);
             var expected = storedRecords;
 
-            var records = storage.retrieveEvents(
-                    EventStorage.Constants.Ids.MIN,
-                    EventStorage.Constants.Ids.MAX,
-                    Collections.emptyList(),
-                    eventTypes);
+            var records = storage.retrieveEvents(Ids.MIN, Ids.MAX, Collections.emptyList(), eventTypes);
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::timestamp));
@@ -154,11 +140,7 @@ public abstract class EventStorageTests {
                     .filter(record -> eventTypes.contains(record.eventType()))
                     .toList();
 
-            var records = storage.retrieveEvents(
-                    EventStorage.Constants.Ids.MIN,
-                    EventStorage.Constants.Ids.MAX,
-                    Collections.emptyList(),
-                    eventTypes);
+            var records = storage.retrieveEvents(Ids.MIN, Ids.MAX, Collections.emptyList(), eventTypes);
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::timestamp));
@@ -170,11 +152,7 @@ public abstract class EventStorageTests {
         void retrieveEventsFromAllStreamsAndTypes() {
             var expected = storedRecords;
 
-            var records = storage.retrieveEvents(
-                    EventStorage.Constants.Ids.MIN,
-                    EventStorage.Constants.Ids.MAX,
-                    Collections.emptyList(),
-                    Collections.emptyList());
+            var records = storage.retrieveEvents(Ids.MIN, Ids.MAX, Collections.emptyList(), Collections.emptyList());
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::timestamp));
@@ -187,11 +165,7 @@ public abstract class EventStorageTests {
             var streamNames = List.of(STREAM_ONE, STREAM_TWO);
             var expected = storedRecords;
 
-            var records = storage.retrieveEvents(
-                    EventStorage.Constants.Ids.MIN,
-                    EventStorage.Constants.Ids.MAX,
-                    streamNames,
-                    Collections.emptyList());
+            var records = storage.retrieveEvents(Ids.MIN, Ids.MAX, streamNames, Collections.emptyList());
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::timestamp));
@@ -206,11 +180,7 @@ public abstract class EventStorageTests {
                     .filter(record -> streamNames.contains(record.streamName()))
                     .toList();
 
-            var records = storage.retrieveEvents(
-                    EventStorage.Constants.Ids.MIN,
-                    EventStorage.Constants.Ids.MAX,
-                    streamNames,
-                    Collections.emptyList());
+            var records = storage.retrieveEvents(Ids.MIN, Ids.MAX, streamNames, Collections.emptyList());
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::timestamp));
@@ -227,8 +197,7 @@ public abstract class EventStorageTests {
                             eventTypes.contains(record.eventType()) && streamNames.contains(record.streamName()))
                     .toList();
 
-            var records = storage.retrieveEvents(
-                    EventStorage.Constants.Ids.MIN, EventStorage.Constants.Ids.MAX, streamNames, eventTypes);
+            var records = storage.retrieveEvents(Ids.MIN, Ids.MAX, streamNames, eventTypes);
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::timestamp));
@@ -264,8 +233,7 @@ public abstract class EventStorageTests {
         @Test
         @DisplayName("Append to stream with stale version fails.")
         void appendEventWithStaleVersion() {
-            assertThatThrownBy(() -> storage.appendEvent(
-                            streamName, EventStorage.VersionConstants.NEW_STREAM, "anything", "anything"))
+            assertThatThrownBy(() -> storage.appendEvent(streamName, Versions.NEW_STREAM, "anything", "anything"))
                     .isInstanceOf(StaleVersionFailure.class);
         }
 
@@ -274,11 +242,7 @@ public abstract class EventStorageTests {
         void retrieveEvents() {
             var expected = storedRecords;
 
-            var records = storage.retrieveEvents(
-                    streamName,
-                    Collections.emptyList(),
-                    EventStorage.VersionConstants.RANGE_MIN_EXCLUSIVE,
-                    EventStorage.VersionConstants.RANGE_MAX_INCLUSIVE);
+            var records = storage.retrieveEvents(streamName, Collections.emptyList(), Versions.MIN, Versions.MAX);
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::version));
@@ -311,7 +275,7 @@ public abstract class EventStorageTests {
                     streamName,
                     Collections.emptyList(),
                     storedRecords.getFirst().version(),
-                    EventStorage.VersionConstants.RANGE_MAX_INCLUSIVE);
+                    Versions.MAX);
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::version));
@@ -326,7 +290,7 @@ public abstract class EventStorageTests {
             var records = storage.retrieveEvents(
                     streamName,
                     Collections.emptyList(),
-                    EventStorage.VersionConstants.RANGE_MIN_EXCLUSIVE,
+                    Versions.MIN,
                     storedRecords.get(1).version());
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
@@ -345,7 +309,7 @@ public abstract class EventStorageTests {
                                 streamName,
                                 Collections.emptyList(),
                                 storedRecords.getLast().version(),
-                                EventStorage.VersionConstants.RANGE_MAX_INCLUSIVE);
+                                Versions.MAX);
 
                         assertThat(record.records()).isEmpty();
                         assertThat(record.version())
@@ -377,11 +341,8 @@ public abstract class EventStorageTests {
                     },
                     () -> {
                         // max version
-                        var record = storage.retrieveEvents(
-                                streamName,
-                                Collections.emptyList(),
-                                EventStorage.VersionConstants.RANGE_MAX_INCLUSIVE,
-                                EventStorage.VersionConstants.RANGE_MAX_INCLUSIVE);
+                        var record =
+                                storage.retrieveEvents(streamName, Collections.emptyList(), Versions.MAX, Versions.MAX);
 
                         assertThat(record.records()).isEmpty();
                         assertThat(record.version())
@@ -395,10 +356,7 @@ public abstract class EventStorageTests {
             var expected = List.of(storedRecords.get(1));
 
             var records = storage.retrieveEvents(
-                    streamName,
-                    List.of(EVENT_TYPE_B),
-                    storedRecords.getFirst().version(),
-                    EventStorage.VersionConstants.RANGE_MAX_INCLUSIVE);
+                    streamName, List.of(EVENT_TYPE_B), storedRecords.getFirst().version(), Versions.MAX);
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::version));
@@ -411,11 +369,7 @@ public abstract class EventStorageTests {
             var eventTypes = List.of(EVENT_TYPE_A);
             var expected = List.of(storedRecords.get(0), storedRecords.get(2));
 
-            var records = storage.retrieveEvents(
-                    streamName,
-                    eventTypes,
-                    EventStorage.VersionConstants.RANGE_MIN_EXCLUSIVE,
-                    EventStorage.VersionConstants.RANGE_MAX_INCLUSIVE);
+            var records = storage.retrieveEvents(streamName, eventTypes, Versions.MIN, Versions.MAX);
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::version));
@@ -428,11 +382,7 @@ public abstract class EventStorageTests {
             var eventTypes = List.of(EVENT_TYPE_A, EVENT_TYPE_B);
             var expected = storedRecords;
 
-            var records = storage.retrieveEvents(
-                    streamName,
-                    eventTypes,
-                    EventStorage.VersionConstants.RANGE_MIN_EXCLUSIVE,
-                    EventStorage.VersionConstants.RANGE_MAX_INCLUSIVE);
+            var records = storage.retrieveEvents(streamName, eventTypes, Versions.MIN, Versions.MAX);
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::version));

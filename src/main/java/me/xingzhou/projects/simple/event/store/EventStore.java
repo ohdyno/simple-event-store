@@ -33,7 +33,7 @@ public class EventStore {
         String eventId = event.id();
         var record = storage.appendEvent(
                 streamName.value(),
-                EventStorage.VersionConstants.UNDEFINED_STREAM,
+                EventStorage.Constants.Versions.UNDEFINED_STREAM,
                 serializedEvent.eventType(),
                 serializedEvent.eventJson());
         return new Version(record.version());

@@ -21,8 +21,8 @@ public interface EventStorage {
 
     @Nonnull
     TimestampedRecords retrieveEvents(
-            long exclusiveStart,
-            long inclusiveEnd,
+            long exclusiveStartId,
+            long inclusiveEndId,
             @Nonnull List<String> streamNames,
             @Nonnull List<String> eventTypes);
 
@@ -32,27 +32,24 @@ public interface EventStorage {
             long START = 1L;
             long MAX = Long.MAX_VALUE;
         }
-    }
 
-    interface TimestampConstants {
-        Instant NEVER = Instant.EPOCH;
-    }
+        interface Timestamps {
+            Instant NEVER = Instant.EPOCH;
+        }
 
-    /**
-     * Define contractual version constants.
-     *
-     * @apiNote The values can be considered stable across major releases. Therefore, the version can be safely
-     *     persisted and read regardless of the release.
-     * @implSpec Since the other methods rely on the value of version, all implementations should use these constants
-     *     when appropriate.
-     */
-    interface VersionConstants {
-        long NEW_STREAM = 0;
-
-        long UNDEFINED_STREAM = -1;
-
-        long RANGE_MIN_EXCLUSIVE = UNDEFINED_STREAM;
-
-        long RANGE_MAX_INCLUSIVE = Long.MAX_VALUE;
+        /**
+         * Define contractual version constants.
+         *
+         * @apiNote The values can be considered stable across major releases. Therefore, the version can be safely
+         *     persisted and read regardless of the release.
+         * @implSpec Since the other methods rely on the value of version, all implementations should use these
+         *     constants when appropriate.
+         */
+        interface Versions {
+            long MIN = -1;
+            long MAX = Long.MAX_VALUE;
+            long NEW_STREAM = 0;
+            long UNDEFINED_STREAM = MIN;
+        }
     }
 }
