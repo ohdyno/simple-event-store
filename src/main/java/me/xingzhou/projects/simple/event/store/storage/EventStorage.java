@@ -6,16 +6,12 @@ import java.util.List;
 
 public interface EventStorage {
     StoredRecord appendEvent(
-            @Nonnull String streamName,
-            long currentVersion,
-            @Nonnull String eventId,
-            @Nonnull String eventType,
-            @Nonnull String eventContent);
+            @Nonnull String streamName, long currentVersion, @Nonnull String eventType, @Nonnull String eventContent);
 
     @Nonnull
     TimestampedRecords retrieveEvents(
-            @Nonnull Instant exclusiveStart,
-            @Nonnull Instant exclusiveEnd,
+            @Nonnull Instant inclusiveStart,
+            @Nonnull Instant inclusiveEnd,
             @Nonnull List<String> streamNames,
             @Nonnull List<String> eventTypes);
 

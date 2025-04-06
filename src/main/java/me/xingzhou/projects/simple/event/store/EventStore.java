@@ -24,11 +24,7 @@ public class EventStore {
     public Version appendEvent(StreamName streamName, Event event, Version current) {
         var serializedEvent = serializer.serialize(event);
         var record = storage.appendEvent(
-                streamName.value(),
-                current.value(),
-                event.id(),
-                serializedEvent.eventType(),
-                serializedEvent.eventJson());
+                streamName.value(), current.value(), serializedEvent.eventType(), serializedEvent.eventJson());
         return new Version(record.version());
     }
 
@@ -38,7 +34,6 @@ public class EventStore {
         var record = storage.appendEvent(
                 streamName.value(),
                 EventStorage.VersionConstants.UNDEFINED_STREAM,
-                eventId,
                 serializedEvent.eventType(),
                 serializedEvent.eventJson());
         return new Version(record.version());

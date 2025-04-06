@@ -30,16 +30,11 @@ public abstract class EventStorageTests {
         var records = new ArrayList<StoredRecord>();
         var first = events.get(0);
         var record = storage.appendEvent(
-                streamName,
-                EventStorage.VersionConstants.UNDEFINED_STREAM,
-                first.eventId(),
-                first.eventType(),
-                first.eventContent());
+                streamName, EventStorage.VersionConstants.UNDEFINED_STREAM, first.eventType(), first.eventContent());
         records.add(record);
 
         for (var event : events.stream().skip(1).toList()) {
-            var newRecord = storage.appendEvent(
-                    streamName, record.version(), event.eventId(), event.eventType(), event.eventContent());
+            var newRecord = storage.appendEvent(streamName, record.version(), event.eventType(), event.eventContent());
             records.add(newRecord);
             record = newRecord;
         }
@@ -57,7 +52,6 @@ public abstract class EventStorageTests {
                             "a-stream-that-does-not-exist",
                             EventStorage.VersionConstants.NEW_STREAM,
                             "anything",
-                            "anything",
                             "anything"))
                     .isInstanceOf(NoSuchStreamFailure.class);
         }
@@ -68,35 +62,29 @@ public abstract class EventStorageTests {
             storage.appendEvent(
                     streamName,
                     EventStorage.VersionConstants.UNDEFINED_STREAM,
-                    "an-event-id",
                     "an-event-type",
                     """
-							{"key", "value"}""");
+					{"key", "value"}""");
 
             assertThatThrownBy(() -> storage.appendEvent(
-                            streamName,
-                            EventStorage.VersionConstants.UNDEFINED_STREAM,
-                            "anything",
-                            "anything",
-                            "anything"))
+                            streamName, EventStorage.VersionConstants.UNDEFINED_STREAM, "anything", "anything"))
                     .isInstanceOf(DuplicateEventStreamFailure.class);
         }
 
         @Test
         @DisplayName("Create a stream successfully")
         void createStream() {
-            var eventId = "an-event-id";
             var eventType = "an-event-type";
             var eventContent = """
 					{"key", "value"}""";
 
             var record = storage.appendEvent(
-                    streamName, EventStorage.VersionConstants.UNDEFINED_STREAM, eventId, eventType, eventContent);
+                    streamName, EventStorage.VersionConstants.UNDEFINED_STREAM, eventType, eventContent);
 
             assertThat(record.streamName()).isEqualTo(streamName);
-            assertThat(record.eventId()).isEqualTo(eventId);
             assertThat(record.eventType()).isEqualTo(eventType);
             assertThat(record.eventContent()).isEqualTo(eventContent);
+            assertThat(record.eventId()).isNotEmpty();
             assertThat(record.version()).isEqualTo(EventStorage.VersionConstants.NEW_STREAM);
         }
 
@@ -258,7 +246,7 @@ public abstract class EventStorageTests {
         @DisplayName("Append to stream with stale version fails.")
         void appendEventWithStaleVersion() {
             assertThatThrownBy(() -> storage.appendEvent(
-                            streamName, EventStorage.VersionConstants.NEW_STREAM, "anything", "anything", "anything"))
+                            streamName, EventStorage.VersionConstants.NEW_STREAM, "anything", "anything"))
                     .isInstanceOf(StaleVersionFailure.class);
         }
 
