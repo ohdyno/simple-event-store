@@ -4,8 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import me.xingzhou.projects.simple.event.store.storage.failures.DuplicateEventStreamFailure;
 import me.xingzhou.projects.simple.event.store.storage.failures.NoSuchStreamFailure;
@@ -77,30 +79,28 @@ public abstract class EventStorageTests {
     @Nested
     class OneStreamStorageTests {
         private final String streamName = "a-stream-name";
-        private List<RequestEvent> events;
+        private final List<RequestEvent> events = List.of(
+                new RequestEvent(
+                        "first-event-id",
+                        "event-type-a",
+                        """
+                            {"key1", "value"}""",
+                        EventStorage.VersionConstants.UNDEFINED_STREAM),
+                new RequestEvent(
+                        "second-event-id",
+                        "event-type-b", // must be unique from the other event type
+                        """
+                            {"key2", "value"}""",
+                        EventStorage.VersionConstants.UNDEFINED_STREAM),
+                new RequestEvent(
+                        "third-event-id",
+                        "event-type-a",
+                        """
+                            {"key3", "value"}""",
+                        EventStorage.VersionConstants.UNDEFINED_STREAM));
 
         @BeforeEach
-        void setUp() {
-            this.events = List.of(
-                    new RequestEvent(
-                            "first-event-id",
-                            "event-type-a",
-                            """
-                            {"key1", "value"}""",
-                            EventStorage.VersionConstants.UNDEFINED_STREAM),
-                    new RequestEvent(
-                            "second-event-id",
-                            "event-type-b", // must be unique from the other event type
-                            """
-                            {"key2", "value"}""",
-                            EventStorage.VersionConstants.UNDEFINED_STREAM),
-                    new RequestEvent(
-                            "third-event-id",
-                            "event-type-a",
-                            """
-                            {"key3", "value"}""",
-                            EventStorage.VersionConstants.UNDEFINED_STREAM));
-
+        void seedEvents() {
             save(this.events, streamName);
         }
 
@@ -308,6 +308,62 @@ public abstract class EventStorageTests {
             assertThatThrownBy(() -> storage.appendEvent(
                             streamName, EventStorage.VersionConstants.NEW_STREAM, "anything", "anything", "anything"))
                     .isInstanceOf(StaleVersionFailure.class);
+        }
+    }
+
+    @Nested
+    class MultipleStreamsStorageTests {
+        private final Map<String, List<RequestEvent>> events = Map.of(
+                "stream-one",
+                        List.of(
+                                new RequestEvent(
+                                        "first-event-id",
+                                        "event-type-a",
+                                        """
+                        {"key1", "in-stream-one"}""",
+                                        EventStorage.VersionConstants.UNDEFINED_STREAM),
+                                new RequestEvent(
+                                        "second-event-id",
+                                        "event-type-b", // must be unique from the other event type
+                                        """
+                        {"key2", "in-stream-one"}""",
+                                        EventStorage.VersionConstants.UNDEFINED_STREAM),
+                                new RequestEvent(
+                                        "third-event-id",
+                                        "event-type-a",
+                                        """
+                        {"key3", "in-stream-one"}""",
+                                        EventStorage.VersionConstants.UNDEFINED_STREAM)),
+                "stream-two",
+                        List.of(
+                                new RequestEvent(
+                                        "first-event-id",
+                                        "event-type-a",
+                                        """
+                        {"key1", "in-stream-two"}""",
+                                        EventStorage.VersionConstants.UNDEFINED_STREAM),
+                                new RequestEvent(
+                                        "second-event-id",
+                                        "event-type-b", // must be unique from the other event type
+                                        """
+                        {"key2", "in-stream-two"}""",
+                                        EventStorage.VersionConstants.UNDEFINED_STREAM),
+                                new RequestEvent(
+                                        "third-event-id",
+                                        "event-type-a",
+                                        """
+                        {"key3", "in-stream-two"}""",
+                                        EventStorage.VersionConstants.UNDEFINED_STREAM)));
+
+        @BeforeEach
+        void seedEvents() {
+            events.forEach((streamName, events) -> save(events, streamName));
+        }
+
+        @Test
+        @DisplayName("Retrieve events from all streams and all types")
+        void retrieveEventsFromAllStreamsAndTypes() {
+            storage.retrieveEvents(Instant.MIN, Instant.MAX, Collections.emptyList(), Collections.emptyList());
         }
     }
 

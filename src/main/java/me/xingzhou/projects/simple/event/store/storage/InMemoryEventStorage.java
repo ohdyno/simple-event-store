@@ -66,6 +66,16 @@ public class InMemoryEventStorage implements EventStorage {
         return new VersionedRecords(records, version);
     }
 
+    @Nonnull
+    @Override
+    public TimestampedRecords retrieveEvents(
+            @Nonnull Instant exclusiveStart,
+            @Nonnull Instant exclusiveEnd,
+            @Nonnull List<String> streamNames,
+            @Nonnull List<String> eventTypes) {
+        return null;
+    }
+
     private static boolean shouldIncludeEvent(
             EventRecord event, List<String> eventTypes, long beginVersion, long endVersion) {
         var isCorrectType = eventTypes.isEmpty() || eventTypes.contains(event.eventType());

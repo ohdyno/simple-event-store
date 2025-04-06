@@ -29,8 +29,8 @@ public interface EventStorage {
      * @param streamName is the name of the new stream. Streams cannot have duplicate names.
      * @param eventId is the id associated with this event. Duplicate ids are allowed.
      * @param eventType is the type of this event. The type can be passed as part of the eventTypes parameter in
-     *     {@link #retrieveEvents(String, List, long, long)} or {@link #retrieveEvents(String, List, Instant, Instant)}
-     *     to reduce the number of events retrieved.
+     *     {@link #retrieveEvents(String, List, long, long)} or {@link #retrieveEvents(Instant, Instant, List, List)} to
+     *     reduce the number of events retrieved.
      * @param eventContent is the content of the event serialized to JSON.
      * @return {@link VersionConstants#NEW_STREAM}
      * @throws DuplicateEventStreamFailure if another stream with the same name already exists.
@@ -53,7 +53,10 @@ public interface EventStorage {
     VersionedRecords retrieveEvents(
             @Nonnull String streamName, @Nonnull List<String> eventTypes, long beginVersion, long endVersion);
 
-    default TimestampedRecords retrieveEvents(String streamName, List<String> eventTypes, Instant start, Instant end) {
-        throw new UnsupportedOperationException("Not implemented yet");
-    }
+    @Nonnull
+    TimestampedRecords retrieveEvents(
+            @Nonnull Instant exclusiveStart,
+            @Nonnull Instant exclusiveEnd,
+            @Nonnull List<String> streamNames,
+            @Nonnull List<String> eventTypes);
 }
