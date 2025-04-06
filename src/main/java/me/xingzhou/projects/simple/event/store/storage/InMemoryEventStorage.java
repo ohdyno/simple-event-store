@@ -89,7 +89,9 @@ public class InMemoryEventStorage implements EventStorage {
             Instant exclusiveEnd,
             List<String> streamNames,
             List<String> eventTypes) {
-        return streamNames.isEmpty() || streamNames.contains(event.streamName());
+        var isInStreams = streamNames.isEmpty() || streamNames.contains(event.streamName());
+        var isCorrectType = eventTypes.isEmpty() || eventTypes.contains(event.eventType());
+        return isInStreams && isCorrectType;
     }
 
     @Override

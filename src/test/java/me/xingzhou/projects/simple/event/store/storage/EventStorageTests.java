@@ -299,24 +299,26 @@ public abstract class EventStorageTests {
     class MultipleStreamsStorageTests {
         private static final String STREAM_ONE = "stream-one";
         private static final String STREAM_TWO = "stream-two";
+        private static final String EVENT_TYPE_A = "event-type-a";
+        private static final String EVENT_TYPE_B = "event-type-b";
         private final Map<String, List<RequestEvent>> streams = Map.of(
                 STREAM_ONE,
                         List.of(
                                 new RequestEvent(
                                         "first-event-id",
-                                        "event-type-a",
+                                        EVENT_TYPE_A,
                                         """
                         {"key1", "in-stream-one"}""",
                                         EventStorage.VersionConstants.UNDEFINED_STREAM),
                                 new RequestEvent(
                                         "second-event-id",
-                                        "event-type-b", // must be unique from the other event type
+                                        EVENT_TYPE_B, // must be unique from the other event type
                                         """
                         {"key2", "in-stream-one"}""",
                                         EventStorage.VersionConstants.UNDEFINED_STREAM),
                                 new RequestEvent(
                                         "third-event-id",
-                                        "event-type-a",
+                                        EVENT_TYPE_A,
                                         """
                         {"key3", "in-stream-one"}""",
                                         EventStorage.VersionConstants.UNDEFINED_STREAM)),
@@ -324,19 +326,19 @@ public abstract class EventStorageTests {
                         List.of(
                                 new RequestEvent(
                                         "first-event-id",
-                                        "event-type-a",
+                                        EVENT_TYPE_A,
                                         """
                         {"key1", "in-stream-two"}""",
                                         EventStorage.VersionConstants.UNDEFINED_STREAM),
                                 new RequestEvent(
                                         "second-event-id",
-                                        "event-type-b", // must be unique from the other event type
+                                        EVENT_TYPE_B, // must be unique from the other event type
                                         """
                         {"key2", "in-stream-two"}""",
                                         EventStorage.VersionConstants.UNDEFINED_STREAM),
                                 new RequestEvent(
                                         "third-event-id",
-                                        "event-type-a",
+                                        EVENT_TYPE_A,
                                         """
                         {"key3", "in-stream-two"}""",
                                         EventStorage.VersionConstants.UNDEFINED_STREAM)));
@@ -388,6 +390,56 @@ public abstract class EventStorageTests {
             var expected = allEvents;
 
             var records = storage.retrieveEvents(Instant.MIN, Instant.MAX, streamNames, Collections.emptyList());
+
+            var actualEvents = records.records().stream().map(RequestEvent::fromStoredRecord);
+
+            assertThat(actualEvents).containsExactlyInAnyOrderElementsOf(expected);
+            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::timestamp));
+            assertThat(records.timestamp()).isEqualTo(storage.lastUpdateAt());
+        }
+
+        @Test
+        @DisplayName("Retrieve events from all streams and one event type")
+        void retrieveEventsFromAllStreamsAndOneEventType() {
+            var eventTypes = List.of(EVENT_TYPE_A);
+            var expected = allEvents.stream()
+                    .filter(event -> eventTypes.contains(event.eventType()))
+                    .toList();
+
+            var records = storage.retrieveEvents(Instant.MIN, Instant.MAX, Collections.emptyList(), eventTypes);
+
+            var actualEvents = records.records().stream().map(RequestEvent::fromStoredRecord);
+
+            assertThat(actualEvents).containsExactlyInAnyOrderElementsOf(expected);
+            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::timestamp));
+            assertThat(records.timestamp()).isEqualTo(storage.lastUpdateAt());
+        }
+
+        @Test
+        @DisplayName("Retrieve events from all streams and multiple event types")
+        void retrieveEventsFromAllStreamsAndMultipleEventTypes() {
+            var eventTypes = List.of(EVENT_TYPE_A, EVENT_TYPE_B);
+            var expected = allEvents;
+
+            var records = storage.retrieveEvents(Instant.MIN, Instant.MAX, Collections.emptyList(), eventTypes);
+
+            var actualEvents = records.records().stream().map(RequestEvent::fromStoredRecord);
+
+            assertThat(actualEvents).containsExactlyInAnyOrderElementsOf(expected);
+            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::timestamp));
+            assertThat(records.timestamp()).isEqualTo(storage.lastUpdateAt());
+        }
+
+        @Test
+        @DisplayName("Retrieve events from some streams and some event types")
+        void retrieveEventsFromSomeStreamsAndSomeEventTypes() {
+            var eventTypes = List.of(EVENT_TYPE_A);
+            var streamNames = List.of(STREAM_ONE);
+            var expected = streams.get(STREAM_ONE).stream()
+                    .filter(event -> eventTypes.contains(event.eventType()))
+                    .toList();
+
+            var records = storage.retrieveEvents(Instant.MIN, Instant.MAX, streamNames, eventTypes);
 
             var actualEvents = records.records().stream().map(RequestEvent::fromStoredRecord);
 
