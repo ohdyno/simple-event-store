@@ -84,7 +84,7 @@ public abstract class EventStorageTests {
             assertThat(record.streamName()).isEqualTo(streamName);
             assertThat(record.eventType()).isEqualTo(eventType);
             assertThat(record.eventContent()).isEqualTo(eventContent);
-            assertThat(record.eventId()).isNotEmpty();
+            assertThat(record.eventId()).isPositive();
             assertThat(record.version()).isEqualTo(EventStorage.VersionConstants.NEW_STREAM);
         }
 

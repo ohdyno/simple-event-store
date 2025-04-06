@@ -52,11 +52,15 @@ public class InMemoryEventStorage implements EventStorage {
     private StoredRecord appendToStream(String streamName, long currentVersion, String eventType, String eventContent) {
         if (getCurrentVersion(streamName) == currentVersion) {
             var record = new StoredRecord(
-                    streamName, generateEventId(), eventType, eventContent, currentVersion + 1, Instant.now());
+                    createEventId(), streamName, eventType, eventContent, currentVersion + 1, Instant.now());
             save(streamName, record);
             return record;
         }
         throw new StaleVersionFailure();
+    }
+
+    private int createEventId() {
+        return storage.size() + 1;
     }
 
     private StoredRecord createStream(String streamName, String eventType, String eventContent) {
@@ -64,13 +68,9 @@ public class InMemoryEventStorage implements EventStorage {
             throw new DuplicateEventStreamFailure();
         }
         var record = new StoredRecord(
-                streamName, generateEventId(), eventType, eventContent, VersionConstants.NEW_STREAM, Instant.now());
+                createEventId(), streamName, eventType, eventContent, VersionConstants.NEW_STREAM, Instant.now());
         save(streamName, record);
         return record;
-    }
-
-    private String generateEventId() {
-        return UUID.randomUUID().toString();
     }
 
     /**
