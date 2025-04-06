@@ -16,12 +16,12 @@ public interface EventStorage {
      *     when appropriate.
      */
     interface VersionConstants {
+
         long NEW_STREAM = 0;
         long UNDEFINED_STREAM = -1;
         long RANGE_MIN_EXCLUSIVE = UNDEFINED_STREAM;
         long RANGE_MAX_INCLUSIVE = Long.MAX_VALUE;
     }
-
     /**
      * Create an event stream with the given streamName containing the event defined by (eventId, eventType,
      * eventContent).
@@ -72,4 +72,14 @@ public interface EventStorage {
             @Nonnull Instant exclusiveEnd,
             @Nonnull List<String> streamNames,
             @Nonnull List<String> eventTypes);
+
+    interface TimestampConstants {
+        Instant NEVER = Instant.EPOCH;
+    }
+
+    /**
+     * @return when the storage system was last updated, or {@link TimestampConstants#NEVER} if the system has never
+     *     been updated.
+     */
+    Instant lastUpdateAt();
 }

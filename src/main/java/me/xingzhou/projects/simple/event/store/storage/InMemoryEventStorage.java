@@ -13,6 +13,7 @@ import me.xingzhou.projects.simple.event.store.storage.failures.StaleVersionFail
 public class InMemoryEventStorage implements EventStorage {
     private final List<EventRecord> storage = new ArrayList<>();
     private final Set<String> streamNamesIndex = new HashSet<>();
+    private Instant lastUpdateAt = TimestampConstants.NEVER;
 
     @Override
     public long createStream(
@@ -76,7 +77,12 @@ public class InMemoryEventStorage implements EventStorage {
             @Nonnull List<String> streamNames,
             @Nonnull List<String> eventTypes) {
         return new TimestampedRecords(
-                storage.stream().map(EventRecord::toStoredRecord).toList(), Instant.now());
+                storage.stream().map(EventRecord::toStoredRecord).toList(), lastUpdateAt());
+    }
+
+    @Override
+    public Instant lastUpdateAt() {
+        return lastUpdateAt;
     }
 
     private static boolean shouldIncludeEvent(
@@ -103,6 +109,7 @@ public class InMemoryEventStorage implements EventStorage {
     private void save(String streamName, EventRecord record) {
         storage.add(record);
         streamNamesIndex.add(streamName);
+        lastUpdateAt = Instant.now();
     }
 
     private record EventRecord(

@@ -361,6 +361,7 @@ public abstract class EventStorageTests {
 
             assertThat(actualEvents).containsAll(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::timestamp));
+            assertThat(records.timestamp()).isEqualTo(storage.lastUpdateAt());
         }
     }
 
