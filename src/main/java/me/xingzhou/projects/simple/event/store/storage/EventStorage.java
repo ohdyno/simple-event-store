@@ -3,8 +3,6 @@ package me.xingzhou.projects.simple.event.store.storage;
 import jakarta.annotation.Nonnull;
 import java.time.Instant;
 import java.util.List;
-import me.xingzhou.projects.simple.event.store.Version;
-import me.xingzhou.projects.simple.event.store.storage.failures.DuplicateEventStreamFailure;
 
 public interface EventStorage {
     /**
@@ -16,33 +14,19 @@ public interface EventStorage {
      *     when appropriate.
      */
     interface VersionConstants {
-
         long NEW_STREAM = 0;
         long UNDEFINED_STREAM = -1;
         long RANGE_MIN_EXCLUSIVE = UNDEFINED_STREAM;
         long RANGE_MAX_INCLUSIVE = Long.MAX_VALUE;
     }
-    /**
-     * Create an event stream with the given streamName containing the event defined by (eventId, eventType,
-     * eventContent).
-     *
-     * @param streamName is the name of the new stream. Streams cannot have duplicate names.
-     * @param eventId is the id associated with this event. Duplicate ids are allowed.
-     * @param eventType is the type of this event. The type can be passed as part of the eventTypes parameter in
-     *     {@link #retrieveEvents(String, List, long, long)} or {@link #retrieveEvents(Instant, Instant, List, List)} to
-     *     reduce the number of events retrieved.
-     * @param eventContent is the content of the event serialized to JSON.
-     * @return {@link VersionConstants#NEW_STREAM}
-     * @throws DuplicateEventStreamFailure if another stream with the same name already exists.
-     * @see Version
-     */
-    long createStream(
+
+    StoredRecord createStream(
             @Nonnull String streamName,
             @Nonnull String eventId,
             @Nonnull String eventType,
             @Nonnull String eventContent);
 
-    long appendEvent(
+    StoredRecord appendEvent(
             @Nonnull String streamName,
             long currentVersion,
             @Nonnull String eventId,
@@ -52,12 +36,6 @@ public interface EventStorage {
     /**
      * Supports the following most common scenarios: - Given a version, retrieve all events after this version. - Given
      * a version, retrieve all events led to this version.
-     *
-     * @param streamName
-     * @param eventTypes
-     * @param exclusiveStartVersion
-     * @param inclusiveEndVersion
-     * @return
      */
     @Nonnull
     VersionedRecords retrieveEvents(

@@ -22,20 +22,20 @@ public class EventStore {
 
     public Version createStream(StreamName streamName, Event event) {
         var serializedEvent = serializer.serialize(event);
-        var current = storage.createStream(
+        var record = storage.createStream(
                 streamName.value(), event.id(), serializedEvent.eventType(), serializedEvent.eventJson());
-        return new Version(current);
+        return new Version(record.version());
     }
 
     public Version appendEvent(StreamName streamName, Event event, Version current) {
         var serializedEvent = serializer.serialize(event);
-        var next = storage.appendEvent(
+        var record = storage.appendEvent(
                 streamName.value(),
                 current.value(),
                 event.id(),
                 serializedEvent.eventType(),
                 serializedEvent.eventJson());
-        return new Version(next);
+        return new Version(record.version());
     }
 
     public VersionedEvents retrieveVersionedEvents(StreamName streamName) {
