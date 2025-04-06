@@ -20,11 +20,9 @@ public interface EventStorage {
         long RANGE_MAX_INCLUSIVE = Long.MAX_VALUE;
     }
 
-    StoredRecord createStream(
-            @Nonnull String streamName,
-            @Nonnull String eventId,
-            @Nonnull String eventType,
-            @Nonnull String eventContent);
+    interface TimestampConstants {
+        Instant NEVER = Instant.EPOCH;
+    }
 
     StoredRecord appendEvent(
             @Nonnull String streamName,
@@ -50,14 +48,4 @@ public interface EventStorage {
             @Nonnull Instant exclusiveEnd,
             @Nonnull List<String> streamNames,
             @Nonnull List<String> eventTypes);
-
-    interface TimestampConstants {
-        Instant NEVER = Instant.EPOCH;
-    }
-
-    /**
-     * @return when the storage system was last updated, or {@link TimestampConstants#NEVER} if the system has never
-     *     been updated.
-     */
-    Instant lastUpdateAt();
 }

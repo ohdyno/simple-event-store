@@ -16,11 +16,30 @@ public class InMemoryEventStorage implements EventStorage {
     private Instant lastUpdateAt = TimestampConstants.NEVER;
 
     @Override
-    public StoredRecord createStream(
+    public StoredRecord appendEvent(
             @Nonnull String streamName,
+            long currentVersion,
             @Nonnull String eventId,
             @Nonnull String eventType,
             @Nonnull String eventContent) {
+        if (isCreateStreamRequest(currentVersion)) {
+            return createStream(streamName, eventId, eventType, eventContent);
+        }
+        return appendToStream(streamName, currentVersion, eventId, eventType, eventContent);
+    }
+
+    private StoredRecord appendToStream(
+            String streamName, long currentVersion, String eventId, String eventType, String eventContent) {
+        if (getCurrentVersion(streamName) == currentVersion) {
+            var record =
+                    new StoredRecord(streamName, eventId, eventType, eventContent, currentVersion + 1, Instant.now());
+            save(streamName, record);
+            return record;
+        }
+        throw new StaleVersionFailure();
+    }
+
+    private StoredRecord createStream(String streamName, String eventId, String eventType, String eventContent) {
         if (streamNamesIndex.contains(streamName)) {
             throw new DuplicateEventStreamFailure();
         }
@@ -30,20 +49,8 @@ public class InMemoryEventStorage implements EventStorage {
         return record;
     }
 
-    @Override
-    public StoredRecord appendEvent(
-            @Nonnull String streamName,
-            long currentVersion,
-            @Nonnull String eventId,
-            @Nonnull String eventType,
-            @Nonnull String eventContent) {
-        if (getCurrentVersion(streamName) == currentVersion) {
-            var record =
-                    new StoredRecord(streamName, eventId, eventType, eventContent, currentVersion + 1, Instant.now());
-            save(streamName, record);
-            return record;
-        }
-        throw new StaleVersionFailure();
+    private static boolean isCreateStreamRequest(long currentVersion) {
+        return currentVersion == VersionConstants.UNDEFINED_STREAM;
     }
 
     /**
@@ -78,7 +85,7 @@ public class InMemoryEventStorage implements EventStorage {
         var records = storage.stream()
                 .filter(event -> shouldIncludeEvent(event, exclusiveStart, exclusiveEnd, streamNames, eventTypes))
                 .toList();
-        return new TimestampedRecords(records, lastUpdateAt());
+        return new TimestampedRecords(records, lastUpdateAt);
     }
 
     private boolean shouldIncludeEvent(
@@ -90,11 +97,6 @@ public class InMemoryEventStorage implements EventStorage {
         var isInStreams = streamNames.isEmpty() || streamNames.contains(event.streamName());
         var isCorrectType = eventTypes.isEmpty() || eventTypes.contains(event.eventType());
         return isInStreams && isCorrectType;
-    }
-
-    @Override
-    public Instant lastUpdateAt() {
-        return lastUpdateAt;
     }
 
     private static boolean shouldIncludeEvent(

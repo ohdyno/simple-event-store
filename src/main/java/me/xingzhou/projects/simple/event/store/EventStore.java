@@ -22,8 +22,13 @@ public class EventStore {
 
     public Version createStream(StreamName streamName, Event event) {
         var serializedEvent = serializer.serialize(event);
-        var record = storage.createStream(
-                streamName.value(), event.id(), serializedEvent.eventType(), serializedEvent.eventJson());
+        String eventId = event.id();
+        var record = storage.appendEvent(
+                streamName.value(),
+                EventStorage.VersionConstants.UNDEFINED_STREAM,
+                eventId,
+                serializedEvent.eventType(),
+                serializedEvent.eventJson());
         return new Version(record.version());
     }
 

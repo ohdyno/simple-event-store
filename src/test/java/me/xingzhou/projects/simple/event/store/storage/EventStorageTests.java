@@ -36,26 +36,33 @@ public abstract class EventStorageTests {
             var eventContent = """
                     {"key", "value"}""";
 
-            var record = storage.createStream(streamName, eventId, eventType, eventContent);
+            var record = storage.appendEvent(
+                    streamName, EventStorage.VersionConstants.UNDEFINED_STREAM, eventId, eventType, eventContent);
 
-            assertThat(record)
-                    .isEqualTo(new StoredRecord(
-                            streamName,
-                            eventId,
-                            eventType,
-                            eventContent,
-                            EventStorage.VersionConstants.NEW_STREAM,
-                            storage.lastUpdateAt()));
+            assertThat(record.streamName()).isEqualTo(streamName);
+            assertThat(record.eventId()).isEqualTo(eventId);
+            assertThat(record.eventType()).isEqualTo(eventType);
+            assertThat(record.eventContent()).isEqualTo(eventContent);
+            assertThat(record.version()).isEqualTo(EventStorage.VersionConstants.NEW_STREAM);
         }
 
         @Test
         @DisplayName("Create a duplicate stream fails.")
         void createDuplicateStream() {
-            storage.createStream(
-                    streamName, "an-event-id", "an-event-type", """
-                            {"key", "value"}""");
+            storage.appendEvent(
+                    streamName,
+                    EventStorage.VersionConstants.UNDEFINED_STREAM,
+                    "an-event-id",
+                    "an-event-type",
+                    """
+                    {"key", "value"}""");
 
-            assertThatThrownBy(() -> storage.createStream(streamName, "anything", "anything", "anything"))
+            assertThatThrownBy(() -> storage.appendEvent(
+                            streamName,
+                            EventStorage.VersionConstants.UNDEFINED_STREAM,
+                            "anything",
+                            "anything",
+                            "anything"))
                     .isInstanceOf(DuplicateEventStreamFailure.class);
         }
 
@@ -348,7 +355,7 @@ public abstract class EventStorageTests {
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::timestamp));
-            assertThat(records.timestamp()).isEqualTo(storage.lastUpdateAt());
+            assertThat(records.timestamp()).isEqualTo(storedRecords.getLast().timestamp());
         }
 
         @Test
@@ -363,7 +370,7 @@ public abstract class EventStorageTests {
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::timestamp));
-            assertThat(records.timestamp()).isEqualTo(storage.lastUpdateAt());
+            assertThat(records.timestamp()).isEqualTo(storedRecords.getLast().timestamp());
         }
 
         @Test
@@ -376,7 +383,7 @@ public abstract class EventStorageTests {
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::timestamp));
-            assertThat(records.timestamp()).isEqualTo(storage.lastUpdateAt());
+            assertThat(records.timestamp()).isEqualTo(storedRecords.getLast().timestamp());
         }
 
         @Test
@@ -391,7 +398,7 @@ public abstract class EventStorageTests {
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::timestamp));
-            assertThat(records.timestamp()).isEqualTo(storage.lastUpdateAt());
+            assertThat(records.timestamp()).isEqualTo(storedRecords.getLast().timestamp());
         }
 
         @Test
@@ -404,7 +411,7 @@ public abstract class EventStorageTests {
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::timestamp));
-            assertThat(records.timestamp()).isEqualTo(storage.lastUpdateAt());
+            assertThat(records.timestamp()).isEqualTo(storedRecords.getLast().timestamp());
         }
 
         @Test
@@ -421,14 +428,19 @@ public abstract class EventStorageTests {
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::timestamp));
-            assertThat(records.timestamp()).isEqualTo(storage.lastUpdateAt());
+            assertThat(records.timestamp()).isEqualTo(storedRecords.getLast().timestamp());
         }
     }
 
     private List<StoredRecord> save(List<RequestEvent> events, String streamName) {
         var records = new ArrayList<StoredRecord>();
         var first = events.get(0);
-        var record = storage.createStream(streamName, first.eventId(), first.eventType(), first.eventContent());
+        var record = storage.appendEvent(
+                streamName,
+                EventStorage.VersionConstants.UNDEFINED_STREAM,
+                first.eventId(),
+                first.eventType(),
+                first.eventContent());
         records.add(record);
 
         for (var event : events.stream().skip(1).toList()) {
