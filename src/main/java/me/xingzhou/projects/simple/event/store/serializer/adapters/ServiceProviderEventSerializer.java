@@ -12,6 +12,7 @@ import me.xingzhou.projects.simple.event.store.serializer.UnknownEventTypeFailur
 
 public class ServiceProviderEventSerializer implements EventSerializer {
     private final ObjectMapper objectMapper = new ObjectMapper();
+
     private final HashMap<String, Class<? extends Event>> definedEvents = new HashMap<>();
 
     public ServiceProviderEventSerializer() {
@@ -20,18 +21,6 @@ public class ServiceProviderEventSerializer implements EventSerializer {
             var klass = event.getClass();
             definedEvents.put(getTypeName(klass), klass);
         }
-    }
-
-    @Override
-    public SerializedEvent serialize(Event event) {
-        var eventJson = handleExceptions(() -> objectMapper.writeValueAsString(event));
-        var eventType = getTypeName(event.getClass());
-        return new SerializedEvent(eventType, eventJson);
-    }
-
-    @Override
-    public String getTypeName(Class<? extends Event> klass) {
-        return klass.getSimpleName();
     }
 
     @Override
@@ -53,5 +42,17 @@ public class ServiceProviderEventSerializer implements EventSerializer {
             return Collections.emptyList();
         }
         return List.copyOf(allTypes);
+    }
+
+    @Override
+    public String getTypeName(Class<? extends Event> klass) {
+        return klass.getSimpleName();
+    }
+
+    @Override
+    public SerializedEvent serialize(Event event) {
+        var eventJson = handleExceptions(() -> objectMapper.writeValueAsString(event));
+        var eventType = getTypeName(event.getClass());
+        return new SerializedEvent(eventType, eventJson);
     }
 }

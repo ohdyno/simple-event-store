@@ -11,15 +11,15 @@ public class Givens {
         this.state = state;
     }
 
-    @Given("the event store is operational")
-    public void theEventStoreIsOperational() {}
+    @And("an event")
+    public void anEvent() {}
 
     @And("the event store is empty")
     public void theEventStoreIsEmpty() {}
 
+    @Given("the event store is operational")
+    public void theEventStoreIsOperational() {}
+
     @Given("the stream name {string}")
     public void theStreamName(String streamName) {}
-
-    @And("an event")
-    public void anEvent() {}
 }

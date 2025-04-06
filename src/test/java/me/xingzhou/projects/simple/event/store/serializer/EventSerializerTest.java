@@ -13,20 +13,6 @@ public abstract class EventSerializerTest {
 
     protected abstract EventSerializer createSerializer();
 
-    @BeforeEach
-    void setUp() {
-        subject = createSerializer();
-    }
-
-    @Test
-    void serialize() {
-        var result = subject.serialize(new FooEvent("foo-event-id"));
-        assertThat(result.eventType()).isEqualTo(FooEvent.class.getSimpleName());
-        assertThat(result.eventJson()).isEqualTo("""
-                {"id":"foo-event-id"}
-                """.trim());
-    }
-
     @Test
     void deserialize() {
         var event = new FooEvent("foo-event-id");
@@ -38,21 +24,10 @@ public abstract class EventSerializerTest {
     }
 
     @Test
-    void getTypeName() {
-        var event = new FooEvent("foo-event-id");
-        var serialized = subject.serialize(event);
-
-        var result = subject.getTypeName(event.getClass());
-
-        assertThat(result).isEqualTo(serialized.eventType());
-    }
-
-    @Test
     void deserializeAnUnknownEvent() {
         var result = assertThrows(UnknownEventTypeFailure.class, () -> subject.deserialize("unknown-event-type", "{}"));
-        assertThat(result.getMessage())
-                .isEqualTo("""
-                        Unknown event type: 'unknown-event-type'""");
+        assertThat(result.getMessage()).isEqualTo("""
+				Unknown event type: 'unknown-event-type'""");
     }
 
     @Test
@@ -88,5 +63,29 @@ public abstract class EventSerializerTest {
                     public void apply(FooEvent event) {}
                 }))
                 .isEmpty();
+    }
+
+    @Test
+    void getTypeName() {
+        var event = new FooEvent("foo-event-id");
+        var serialized = subject.serialize(event);
+
+        var result = subject.getTypeName(event.getClass());
+
+        assertThat(result).isEqualTo(serialized.eventType());
+    }
+
+    @Test
+    void serialize() {
+        var result = subject.serialize(new FooEvent("foo-event-id"));
+        assertThat(result.eventType()).isEqualTo(FooEvent.class.getSimpleName());
+        assertThat(result.eventJson()).isEqualTo("""
+				{"id":"foo-event-id"}
+				""".trim());
+    }
+
+    @BeforeEach
+    void setUp() {
+        subject = createSerializer();
     }
 }

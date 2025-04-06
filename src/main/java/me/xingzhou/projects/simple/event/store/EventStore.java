@@ -8,7 +8,12 @@ import me.xingzhou.projects.simple.event.store.serializer.EventSerializer;
 import me.xingzhou.projects.simple.event.store.storage.EventStorage;
 
 public class EventStore {
+    public static EventStore build(EventStorage storage, EventSerializer serializer) {
+        return new EventStore(storage, serializer);
+    }
+
     private final EventStorage storage;
+
     private final EventSerializer serializer;
 
     private EventStore(EventStorage storage, EventSerializer serializer) {
@@ -16,8 +21,15 @@ public class EventStore {
         this.serializer = serializer;
     }
 
-    public static EventStore build(EventStorage storage, EventSerializer serializer) {
-        return new EventStore(storage, serializer);
+    public Version appendEvent(StreamName streamName, Event event, Version current) {
+        var serializedEvent = serializer.serialize(event);
+        var record = storage.appendEvent(
+                streamName.value(),
+                current.value(),
+                event.id(),
+                serializedEvent.eventType(),
+                serializedEvent.eventJson());
+        return new Version(record.version());
     }
 
     public Version createStream(StreamName streamName, Event event) {
@@ -32,43 +44,6 @@ public class EventStore {
         return new Version(record.version());
     }
 
-    public Version appendEvent(StreamName streamName, Event event, Version current) {
-        var serializedEvent = serializer.serialize(event);
-        var record = storage.appendEvent(
-                streamName.value(),
-                current.value(),
-                event.id(),
-                serializedEvent.eventType(),
-                serializedEvent.eventJson());
-        return new Version(record.version());
-    }
-
-    public VersionedEvents retrieveVersionedEvents(StreamName streamName) {
-        return retrieveVersionedEvents(streamName, Collections.emptyList(), Version.start(), Version.end());
-    }
-
-    public VersionedEvents retrieveVersionedEvents(StreamName streamName, List<Class<? extends Event>> eventTypes) {
-        return retrieveVersionedEvents(streamName, eventTypes, Version.start(), Version.end());
-    }
-
-    public VersionedEvents retrieveVersionedEventsStartingAfter(StreamName streamName, Version version) {
-        return retrieveVersionedEvents(streamName, Collections.emptyList(), version, Version.end());
-    }
-
-    public VersionedEvents retrieveVersionedEventsEndingBefore(StreamName streamName, Version version) {
-        return retrieveVersionedEvents(streamName, Collections.emptyList(), Version.start(), version);
-    }
-
-    private VersionedEvents retrieveVersionedEvents(
-            StreamName streamName, List<Class<? extends Event>> eventTypes, Version start, Version end) {
-        var typeNames = eventTypes.stream().map(serializer::getTypeName).toList();
-        var versionedRecords = storage.retrieveEvents(streamName.value(), typeNames, start.value(), end.value());
-        var events = versionedRecords.records().stream()
-                .map(record -> DeserializedRecord.from(record, serializer))
-                .toList();
-        return new VersionedEvents(events, new Version(versionedRecords.version()));
-    }
-
     public TimestampedEvents retrieveTimestampedEvents() {
         return retrieveTimestampedEvents(null, Collections.emptyList(), Instant.MIN, Instant.MAX);
     }
@@ -81,12 +56,28 @@ public class EventStore {
         return retrieveTimestampedEvents(streamName, eventTypes, Instant.MIN, Instant.MAX);
     }
 
+    public TimestampedEvents retrieveTimestampedEventsEndingBefore(Instant timestamp) {
+        return retrieveTimestampedEvents(null, Collections.emptyList(), Instant.MIN, timestamp);
+    }
+
     public TimestampedEvents retrieveTimestampedEventsStartingAfter(Instant timestamp) {
         return retrieveTimestampedEvents(null, Collections.emptyList(), timestamp, Instant.MAX);
     }
 
-    public TimestampedEvents retrieveTimestampedEventsEndingBefore(Instant timestamp) {
-        return retrieveTimestampedEvents(null, Collections.emptyList(), Instant.MIN, timestamp);
+    public VersionedEvents retrieveVersionedEvents(StreamName streamName) {
+        return retrieveVersionedEvents(streamName, Collections.emptyList(), Version.start(), Version.end());
+    }
+
+    public VersionedEvents retrieveVersionedEvents(StreamName streamName, List<Class<? extends Event>> eventTypes) {
+        return retrieveVersionedEvents(streamName, eventTypes, Version.start(), Version.end());
+    }
+
+    public VersionedEvents retrieveVersionedEventsEndingBefore(StreamName streamName, Version version) {
+        return retrieveVersionedEvents(streamName, Collections.emptyList(), Version.start(), version);
+    }
+
+    public VersionedEvents retrieveVersionedEventsStartingAfter(StreamName streamName, Version version) {
+        return retrieveVersionedEvents(streamName, Collections.emptyList(), version, Version.end());
     }
 
     private TimestampedEvents retrieveTimestampedEvents(
@@ -98,5 +89,15 @@ public class EventStore {
                 .map(record -> DeserializedRecord.from(record, serializer))
                 .toList();
         return new TimestampedEvents(events, timestampedRecords.timestamp());
+    }
+
+    private VersionedEvents retrieveVersionedEvents(
+            StreamName streamName, List<Class<? extends Event>> eventTypes, Version start, Version end) {
+        var typeNames = eventTypes.stream().map(serializer::getTypeName).toList();
+        var versionedRecords = storage.retrieveEvents(streamName.value(), typeNames, start.value(), end.value());
+        var events = versionedRecords.records().stream()
+                .map(record -> DeserializedRecord.from(record, serializer))
+                .toList();
+        return new VersionedEvents(events, new Version(versionedRecords.version()));
     }
 }

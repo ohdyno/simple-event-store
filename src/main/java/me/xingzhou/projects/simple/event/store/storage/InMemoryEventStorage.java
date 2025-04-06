@@ -12,7 +12,9 @@ import me.xingzhou.projects.simple.event.store.storage.failures.StaleVersionFail
 
 public class InMemoryEventStorage implements EventStorage {
     private final List<StoredRecord> storage = new ArrayList<>();
+
     private final Set<String> streamNamesIndex = new HashSet<>();
+
     private Instant lastUpdateAt = TimestampConstants.NEVER;
 
     @Override
@@ -26,6 +28,32 @@ public class InMemoryEventStorage implements EventStorage {
             return createStream(streamName, eventId, eventType, eventContent);
         }
         return appendToStream(streamName, currentVersion, eventId, eventType, eventContent);
+    }
+
+    @Override
+    public @Nonnull TimestampedRecords retrieveEvents(
+            @Nonnull Instant exclusiveStart,
+            @Nonnull Instant exclusiveEnd,
+            @Nonnull List<String> streamNames,
+            @Nonnull List<String> eventTypes) {
+        var records = storage.stream()
+                .filter(event -> shouldIncludeEvent(event, exclusiveStart, exclusiveEnd, streamNames, eventTypes))
+                .toList();
+        return new TimestampedRecords(records, lastUpdateAt);
+    }
+
+    @Override
+    public @Nonnull VersionedRecords retrieveEvents(
+            @Nonnull String streamName,
+            @Nonnull List<String> eventTypes,
+            long exclusiveStartVersion,
+            long inclusiveEndVersion) {
+        var eventStream = getEventStream(streamName);
+        var version = getCurrentVersion(streamName);
+        var records = eventStream.stream()
+                .filter(event -> shouldIncludeEvent(event, eventTypes, exclusiveStartVersion, inclusiveEndVersion))
+                .toList();
+        return new VersionedRecords(records, version);
     }
 
     private StoredRecord appendToStream(
@@ -49,10 +77,6 @@ public class InMemoryEventStorage implements EventStorage {
         return record;
     }
 
-    private static boolean isCreateStreamRequest(long currentVersion) {
-        return currentVersion == VersionConstants.UNDEFINED_STREAM;
-    }
-
     /**
      * @param streamName is the name of a stream within {@link #storage}.
      * @throws NoSuchStreamFailure if the stream does not exist.
@@ -60,50 +84,6 @@ public class InMemoryEventStorage implements EventStorage {
      */
     private int getCurrentVersion(String streamName) {
         return getEventStream(streamName).size() - 1;
-    }
-
-    @Override
-    public @Nonnull VersionedRecords retrieveEvents(
-            @Nonnull String streamName,
-            @Nonnull List<String> eventTypes,
-            long exclusiveStartVersion,
-            long inclusiveEndVersion) {
-        var eventStream = getEventStream(streamName);
-        var version = getCurrentVersion(streamName);
-        var records = eventStream.stream()
-                .filter(event -> shouldIncludeEvent(event, eventTypes, exclusiveStartVersion, inclusiveEndVersion))
-                .toList();
-        return new VersionedRecords(records, version);
-    }
-
-    @Override
-    public @Nonnull TimestampedRecords retrieveEvents(
-            @Nonnull Instant exclusiveStart,
-            @Nonnull Instant exclusiveEnd,
-            @Nonnull List<String> streamNames,
-            @Nonnull List<String> eventTypes) {
-        var records = storage.stream()
-                .filter(event -> shouldIncludeEvent(event, exclusiveStart, exclusiveEnd, streamNames, eventTypes))
-                .toList();
-        return new TimestampedRecords(records, lastUpdateAt);
-    }
-
-    private boolean shouldIncludeEvent(
-            StoredRecord event,
-            Instant exclusiveStart,
-            Instant exclusiveEnd,
-            List<String> streamNames,
-            List<String> eventTypes) {
-        var isInStreams = streamNames.isEmpty() || streamNames.contains(event.streamName());
-        var isCorrectType = eventTypes.isEmpty() || eventTypes.contains(event.eventType());
-        return isInStreams && isCorrectType;
-    }
-
-    private static boolean shouldIncludeEvent(
-            StoredRecord event, List<String> eventTypes, long exclusiveStartVersion, long inclusiveEndVersion) {
-        var isCorrectType = eventTypes.isEmpty() || eventTypes.contains(event.eventType());
-        var isWithinRange = exclusiveStartVersion < event.version() && event.version() <= inclusiveEndVersion;
-        return isCorrectType && isWithinRange;
     }
 
     /**
@@ -120,9 +100,31 @@ public class InMemoryEventStorage implements EventStorage {
         throw new NoSuchStreamFailure(streamName);
     }
 
+    private boolean isCreateStreamRequest(long currentVersion) {
+        return currentVersion == VersionConstants.UNDEFINED_STREAM;
+    }
+
     private void save(String streamName, StoredRecord record) {
         storage.add(record);
         streamNamesIndex.add(streamName);
         lastUpdateAt = record.timestamp();
+    }
+
+    private boolean shouldIncludeEvent(
+            StoredRecord event,
+            Instant exclusiveStart,
+            Instant exclusiveEnd,
+            List<String> streamNames,
+            List<String> eventTypes) {
+        var isInStreams = streamNames.isEmpty() || streamNames.contains(event.streamName());
+        var isCorrectType = eventTypes.isEmpty() || eventTypes.contains(event.eventType());
+        return isInStreams && isCorrectType;
+    }
+
+    private boolean shouldIncludeEvent(
+            StoredRecord event, List<String> eventTypes, long exclusiveStartVersion, long inclusiveEndVersion) {
+        var isCorrectType = eventTypes.isEmpty() || eventTypes.contains(event.eventType());
+        var isWithinRange = exclusiveStartVersion < event.version() && event.version() <= inclusiveEndVersion;
+        return isCorrectType && isWithinRange;
     }
 }
