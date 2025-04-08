@@ -11,6 +11,12 @@ Feature: Retrieve Events
   Like version, the last event's id reflects the current state of the system. The timestamp can be used to communicate to others roughly
   when the system was last updated.
 
+  Scenario: Retrieve events from a single stream.
+
+  Scenario: Retrieve all events from the system.
+
+  Scenario: Retrieve events with a combination of restrictions.
+
   Rule: Events can be restricted to specific types.
 
   Rule: Events can be restricted to belong to specific streams.
@@ -18,9 +24,3 @@ Feature: Retrieve Events
   Rule: Events can be restricted to be within a range for their versions.
 
   Rule: Events can be restricted to be within a range for their ids.
-
-    Scenario: Retrieve events from a single stream.
-
-    Scenario: Retrieve all events from the system.
-
-    Scenario: Retrieve events with a combination of restrictions.

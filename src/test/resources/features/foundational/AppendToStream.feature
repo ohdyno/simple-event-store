@@ -5,13 +5,13 @@ Feature: Append To Stream
   is still pointing at the end of the stream, then the operation is successful. Otherwise, an appropriate failure is raised by
   the operation.
 
-  Rule: If the version indicates a stream should be created, then the append operation is treated as a "create stream" operation.
+  Rule: Create a new stream if the version indicates so.
 
     Example: How to create a new stream
 
     Example: How to fail creating a stream due to duplicate stream names
 
-  Rule: The version for the append operation must reflect the current state of the event stream.
+  Rule: Version must reflect the current state of the event stream.
 
     Example: How to append to a stream with an up-to-date version
 
