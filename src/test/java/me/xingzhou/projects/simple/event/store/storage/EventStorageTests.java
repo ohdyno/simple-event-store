@@ -120,6 +120,19 @@ public abstract class EventStorageTests {
         private List<StoredRecord> storedRecords;
 
         @Test
+        @DisplayName("Retrieve events from all streams after a given event")
+        void retrieveEventsFromAllStreamsAfterGivenEvent() {
+            var minEventId = storedRecords.getFirst().eventId();
+            var expected = storedRecords.stream().skip(1).toList();
+
+            var records = storage.retrieveEvents(minEventId, Ids.MAX, Collections.emptyList(), Collections.emptyList());
+
+            assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
+            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::timestamp));
+            assertThat(records.timestamp()).isEqualTo(storedRecords.getLast().timestamp());
+        }
+
+        @Test
         @DisplayName("Retrieve events from all streams and multiple event types")
         void retrieveEventsFromAllStreamsAndMultipleEventTypes() {
             var eventTypes = List.of(EVENT_TYPE_A, EVENT_TYPE_B);
@@ -153,6 +166,22 @@ public abstract class EventStorageTests {
             var expected = storedRecords;
 
             var records = storage.retrieveEvents(Ids.MIN, Ids.MAX, Collections.emptyList(), Collections.emptyList());
+
+            assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
+            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::timestamp));
+            assertThat(records.timestamp()).isEqualTo(storedRecords.getLast().timestamp());
+        }
+
+        @Test
+        @DisplayName("Retrieve events from all streams up to a given event")
+        void retrieveEventsFromAllStreamsUptoGivenEvent() {
+            var maxInclusiveEventId =
+                    storedRecords.get(storedRecords.size() - 2).eventId();
+            var expected =
+                    storedRecords.stream().limit(storedRecords.size() - 1).toList();
+
+            var records = storage.retrieveEvents(
+                    Ids.MIN, maxInclusiveEventId, Collections.emptyList(), Collections.emptyList());
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::timestamp));

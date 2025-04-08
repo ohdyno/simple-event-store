@@ -124,6 +124,7 @@ public class InMemoryEventStorage implements EventStorage {
             List<String> eventTypes) {
         var isInStreams = streamNames.isEmpty() || streamNames.contains(event.streamName());
         var isCorrectType = eventTypes.isEmpty() || eventTypes.contains(event.eventType());
-        return isInStreams && isCorrectType;
+        var isWithinRange = exclusiveStartId < event.eventId() && event.eventId() <= inclusiveEndId;
+        return isInStreams && isCorrectType && isWithinRange;
     }
 }
