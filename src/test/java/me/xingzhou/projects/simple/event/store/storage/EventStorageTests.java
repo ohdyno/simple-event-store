@@ -289,15 +289,49 @@ public abstract class EventStorageTests {
             assertThat(records.timestamp()).isEqualTo(storedRecords.getLast().timestamp());
         }
 
+        @Test
+        @DisplayName("Retrieve events from some streams and some event types and within an id range")
+        void retrieveEventsFromSomeStreamsAndSomeEventTypesWithinRange() {
+            var eventTypes = List.of(EVENT_TYPE_A);
+            var streamNames = List.of(STREAM_ONE);
+            var minId = storedRecords.getFirst().eventId();
+            var maxIdInclusive = minId + 2;
+            var expected = storedRecords.stream()
+                    .filter(record -> eventTypes.contains(record.eventType())
+                            && streamNames.contains(record.streamName())
+                            && (minId < record.eventId() && record.eventId() <= maxIdInclusive))
+                    .toList();
+
+            var records = storage.retrieveEvents(minId, maxIdInclusive, streamNames, eventTypes);
+
+            assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
+            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::timestamp));
+            assertThat(records.timestamp()).isEqualTo(storedRecords.getLast().timestamp());
+        }
+
         @BeforeEach
         void seedEvents() {
+            var storedRecords = mixAndSave(streams);
+            this.storedRecords = flatten(storedRecords).stream()
+                    .sorted(Comparator.comparing(StoredRecord::eventId))
+                    .toList();
+        }
+
+        /**
+         * Save the events to the store by mixing which stream gets appended.
+         *
+         * @param requests contain the events requested to be saved for each stream.
+         * @return the {@link StoredRecord records} returned from {@link EventStorage#appendEvent(String, long, String,
+         *     String)} for each stream.
+         */
+        private HashMap<String, List<StoredRecord>> mixAndSave(Map<String, List<RequestEvent>> requests) {
             var storedRecords = new HashMap<String, List<StoredRecord>>();
-            int maxEventStream = streams.values().stream()
+            int maxEventStream = requests.values().stream()
                     .map(List::size)
                     .max(Comparator.naturalOrder())
                     .orElseThrow();
             for (int index = 0; index < maxEventStream; index++) {
-                for (var entry : streams.entrySet()) {
+                for (var entry : requests.entrySet()) {
                     var streamName = entry.getKey();
                     var events = entry.getValue();
                     if (index < events.size()) {
@@ -305,9 +339,7 @@ public abstract class EventStorageTests {
                     }
                 }
             }
-            this.storedRecords = flatten(storedRecords).stream()
-                    .sorted(Comparator.comparing(StoredRecord::eventId))
-                    .toList();
+            return storedRecords;
         }
     }
 
