@@ -189,6 +189,47 @@ public abstract class EventStorageTests {
         }
 
         @Test
+        @DisplayName("Retrieve events from all streams for id range edge cases")
+        void retrieveEventsFromAllStreamsWithIdRangeEdgeCases() {
+            assertAll(
+                    "Retrieve events from all streams for id range edge cases",
+                    () -> {
+                        // start == end
+                        var records = storage.retrieveEvents(1, 1, Collections.emptyList(), Collections.emptyList());
+
+                        assertThat(records.records()).isEmpty();
+                        assertThat(records.timestamp())
+                                .isEqualTo(storedRecords.getLast().timestamp());
+                    },
+                    () -> {
+                        // start > end
+                        var records = storage.retrieveEvents(2, 1, Collections.emptyList(), Collections.emptyList());
+
+                        assertThat(records.records()).isEmpty();
+                        assertThat(records.timestamp())
+                                .isEqualTo(storedRecords.getLast().timestamp());
+                    },
+                    () -> {
+                        // start == end == min
+                        var records = storage.retrieveEvents(
+                                Ids.MIN, Ids.MIN, Collections.emptyList(), Collections.emptyList());
+
+                        assertThat(records.records()).isEmpty();
+                        assertThat(records.timestamp())
+                                .isEqualTo(storedRecords.getLast().timestamp());
+                    },
+                    () -> {
+                        // start == end == max
+                        var records = storage.retrieveEvents(
+                                Ids.MAX, Ids.MAX, Collections.emptyList(), Collections.emptyList());
+
+                        assertThat(records.records()).isEmpty();
+                        assertThat(records.timestamp())
+                                .isEqualTo(storedRecords.getLast().timestamp());
+                    });
+        }
+
+        @Test
         @DisplayName("Retrieve events from multiple streams and all types")
         void retrieveEventsFromMultipleStreamsAndTypes() {
             var streamNames = List.of(STREAM_ONE, STREAM_TWO);
