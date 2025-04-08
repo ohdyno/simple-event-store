@@ -16,6 +16,10 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 public abstract class EventStorageTests {
+    private static List<StoredRecord> flatten(HashMap<String, List<StoredRecord>> storedRecords) {
+        return storedRecords.values().stream().flatMap(List::stream).toList();
+    }
+
     private EventStorage storage;
 
     protected abstract EventStorage createStorage();
@@ -27,19 +31,30 @@ public abstract class EventStorageTests {
 
     private record RequestEvent(String eventId, String eventType, String eventContent) {}
 
-    private List<StoredRecord> save(List<RequestEvent> events, String streamName) {
-        var records = new ArrayList<StoredRecord>();
-        var first = events.get(0);
-        var record =
-                storage.appendEvent(streamName, Versions.UNDEFINED_STREAM, first.eventType(), first.eventContent());
-        records.add(record);
-
-        for (var event : events.stream().skip(1).toList()) {
-            var newRecord = storage.appendEvent(streamName, record.version(), event.eventType(), event.eventContent());
-            records.add(newRecord);
-            record = newRecord;
-        }
-        return records;
+    /**
+     * Store the events to the event stream and record the StoredRecord into storedRecords.
+     *
+     * @param events are the events to be saved to the stream.
+     * @param streamName is the name of the stream. If the stream does not exist, then a stream is created.
+     * @param storedRecords are the records that have already been stored in the event stream. New records are added to
+     *     the map referred by the parameter. This parameter is also used to find the current version of the stream for
+     *     the append operation.
+     */
+    private void save(List<RequestEvent> events, String streamName, Map<String, List<StoredRecord>> storedRecords) {
+        events.forEach(event -> {
+            var previousRecords = storedRecords.getOrDefault(streamName, new ArrayList<>());
+            if (previousRecords.isEmpty()) {
+                var record = storage.appendEvent(
+                        streamName, Versions.UNDEFINED_STREAM, event.eventType(), event.eventContent());
+                previousRecords.add(record);
+            } else {
+                var previousRecord = previousRecords.getLast();
+                var record = storage.appendEvent(
+                        streamName, previousRecord.version(), event.eventType(), event.eventContent());
+                previousRecords.add(record);
+            }
+            storedRecords.put(streamName, previousRecords);
+        });
     }
 
     @Nested
@@ -276,8 +291,22 @@ public abstract class EventStorageTests {
 
         @BeforeEach
         void seedEvents() {
-            storedRecords = streams.entrySet().stream()
-                    .flatMap(entry -> save(entry.getValue(), entry.getKey()).stream())
+            var storedRecords = new HashMap<String, List<StoredRecord>>();
+            int maxEventStream = streams.values().stream()
+                    .map(List::size)
+                    .max(Comparator.naturalOrder())
+                    .orElseThrow();
+            for (int index = 0; index < maxEventStream; index++) {
+                for (var entry : streams.entrySet()) {
+                    var streamName = entry.getKey();
+                    var events = entry.getValue();
+                    if (index < events.size()) {
+                        save(List.of(events.get(index)), streamName, storedRecords);
+                    }
+                }
+            }
+            this.storedRecords = flatten(storedRecords).stream()
+                    .sorted(Comparator.comparing(StoredRecord::eventId))
                     .toList();
         }
     }
@@ -461,7 +490,11 @@ public abstract class EventStorageTests {
 
         @BeforeEach
         void seedEvents() {
-            this.storedRecords = save(this.events, streamName);
+            var storedRecords = new HashMap<String, List<StoredRecord>>();
+            save(this.events, streamName, storedRecords);
+            this.storedRecords = flatten(storedRecords).stream()
+                    .sorted(Comparator.comparing(StoredRecord::eventId))
+                    .toList();
         }
     }
 }
