@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import me.xingzhou.projects.simple.event.store.entities.Aggregate;
 import me.xingzhou.projects.simple.event.store.serializer.EventSerializer;
 import me.xingzhou.projects.simple.event.store.storage.EventStorage;
 
@@ -30,7 +31,6 @@ public class EventStore {
 
     public Version createStream(StreamName streamName, Event event) {
         var serializedEvent = serializer.serialize(event);
-        String eventId = event.id();
         var record = storage.appendEvent(
                 streamName.value(),
                 EventStorage.Constants.Versions.UNDEFINED_STREAM,
@@ -73,6 +73,16 @@ public class EventStore {
 
     public VersionedEvents retrieveVersionedEventsStartingAfter(StreamName streamName, Version version) {
         return retrieveVersionedEvents(streamName, Collections.emptyList(), version, Version.end());
+    }
+
+    public void save(Event event, Aggregate aggregate) {
+        var serialized = serializer.serialize(event);
+        var record = storage.appendEvent(
+                aggregate.streamName().value(),
+                aggregate.version().value(),
+                serialized.eventType(),
+                serialized.eventJson());
+        aggregate.setVersion(record.version());
     }
 
     private TimestampedEvents retrieveTimestampedEvents(
