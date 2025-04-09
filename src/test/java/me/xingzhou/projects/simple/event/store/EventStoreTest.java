@@ -14,6 +14,21 @@ import org.junit.jupiter.api.Test;
 class EventStoreTest {
 
     @Test
+    void enrichAnAggregateFromAStream() {
+        var store = EventStore.build(new InMemoryEventStorage(), new ServiceProviderEventSerializer());
+        var event = new TestEvent("event-id");
+        var aggregate = new TestAggregate();
+        store.save(event, aggregate);
+
+        var recorder = new TestAggregate();
+        store.enrich(recorder);
+
+        assertThat(recorder.appliedEvents()).hasSize(1);
+        assertThat(recorder.appliedEvents().getFirst()).isEqualTo(event);
+        assertThat(recorder.appliedEvents().getFirst()).isNotSameAs(event);
+    }
+
+    @Test
     void saveAnEvent() {
         var store = EventStore.build(new InMemoryEventStorage(), new ServiceProviderEventSerializer());
         var event = new TestEvent();

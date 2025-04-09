@@ -1,5 +1,9 @@
 package me.xingzhou.projects.simple.event.store;
 
+import static me.xingzhou.projects.simple.event.store.internal.tooling.CheckedExceptionHandlers.*;
+
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -40,6 +44,18 @@ public class EventStore {
                 serializedEvent.eventType(),
                 serializedEvent.eventJson());
         return new Version(record.version());
+    }
+
+    public <T extends Aggregate> void enrich(T aggregate) {
+        var eventTypes = serializer.extractDefinedEventsFromApplyMethods(aggregate);
+        var records = storage.retrieveEvents(
+                aggregate.streamName().value(),
+                eventTypes,
+                aggregate.version().value(),
+                EventStorage.Constants.Versions.MAX);
+        records.records().stream()
+                .map(record -> DeserializedRecord.from(record, serializer))
+                .forEach(record -> apply(record, aggregate));
     }
 
     public TimestampedEvents retrieveTimestampedEvents() {
@@ -90,6 +106,15 @@ public class EventStore {
         } catch (DuplicateEventStreamFailure | StaleVersionFailure failure) {
             throw new StaleStateFailure();
         }
+    }
+
+    private <T extends Aggregate> void apply(DeserializedRecord record, T aggregate) {
+        handleExceptions(() -> {
+            var lookup = MethodHandles.publicLookup();
+            var methodType = MethodType.methodType(void.class, record.event().getClass());
+            var applyMethod = lookup.findVirtual(aggregate.getClass(), "apply", methodType);
+            applyMethod.invoke(aggregate, record.event());
+        });
     }
 
     private TimestampedEvents retrieveTimestampedEvents(
