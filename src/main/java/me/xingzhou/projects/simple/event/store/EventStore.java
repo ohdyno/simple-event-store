@@ -5,6 +5,7 @@ import static me.xingzhou.projects.simple.event.store.internal.tooling.CheckedEx
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import me.xingzhou.projects.simple.event.store.entities.Aggregate;
+import me.xingzhou.projects.simple.event.store.entities.Projection;
 import me.xingzhou.projects.simple.event.store.failures.StaleStateFailure;
 import me.xingzhou.projects.simple.event.store.serializer.EventSerializer;
 import me.xingzhou.projects.simple.event.store.storage.EventStorage;
@@ -23,6 +24,18 @@ public class EventStore {
     private EventStore(EventStorage storage, EventSerializer serializer) {
         this.storage = storage;
         this.serializer = serializer;
+    }
+
+    public void enrich(Projection projection) {
+        var eventTypes = serializer.extractDefinedEventsFromApplyMethods(projection);
+        var records = storage.retrieveEvents(
+                projection.lastEventId().id(),
+                EventStorage.Constants.Ids.MAX,
+                projection.streamNames().stream().map(StreamName::value).toList(),
+                eventTypes);
+        records.records().stream()
+                .map(record -> EventRecord.extract(record, serializer))
+                .forEach(record -> apply(record, projection));
     }
 
     public <T extends Aggregate> void enrich(T aggregate) {
@@ -51,12 +64,12 @@ public class EventStore {
         }
     }
 
-    private <T extends Aggregate> void apply(EventRecord record, T aggregate) {
+    private <T> void apply(EventRecord record, T entity) {
         handleExceptions(() -> {
             var lookup = MethodHandles.publicLookup();
             var methodType = MethodType.methodType(void.class, record.event().getClass());
-            var applyMethod = lookup.findVirtual(aggregate.getClass(), "apply", methodType);
-            applyMethod.invoke(aggregate, record.event());
+            var applyMethod = lookup.findVirtual(entity.getClass(), "apply", methodType);
+            applyMethod.invoke(entity, record.event());
         });
     }
 }

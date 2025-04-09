@@ -28,7 +28,7 @@ public interface EventStorage {
 
     interface Constants {
         interface Ids {
-            long MIN = 0L;
+            long MIN = 0L, UNDEFINED = MIN;
             long START = 1L;
             long MAX = Long.MAX_VALUE;
         }
@@ -46,10 +46,9 @@ public interface EventStorage {
          *     constants when appropriate.
          */
         interface Versions {
-            long MIN = -1;
+            long MIN = -1, UNDEFINED_STREAM = MIN;
             long MAX = Long.MAX_VALUE;
             long NEW_STREAM = 0;
-            long UNDEFINED_STREAM = MIN;
         }
     }
 }

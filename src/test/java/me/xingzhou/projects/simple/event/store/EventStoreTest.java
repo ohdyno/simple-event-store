@@ -3,6 +3,7 @@ package me.xingzhou.projects.simple.event.store;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import me.xingzhou.projects.simple.event.store.entities.ProjectionRecorder;
 import me.xingzhou.projects.simple.event.store.entities.TestAggregate;
 import me.xingzhou.projects.simple.event.store.events.TestEvent;
 import me.xingzhou.projects.simple.event.store.failures.StaleStateFailure;
@@ -12,6 +13,21 @@ import me.xingzhou.projects.simple.event.store.storage.InMemoryEventStorage;
 import org.junit.jupiter.api.Test;
 
 class EventStoreTest {
+
+    @Test
+    void enrichAProjection() {
+        var store = EventStore.build(new InMemoryEventStorage(), new ServiceProviderEventSerializer());
+        var event = new TestEvent("event-id");
+        var aggregate = new TestAggregate();
+        store.save(event, aggregate);
+
+        var recorder = new ProjectionRecorder();
+        store.enrich(recorder);
+
+        assertThat(recorder.appliedEvents()).hasSize(1);
+        assertThat(recorder.appliedEvents().getFirst()).isEqualTo(event);
+        assertThat(recorder.appliedEvents().getFirst()).isNotSameAs(event);
+    }
 
     @Test
     void enrichAnAggregateFromAStream() {
