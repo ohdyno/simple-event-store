@@ -1,9 +1,7 @@
 package me.xingzhou.projects.simple.event.store;
 
-import static me.xingzhou.projects.simple.event.store.internal.tooling.CheckedExceptionHandlers.handleExceptions;
+import static me.xingzhou.projects.simple.event.store.internal.tooling.EntityEventApplier.apply;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import me.xingzhou.projects.simple.event.store.entities.Aggregate;
 import me.xingzhou.projects.simple.event.store.entities.Projection;
 import me.xingzhou.projects.simple.event.store.failures.StaleStateFailure;
@@ -62,14 +60,5 @@ public class EventStore {
         } catch (DuplicateEventStreamFailure | StaleVersionFailure failure) {
             throw new StaleStateFailure();
         }
-    }
-
-    private <T> void apply(EventRecord record, T entity) {
-        handleExceptions(() -> {
-            var lookup = MethodHandles.publicLookup();
-            var methodType = MethodType.methodType(void.class, record.event().getClass());
-            var applyMethod = lookup.findVirtual(entity.getClass(), "apply", methodType);
-            applyMethod.invoke(entity, record.event());
-        });
     }
 }
