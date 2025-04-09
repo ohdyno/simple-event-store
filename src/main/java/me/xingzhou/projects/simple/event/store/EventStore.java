@@ -5,8 +5,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import me.xingzhou.projects.simple.event.store.entities.Aggregate;
+import me.xingzhou.projects.simple.event.store.failures.StaleStateFailure;
 import me.xingzhou.projects.simple.event.store.serializer.EventSerializer;
 import me.xingzhou.projects.simple.event.store.storage.EventStorage;
+import me.xingzhou.projects.simple.event.store.storage.failures.DuplicateEventStreamFailure;
+import me.xingzhou.projects.simple.event.store.storage.failures.StaleVersionFailure;
 
 public class EventStore {
     public static EventStore build(EventStorage storage, EventSerializer serializer) {
@@ -76,13 +79,17 @@ public class EventStore {
     }
 
     public void save(Event event, Aggregate aggregate) {
-        var serialized = serializer.serialize(event);
-        var record = storage.appendEvent(
-                aggregate.streamName().value(),
-                aggregate.version().value(),
-                serialized.eventType(),
-                serialized.eventJson());
-        aggregate.setVersion(record.version());
+        try {
+            var serialized = serializer.serialize(event);
+            var record = storage.appendEvent(
+                    aggregate.streamName().value(),
+                    aggregate.version().value(),
+                    serialized.eventType(),
+                    serialized.eventJson());
+            aggregate.setVersion(new Version(record.version()));
+        } catch (DuplicateEventStreamFailure | StaleVersionFailure failure) {
+            throw new StaleStateFailure();
+        }
     }
 
     private TimestampedEvents retrieveTimestampedEvents(
