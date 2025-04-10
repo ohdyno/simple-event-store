@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import me.xingzhou.projects.simple.event.store.Event;
 import me.xingzhou.projects.simple.event.store.EventRecord;
+import me.xingzhou.projects.simple.event.store.entities.EventSourceEntity;
 import org.junit.jupiter.api.Test;
 
 public class EntityEventApplierTest {
@@ -125,7 +126,7 @@ public class EntityEventApplierTest {
         }
     }
 
-    private abstract static class Recorder {
+    private abstract static class Recorder implements EventSourceEntity {
         protected boolean eventTypeApplied = false;
 
         public boolean eventTypeApplied() {

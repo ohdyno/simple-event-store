@@ -3,7 +3,6 @@ package me.xingzhou.projects.simple.event.store.entities;
 import java.util.ArrayList;
 import java.util.List;
 import me.xingzhou.projects.simple.event.store.Event;
-import me.xingzhou.projects.simple.event.store.events.TestEvent;
 
 public class ProjectionRecorder extends BaseProjection {
     private final List<Event> appliedEvents = new ArrayList<>();
@@ -12,7 +11,7 @@ public class ProjectionRecorder extends BaseProjection {
         return appliedEvents;
     }
 
-    public void apply(TestEvent event) {
+    public void apply(Event event) {
         appliedEvents.add(event);
     }
 }
