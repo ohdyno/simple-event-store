@@ -118,19 +118,19 @@ public abstract class EventStorageTests {
                 STREAM_ONE,
                 List.of(
                         new RequestEvent("first-event-id", EVENT_TYPE_A, """
-						{"key1", "in-stream-one"}"""),
+						{"key1": "in-stream-one"}"""),
                         new RequestEvent("second-event-id", EVENT_TYPE_B, """
-						{"key2", "in-stream-one"}"""),
+						{"key2": "in-stream-one"}"""),
                         new RequestEvent("third-event-id", EVENT_TYPE_A, """
-						{"key3", "in-stream-one"}""")),
+						{"key3": "in-stream-one"}""")),
                 STREAM_TWO,
                 List.of(
                         new RequestEvent("first-event-id", EVENT_TYPE_A, """
-						{"key1", "in-stream-two"}"""),
+						{"key1": "in-stream-two"}"""),
                         new RequestEvent("second-event-id", EVENT_TYPE_B, """
-						{"key2", "in-stream-two"}"""),
+						{"key2": "in-stream-two"}"""),
                         new RequestEvent("third-event-id", EVENT_TYPE_A, """
-						{"key3", "in-stream-two"}""")));
+						{"key3": "in-stream-two"}""")));
 
         private List<StoredRecord> storedRecords;
 
@@ -354,11 +354,11 @@ public abstract class EventStorageTests {
 
         private final List<RequestEvent> events = List.of(
                 new RequestEvent("first-event-id", EVENT_TYPE_A, """
-				{"key1", "value"}"""),
+				{"key1": "value"}"""),
                 new RequestEvent("second-event-id", EVENT_TYPE_B, """
-				{"key2", "value"}"""),
+				{"key2": "value"}"""),
                 new RequestEvent("third-event-id", EVENT_TYPE_A, """
-				{"key3", "value"}"""));
+				{"key3": "value"}"""));
 
         private List<StoredRecord> storedRecords;
 

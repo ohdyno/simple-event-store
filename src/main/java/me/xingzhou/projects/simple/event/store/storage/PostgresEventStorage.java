@@ -2,15 +2,18 @@ package me.xingzhou.projects.simple.event.store.storage;
 
 import static me.xingzhou.projects.simple.event.store.internal.tooling.CheckedExceptionHandlers.handleExceptions;
 import static me.xingzhou.projects.simple.event.store.storage.PostgresEventStorage.ErrorCodes.UNIQUE_VIOLATION;
-import static me.xingzhou.projects.simple.event.store.storage.PostgresEventStorage.Queries.INSERT_EVENT_QUERY;
-import static me.xingzhou.projects.simple.event.store.storage.PostgresEventStorage.Queries.LATEST_STREAM_EVENT_QUERY;
+import static me.xingzhou.projects.simple.event.store.storage.PostgresEventStorage.Queries.*;
 import static me.xingzhou.projects.simple.event.store.storage.PostgresEventStorage.Schema.Columns.*;
 import static me.xingzhou.projects.simple.event.store.storage.PostgresEventStorage.Schema.Tables.EVENTS_TABLE;
 import static me.xingzhou.projects.simple.event.store.storage.PostgresEventStorage.Schema.Tables.LATEST_STREAM_EVENT_TABLE;
 
 import jakarta.annotation.Nonnull;
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import javax.sql.DataSource;
 import me.xingzhou.projects.simple.event.store.storage.failures.DuplicateEventStreamFailure;
 import me.xingzhou.projects.simple.event.store.storage.failures.NoSuchStreamFailure;
@@ -41,7 +44,7 @@ public class PostgresEventStorage implements EventStorage {
             long exclusiveStartVersion,
             long inclusiveEndVersion) {
         if (streamExists(streamName)) {
-            throw new UnsupportedOperationException("Not Implemented");
+            return retrieveStreamEvents(streamName, eventTypes, exclusiveStartVersion, inclusiveEndVersion);
         }
         throw new NoSuchStreamFailure(streamName);
     }
@@ -85,6 +88,60 @@ public class PostgresEventStorage implements EventStorage {
         });
     }
 
+    private List<StoredRecord> extractRecords(ResultSet resultSet) {
+        return handleExceptions(() -> {
+            var list = new ArrayList<StoredRecord>();
+            while (resultSet.next()) {
+                var record = new StoredRecord(
+                        resultSet.getLong(ID),
+                        resultSet.getString(STREAM_NAME),
+                        resultSet.getString(EVENT_TYPE),
+                        resultSet.getString(EVENT_CONTENT),
+                        resultSet.getLong(VERSION),
+                        resultSet.getTimestamp(INSERTED_ON).toInstant());
+                list.add(record);
+            }
+            return list;
+        });
+    }
+
+    private long getLatestVersion(Connection connection, String streamName) throws SQLException {
+        try (var statement = connection.prepareStatement(LATEST_STREAM_EVENT_QUERY)) {
+            statement.setString(1, streamName);
+            var resultSet = statement.executeQuery();
+            resultSet.next();
+            return resultSet.getLong(VERSION);
+        }
+    }
+
+    private List<StoredRecord> getResults(
+            String streamName,
+            List<String> eventTypes,
+            long exclusiveStartVersion,
+            long inclusiveEndVersion,
+            Connection connection,
+            Function<ResultSet, List<StoredRecord>> extractRecord)
+            throws SQLException {
+        if (eventTypes.isEmpty()) {
+            try (var retrieveEventsStatement = connection.prepareStatement(Queries.RETRIEVE_STREAM_EVENTS_ALL_EVENTS)) {
+                retrieveEventsStatement.setString(1, streamName);
+                retrieveEventsStatement.setLong(2, exclusiveStartVersion);
+                retrieveEventsStatement.setLong(3, inclusiveEndVersion);
+                var resultSet = retrieveEventsStatement.executeQuery();
+                return extractRecord.apply(resultSet);
+            }
+        }
+
+        try (var retrieveEventsStatement = connection.prepareStatement(RETRIEVE_STREAM_EVENTS)) {
+            retrieveEventsStatement.setString(1, streamName);
+            retrieveEventsStatement.setLong(2, exclusiveStartVersion);
+            retrieveEventsStatement.setLong(3, inclusiveEndVersion);
+            retrieveEventsStatement.setArray(4, connection.createArrayOf("text", eventTypes.toArray()));
+            var resultSet = retrieveEventsStatement.executeQuery();
+            return extractRecord.apply(resultSet);
+        }
+    }
+
     private StoredRecord insertRecord(String streamName, String eventType, String eventContent, long version)
             throws SQLException {
         try (var connection = dataSource.getConnection();
@@ -103,6 +160,23 @@ public class PostgresEventStorage implements EventStorage {
 
     private boolean isCreateStreamRequest(long currentVersion) {
         return currentVersion == Constants.Versions.UNDEFINED_STREAM;
+    }
+
+    private VersionedRecords retrieveStreamEvents(
+            String streamName, List<String> eventTypes, long exclusiveStartVersion, long inclusiveEndVersion) {
+        return handleExceptions(() -> {
+            try (var connection = dataSource.getConnection()) {
+                var latestVersion = getLatestVersion(connection, streamName);
+                var records = getResults(
+                        streamName,
+                        eventTypes,
+                        exclusiveStartVersion,
+                        inclusiveEndVersion,
+                        connection,
+                        this::extractRecords);
+                return new VersionedRecords(records, latestVersion);
+            }
+        });
     }
 
     private boolean streamExists(String streamName) {
@@ -132,6 +206,21 @@ public class PostgresEventStorage implements EventStorage {
                 // spotless:off
                 " SELECT * FROM " + LATEST_STREAM_EVENT_TABLE +
                 " WHERE " + STREAM_NAME + " = ?";
+                //spotless:on
+
+        String RETRIEVE_STREAM_EVENTS =
+                // spotless:off
+                " SELECT * FROM " + EVENTS_TABLE +
+                " WHERE " + STREAM_NAME + " = ?" +
+                " AND " + VERSION + " > ? AND " + VERSION + " <= ?" +
+                " AND " + EVENT_TYPE + " = ANY(?::text[])";
+                //spotless:on
+
+        String RETRIEVE_STREAM_EVENTS_ALL_EVENTS =
+                // spotless:off
+                " SELECT * FROM " + EVENTS_TABLE +
+                " WHERE " + STREAM_NAME + " = ?" +
+                " AND " + VERSION + " > ? AND " + VERSION + " <= ?";
                 //spotless:on
     }
 
