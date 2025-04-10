@@ -64,8 +64,8 @@ public abstract class EventStorageTests {
         @Test
         @DisplayName("Append to a stream that does not exist fails.")
         void appendToStreamThatDoesNotExist() {
-            assertThatThrownBy(() -> storage.appendEvent(
-                            "a-stream-that-does-not-exist", Versions.NEW_STREAM, "anything", "anything"))
+            assertThatThrownBy(() ->
+                            storage.appendEvent("a-stream-that-does-not-exist", Versions.NEW_STREAM, "anything", "{}"))
                     .isInstanceOf(NoSuchStreamFailure.class);
         }
 
@@ -365,7 +365,7 @@ public abstract class EventStorageTests {
         @Test
         @DisplayName("Append to stream with stale version fails.")
         void appendEventWithStaleVersion() {
-            assertThatThrownBy(() -> storage.appendEvent(streamName, Versions.NEW_STREAM, "anything", "anything"))
+            assertThatThrownBy(() -> storage.appendEvent(streamName, Versions.NEW_STREAM, "anything", "{}"))
                     .isInstanceOf(StaleVersionFailure.class);
         }
 
