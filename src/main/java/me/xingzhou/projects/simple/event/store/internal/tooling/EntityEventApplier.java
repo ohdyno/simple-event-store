@@ -11,24 +11,25 @@ import org.apache.commons.lang3.ClassUtils;
 public class EntityEventApplier {
     public static <T> void apply(EventRecord record, T entity) {
         handleExceptions(() -> {
-            var method = getMethod(entity, record.event().getClass());
+            var method = getMethod(entity.getClass(), record.event().getClass());
             method.invoke(entity, record.event());
         });
     }
 
-    private static <T> Method getMethod(T entity, Class<?> eventClass) throws NoSuchMethodException {
-        List<Class<?>> allPossibleClasses = new ArrayList<>();
-        allPossibleClasses.add(eventClass);
-        allPossibleClasses.addAll(ClassUtils.getAllSuperclasses(eventClass));
-        allPossibleClasses.addAll(ClassUtils.getAllInterfaces(eventClass));
+    private static Method getMethod(Class<?> entity, Class<?> event) throws NoSuchMethodException {
+        List<Class<?>> eventClasses = new ArrayList<>();
+        eventClasses.add(event);
+        eventClasses.addAll(ClassUtils.getAllSuperclasses(event));
+        eventClasses.addAll(ClassUtils.getAllInterfaces(event));
 
-        for (var cls : allPossibleClasses) {
+        for (var aClass : eventClasses) {
             try {
-                return entity.getClass().getMethod("apply", cls);
+                return entity.getMethod("apply", aClass);
             } catch (NoSuchMethodException ignored) {
             }
         }
-        throw new NoSuchMethodException("No such method: public void apply(" + eventClass.getName() + ") in "
-                + entity.getClass().getName());
+
+        throw new NoSuchMethodException(
+                "No such method: public void apply(" + event.getName() + ") on " + entity.getName());
     }
 }
