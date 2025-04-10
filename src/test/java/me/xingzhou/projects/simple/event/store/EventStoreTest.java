@@ -18,11 +18,9 @@ class EventStoreTest {
     @Test
     void enrichAProjection() {
         var event = new TestEvent("event-id");
-        var aggregate = new TestAggregate();
-        store.save(event, aggregate);
+        store.save(event, new TestAggregate());
 
-        var recorder = new ProjectionRecorder();
-        store.enrich(recorder);
+        var recorder = store.enrich(new ProjectionRecorder());
 
         assertThat(recorder.appliedEvents()).hasSize(1);
         assertThat(recorder.appliedEvents().getFirst()).isEqualTo(event);
@@ -32,11 +30,9 @@ class EventStoreTest {
     @Test
     void enrichAnAggregateFromAStream() {
         var event = new TestEvent("event-id");
-        var aggregate = new TestAggregate();
-        store.save(event, aggregate);
+        store.save(event, new TestAggregate());
 
-        var recorder = new TestAggregate();
-        store.enrich(recorder);
+        var recorder = store.enrich(new TestAggregate());
 
         assertThat(recorder.appliedEvents()).hasSize(1);
         assertThat(recorder.appliedEvents().getFirst()).isEqualTo(event);
@@ -46,16 +42,14 @@ class EventStoreTest {
     @Test
     void saveAnEvent() {
         var event = new TestEvent();
-        var aggregate = new TestAggregate();
-        store.save(event, aggregate);
+        var aggregate = store.save(event, new TestAggregate());
         assertThat(aggregate.version().value()).isEqualTo(EventStorage.Constants.Versions.NEW_STREAM);
     }
 
     @Test
     void saveAnEventWithAnAggregateWithStaleVersion() {
         var event = new TestEvent();
-        var aggregate = new TestAggregate();
-        store.save(event, aggregate);
+        store.save(event, new TestAggregate());
 
         assertThatThrownBy(() -> store.save(event, new TestAggregate())).isInstanceOf(StaleStateFailure.class);
     }

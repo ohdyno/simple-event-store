@@ -19,11 +19,15 @@ public class EventStore {
         this.dependencies = dependencies;
     }
 
-    public void enrich(Projection projection) {
-        enrich(projection, dependencies);
+    public <T extends Projection> T enrich(T projection) {
+        return enrich(projection, dependencies);
     }
 
-    public void enrich(Projection projection, EventStoreDependencies dependencies) {
+    public <T extends Aggregate> T enrich(T aggregate) {
+        return enrich(aggregate, dependencies);
+    }
+
+    public <T extends Projection> T enrich(T projection, EventStoreDependencies dependencies) {
         var eventTypes = dependencies.extractor().extract(projection);
         var records = dependencies
                 .storage()
@@ -36,13 +40,10 @@ public class EventStore {
                 .map(record -> EventRecord.extract(
                         record, dependencies.serializer().deserialize(record.eventType(), record.eventContent())))
                 .forEach(record -> dependencies.applier().apply(record, projection));
+        return projection;
     }
 
-    public <T extends Aggregate> void enrich(T aggregate) {
-        enrich(aggregate, dependencies);
-    }
-
-    public <T extends Aggregate> void enrich(T aggregate, EventStoreDependencies dependencies) {
+    public <T extends Aggregate> T enrich(T aggregate, EventStoreDependencies dependencies) {
         var eventTypes = dependencies.extractor().extract(aggregate);
         var records = dependencies
                 .storage()
@@ -57,13 +58,14 @@ public class EventStore {
                     return EventRecord.extract(record, deserialized);
                 })
                 .forEach(record -> dependencies.applier().apply(record, aggregate));
+        return aggregate;
     }
 
-    public void save(Event event, Aggregate aggregate) {
-        save(event, aggregate, dependencies);
+    public <T extends Aggregate> T save(Event event, T aggregate) {
+        return save(event, aggregate, dependencies);
     }
 
-    public void save(Event event, Aggregate aggregate, EventStoreDependencies dependencies) {
+    public <T extends Aggregate> T save(Event event, T aggregate, EventStoreDependencies dependencies) {
         try {
             var serialized = dependencies.serializer().serialize(event);
             var record = dependencies
@@ -74,6 +76,7 @@ public class EventStore {
                             serialized.eventType(),
                             serialized.eventJson());
             aggregate.setVersion(new Version(record.version()));
+            return aggregate;
         } catch (DuplicateEventStreamFailure | StaleVersionFailure failure) {
             throw new StaleStateFailure();
         }
