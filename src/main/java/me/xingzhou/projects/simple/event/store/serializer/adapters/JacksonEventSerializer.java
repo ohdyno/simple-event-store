@@ -6,21 +6,34 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.*;
 import java.util.stream.Collectors;
 import me.xingzhou.projects.simple.event.store.Event;
+import me.xingzhou.projects.simple.event.store.eventsmapper.EventTypeMapper;
+import me.xingzhou.projects.simple.event.store.eventsmapper.ServiceLoaderEventTypeMapper;
 import me.xingzhou.projects.simple.event.store.serializer.EventSerializer;
 import me.xingzhou.projects.simple.event.store.serializer.SerializedEvent;
 import me.xingzhou.projects.simple.event.store.serializer.UnknownEventTypeFailure;
 
-public class ServiceProviderEventSerializer implements EventSerializer {
-    private final ObjectMapper objectMapper = new ObjectMapper();
+public class JacksonEventSerializer implements EventSerializer {
+    private static final ObjectMapper DEFAULT_OBJECT_MAPPER = new ObjectMapper();
 
-    private final HashMap<String, Class<? extends Event>> definedEvents = new HashMap<>();
+    private final Map<String, Class<? extends Event>> definedEvents;
 
-    public ServiceProviderEventSerializer() {
-        var serviceLoader = ServiceLoader.load(Event.class);
-        for (var event : serviceLoader) {
-            var klass = event.getClass();
-            definedEvents.put(getTypeName(klass), klass);
-        }
+    private final ObjectMapper objectMapper;
+
+    public JacksonEventSerializer() {
+        this(DEFAULT_OBJECT_MAPPER, new ServiceLoaderEventTypeMapper());
+    }
+
+    public JacksonEventSerializer(EventTypeMapper mapper) {
+        this(DEFAULT_OBJECT_MAPPER, mapper);
+    }
+
+    public JacksonEventSerializer(ObjectMapper objectMapper) {
+        this(objectMapper, new ServiceLoaderEventTypeMapper());
+    }
+
+    public JacksonEventSerializer(ObjectMapper objectMapper, EventTypeMapper mapper) {
+        this.objectMapper = objectMapper;
+        this.definedEvents = mapper.getMapping();
     }
 
     @Override
@@ -46,7 +59,11 @@ public class ServiceProviderEventSerializer implements EventSerializer {
 
     @Override
     public String getTypeName(Class<? extends Event> klass) {
-        return klass.getSimpleName();
+        return definedEvents.entrySet().stream()
+                .filter(entry -> klass.equals(entry.getValue()))
+                .findFirst()
+                .orElseThrow()
+                .getKey();
     }
 
     @Override
