@@ -20,6 +20,10 @@ public class EventStore {
     }
 
     public void enrich(Projection projection) {
+        enrich(projection, dependencies);
+    }
+
+    public void enrich(Projection projection, EventStoreDependencies dependencies) {
         var eventTypes = dependencies.extractor().extract(projection);
         var records = dependencies
                 .storage()
@@ -35,6 +39,10 @@ public class EventStore {
     }
 
     public <T extends Aggregate> void enrich(T aggregate) {
+        enrich(aggregate, dependencies);
+    }
+
+    public <T extends Aggregate> void enrich(T aggregate, EventStoreDependencies dependencies) {
         var eventTypes = dependencies.extractor().extract(aggregate);
         var records = dependencies
                 .storage()
@@ -52,6 +60,10 @@ public class EventStore {
     }
 
     public void save(Event event, Aggregate aggregate) {
+        save(event, aggregate, dependencies);
+    }
+
+    public void save(Event event, Aggregate aggregate, EventStoreDependencies dependencies) {
         try {
             var serialized = dependencies.serializer().serialize(event);
             var record = dependencies
