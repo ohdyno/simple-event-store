@@ -3,9 +3,11 @@ package me.xingzhou.projects.simple.event.store.serializer.adapters;
 import static me.xingzhou.projects.simple.event.store.internal.tooling.CheckedExceptionHandlers.handleExceptions;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
 import me.xingzhou.projects.simple.event.store.Event;
+import me.xingzhou.projects.simple.event.store.entities.EventSourceEntity;
 import me.xingzhou.projects.simple.event.store.eventsmapper.EventTypeMapper;
 import me.xingzhou.projects.simple.event.store.eventsmapper.ServiceLoaderEventTypeMapper;
 import me.xingzhou.projects.simple.event.store.serializer.EventSerializer;
@@ -47,29 +49,37 @@ public class JacksonEventSerializer implements EventSerializer {
     @Override
     public List<String> extractDefinedEventsFromApplyMethods(Object object) {
         var allTypes = Arrays.stream(object.getClass().getMethods())
-                .filter(method -> "apply".equals(method.getName()) && method.getParameterCount() > 0)
-                .map(method -> method.getParameters()[0].getType().getSimpleName())
-                .filter(typeName -> definedEvents.containsKey(typeName) || "Event".equals(typeName))
+                .filter(EventSourceEntity::isApplyMethod)
+                .map(this::extractFirstParameterType)
+                .filter(this::isDefinedEventType)
                 .collect(Collectors.toSet());
-        if (allTypes.contains("Event")) {
+        if (allTypes.contains(Event.class)) {
             return Collections.emptyList();
         }
-        return List.copyOf(allTypes);
+        return allTypes.stream().map(this::getDefinedEventName).toList();
     }
 
     @Override
-    public String getTypeName(Class<? extends Event> klass) {
+    public String getDefinedEventName(Class<?> klass) {
         return definedEvents.entrySet().stream()
                 .filter(entry -> klass.equals(entry.getValue()))
                 .findFirst()
-                .orElseThrow()
+                .orElseThrow(() -> new UnknownEventTypeFailure(klass))
                 .getKey();
     }
 
     @Override
     public SerializedEvent serialize(Event event) {
         var eventJson = handleExceptions(() -> objectMapper.writeValueAsString(event));
-        var eventType = getTypeName(event.getClass());
+        var eventType = getDefinedEventName(event.getClass());
         return new SerializedEvent(eventType, eventJson);
+    }
+
+    private Class<?> extractFirstParameterType(Method method) {
+        return method.getParameterTypes()[0];
+    }
+
+    private boolean isDefinedEventType(Class<?> parameterClass) {
+        return definedEvents.containsValue(parameterClass) || Event.class.equals(parameterClass);
     }
 }

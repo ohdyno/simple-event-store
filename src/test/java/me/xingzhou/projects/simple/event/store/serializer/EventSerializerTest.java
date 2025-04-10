@@ -35,7 +35,7 @@ public abstract class EventSerializerTest {
         assertThat(subject.extractDefinedEventsFromApplyMethods(new Object() {
                     public void apply(FooEvent event) {}
                 }))
-                .containsOnly(subject.getTypeName(FooEvent.class));
+                .containsOnly(subject.getDefinedEventName(FooEvent.class));
 
         assertThat(subject.extractDefinedEventsFromApplyMethods(new Object() {
                     public void apply(Event event) {}
@@ -66,11 +66,11 @@ public abstract class EventSerializerTest {
     }
 
     @Test
-    void getTypeName() {
+    void getDefinedEventName() {
         var event = new FooEvent("foo-event-id");
         var serialized = subject.serialize(event);
 
-        var result = subject.getTypeName(event.getClass());
+        var result = subject.getDefinedEventName(event.getClass());
 
         assertThat(result).isEqualTo(serialized.eventType());
     }

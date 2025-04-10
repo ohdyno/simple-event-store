@@ -9,7 +9,7 @@ public interface EventSerializer {
 
     List<String> extractDefinedEventsFromApplyMethods(Object object);
 
-    String getTypeName(Class<? extends Event> klass);
+    String getDefinedEventName(Class<?> klass);
 
     SerializedEvent serialize(Event event);
 }
