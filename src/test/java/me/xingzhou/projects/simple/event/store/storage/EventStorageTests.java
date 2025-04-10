@@ -96,8 +96,16 @@ public abstract class EventStorageTests {
         }
 
         @Test
-        @DisplayName("Retrieve the event from a stream that does not exist fails.")
+        @DisplayName("Retrieve the event from the system returns no records.")
         void retrieveEvents() {
+            var records = storage.retrieveEvents(Ids.MIN, Ids.MAX, Collections.emptyList(), Collections.emptyList());
+
+            assertThat(records.records()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Retrieve the event from a stream that does not exist fails.")
+        void retrieveEventsFromStream() {
             assertThatThrownBy(() ->
                             storage.retrieveEvents(streamName, Collections.emptyList(), Versions.MIN, Versions.MAX))
                     .isInstanceOf(NoSuchStreamFailure.class);
@@ -145,7 +153,7 @@ public abstract class EventStorageTests {
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::insertedOn));
-            assertThat(records.insertedOn()).isEqualTo(storedRecords.getLast().insertedOn());
+            assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
         }
 
         @Test
@@ -158,7 +166,7 @@ public abstract class EventStorageTests {
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::insertedOn));
-            assertThat(records.insertedOn()).isEqualTo(storedRecords.getLast().insertedOn());
+            assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
         }
 
         @Test
@@ -173,7 +181,7 @@ public abstract class EventStorageTests {
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::insertedOn));
-            assertThat(records.insertedOn()).isEqualTo(storedRecords.getLast().insertedOn());
+            assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
         }
 
         @Test
@@ -185,7 +193,7 @@ public abstract class EventStorageTests {
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::insertedOn));
-            assertThat(records.insertedOn()).isEqualTo(storedRecords.getLast().insertedOn());
+            assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
         }
 
         @Test
@@ -201,7 +209,7 @@ public abstract class EventStorageTests {
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::insertedOn));
-            assertThat(records.insertedOn()).isEqualTo(storedRecords.getLast().insertedOn());
+            assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
         }
 
         @Test
@@ -214,16 +222,14 @@ public abstract class EventStorageTests {
                         var records = storage.retrieveEvents(1, 1, Collections.emptyList(), Collections.emptyList());
 
                         assertThat(records.records()).isEmpty();
-                        assertThat(records.insertedOn())
-                                .isEqualTo(storedRecords.getLast().insertedOn());
+                        assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
                     },
                     () -> {
                         // start > end
                         var records = storage.retrieveEvents(2, 1, Collections.emptyList(), Collections.emptyList());
 
                         assertThat(records.records()).isEmpty();
-                        assertThat(records.insertedOn())
-                                .isEqualTo(storedRecords.getLast().insertedOn());
+                        assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
                     },
                     () -> {
                         // start == end == min
@@ -231,8 +237,7 @@ public abstract class EventStorageTests {
                                 Ids.MIN, Ids.MIN, Collections.emptyList(), Collections.emptyList());
 
                         assertThat(records.records()).isEmpty();
-                        assertThat(records.insertedOn())
-                                .isEqualTo(storedRecords.getLast().insertedOn());
+                        assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
                     },
                     () -> {
                         // start == end == max
@@ -240,8 +245,7 @@ public abstract class EventStorageTests {
                                 Ids.MAX, Ids.MAX, Collections.emptyList(), Collections.emptyList());
 
                         assertThat(records.records()).isEmpty();
-                        assertThat(records.insertedOn())
-                                .isEqualTo(storedRecords.getLast().insertedOn());
+                        assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
                     });
         }
 
@@ -255,7 +259,7 @@ public abstract class EventStorageTests {
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::insertedOn));
-            assertThat(records.insertedOn()).isEqualTo(storedRecords.getLast().insertedOn());
+            assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
         }
 
         @Test
@@ -270,7 +274,7 @@ public abstract class EventStorageTests {
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::insertedOn));
-            assertThat(records.insertedOn()).isEqualTo(storedRecords.getLast().insertedOn());
+            assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
         }
 
         @Test
@@ -287,7 +291,7 @@ public abstract class EventStorageTests {
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::insertedOn));
-            assertThat(records.insertedOn()).isEqualTo(storedRecords.getLast().insertedOn());
+            assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
         }
 
         @Test
@@ -307,7 +311,7 @@ public abstract class EventStorageTests {
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::insertedOn));
-            assertThat(records.insertedOn()).isEqualTo(storedRecords.getLast().insertedOn());
+            assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
         }
 
         @BeforeEach
@@ -378,7 +382,7 @@ public abstract class EventStorageTests {
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::version));
-            assertThat(records.version()).isEqualTo(storedRecords.getLast().version());
+            assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
         }
 
         @Test
@@ -395,7 +399,7 @@ public abstract class EventStorageTests {
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::version));
-            assertThat(records.version()).isEqualTo(storedRecords.getLast().version());
+            assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
         }
 
         @Test
@@ -411,7 +415,7 @@ public abstract class EventStorageTests {
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::version));
-            assertThat(records.version()).isEqualTo(storedRecords.getLast().version());
+            assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
         }
 
         @Test
@@ -427,7 +431,7 @@ public abstract class EventStorageTests {
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::version));
-            assertThat(records.version()).isEqualTo(storedRecords.getLast().version());
+            assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
         }
 
         @Test
@@ -444,8 +448,7 @@ public abstract class EventStorageTests {
                                 Versions.MAX);
 
                         assertThat(record.records()).isEmpty();
-                        assertThat(record.version())
-                                .isEqualTo(storedRecords.getLast().version());
+                        assertThat(record.latestRecord()).isEqualTo(storedRecords.getLast());
                     },
                     () -> {
                         // end > begin
@@ -456,8 +459,7 @@ public abstract class EventStorageTests {
                                 storedRecords.getFirst().version());
 
                         assertThat(record.records()).isEmpty();
-                        assertThat(record.version())
-                                .isEqualTo(storedRecords.getLast().version());
+                        assertThat(record.latestRecord()).isEqualTo(storedRecords.getLast());
                     },
                     () -> {
                         // end = begin
@@ -468,8 +470,7 @@ public abstract class EventStorageTests {
                                 storedRecords.getFirst().version());
 
                         assertThat(record.records()).isEmpty();
-                        assertThat(record.version())
-                                .isEqualTo(storedRecords.getLast().version());
+                        assertThat(record.latestRecord()).isEqualTo(storedRecords.getLast());
                     },
                     () -> {
                         // max version
@@ -477,8 +478,7 @@ public abstract class EventStorageTests {
                                 storage.retrieveEvents(streamName, Collections.emptyList(), Versions.MAX, Versions.MAX);
 
                         assertThat(record.records()).isEmpty();
-                        assertThat(record.version())
-                                .isEqualTo(storedRecords.getLast().version());
+                        assertThat(record.latestRecord()).isEqualTo(storedRecords.getLast());
                     });
         }
 
@@ -492,7 +492,7 @@ public abstract class EventStorageTests {
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::version));
-            assertThat(records.version()).isEqualTo(storedRecords.getLast().version());
+            assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
         }
 
         @Test
@@ -505,7 +505,7 @@ public abstract class EventStorageTests {
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::version));
-            assertThat(records.version()).isEqualTo(storedRecords.getLast().version());
+            assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
         }
 
         @Test
@@ -518,7 +518,7 @@ public abstract class EventStorageTests {
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
             assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::version));
-            assertThat(records.version()).isEqualTo(storedRecords.getLast().version());
+            assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
         }
 
         @BeforeEach

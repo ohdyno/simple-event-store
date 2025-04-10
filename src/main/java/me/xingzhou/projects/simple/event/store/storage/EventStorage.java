@@ -28,14 +28,14 @@ public interface EventStorage {
             @Nonnull List<String> eventTypes);
 
     interface Constants {
-        interface INSERTED_ON_TIMESTAMPS {
-            Instant NEVER = Instant.EPOCH;
-        }
-
         interface Ids {
             long MIN = 0L, UNDEFINED = MIN;
             long START = 1L;
             long MAX = Long.MAX_VALUE;
+        }
+
+        interface InsertedOnTimestamps {
+            Instant NEVER = Instant.EPOCH;
         }
 
         /**

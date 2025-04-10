@@ -4,8 +4,7 @@ import static me.xingzhou.projects.simple.event.store.internal.tooling.CheckedEx
 import static me.xingzhou.projects.simple.event.store.storage.PostgresEventStorage.ErrorCodes.UNIQUE_VIOLATION;
 import static me.xingzhou.projects.simple.event.store.storage.PostgresEventStorage.Queries.*;
 import static me.xingzhou.projects.simple.event.store.storage.PostgresEventStorage.Schema.Columns.*;
-import static me.xingzhou.projects.simple.event.store.storage.PostgresEventStorage.Schema.Tables.EVENTS_TABLE;
-import static me.xingzhou.projects.simple.event.store.storage.PostgresEventStorage.Schema.Tables.LATEST_STREAM_EVENT_TABLE;
+import static me.xingzhou.projects.simple.event.store.storage.PostgresEventStorage.Schema.Tables.*;
 
 import jakarta.annotation.Nonnull;
 import java.sql.Connection;
@@ -56,7 +55,14 @@ public class PostgresEventStorage implements EventStorage {
             long inclusiveEndId,
             @Nonnull List<String> streamNames,
             @Nonnull List<String> eventTypes) {
-        throw new UnsupportedOperationException("Not Implemented");
+        return handleExceptions(() -> {
+            try (var connection = dataSource.getConnection()) {
+                var latestRecord = getLatestRecord(connection, this::extractRecord);
+                var records = getRecords(
+                        exclusiveStartId, inclusiveEndId, streamNames, eventTypes, connection, this::extractRecords);
+                return new TimestampedRecords(records, latestRecord);
+            }
+        });
     }
 
     private StoredRecord appendToStream(String streamName, long currentVersion, String eventType, String eventContent) {
@@ -88,57 +94,118 @@ public class PostgresEventStorage implements EventStorage {
         });
     }
 
+    private StoredRecord extractRecord(ResultSet resultSet) {
+        return handleExceptions(() -> new StoredRecord(
+                resultSet.getLong(ID),
+                resultSet.getString(STREAM_NAME),
+                resultSet.getString(EVENT_TYPE),
+                resultSet.getString(EVENT_CONTENT),
+                resultSet.getLong(VERSION),
+                resultSet.getTimestamp(INSERTED_ON).toInstant()));
+    }
+
     private List<StoredRecord> extractRecords(ResultSet resultSet) {
         return handleExceptions(() -> {
             var list = new ArrayList<StoredRecord>();
             while (resultSet.next()) {
-                var record = new StoredRecord(
-                        resultSet.getLong(ID),
-                        resultSet.getString(STREAM_NAME),
-                        resultSet.getString(EVENT_TYPE),
-                        resultSet.getString(EVENT_CONTENT),
-                        resultSet.getLong(VERSION),
-                        resultSet.getTimestamp(INSERTED_ON).toInstant());
+                var record = extractRecord(resultSet);
                 list.add(record);
             }
             return list;
         });
     }
 
-    private long getLatestVersion(Connection connection, String streamName) throws SQLException {
+    private StoredRecord getLatestRecord(Connection connection, Function<ResultSet, StoredRecord> extractRecord)
+            throws SQLException {
+        try (var statement = connection.prepareStatement(LATEST_EVENT_QUERY)) {
+            var resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return extractRecord.apply(resultSet);
+            }
+            return StoredRecord.emptyRecord();
+        }
+    }
+
+    private StoredRecord getLatestRecord(Connection connection, String streamName) throws SQLException {
         try (var statement = connection.prepareStatement(LATEST_STREAM_EVENT_QUERY)) {
             statement.setString(1, streamName);
             var resultSet = statement.executeQuery();
             resultSet.next();
-            return resultSet.getLong(VERSION);
+            return extractRecord(resultSet);
         }
     }
 
-    private List<StoredRecord> getResults(
+    private List<StoredRecord> getRecords(
             String streamName,
             List<String> eventTypes,
             long exclusiveStartVersion,
             long inclusiveEndVersion,
-            Connection connection,
-            Function<ResultSet, List<StoredRecord>> extractRecord)
+            Connection connection)
             throws SQLException {
         if (eventTypes.isEmpty()) {
-            try (var retrieveEventsStatement = connection.prepareStatement(Queries.RETRIEVE_STREAM_EVENTS_ALL_EVENTS)) {
+            try (var retrieveEventsStatement = connection.prepareStatement(RETRIEVE_STREAM_EVENTS)) {
                 retrieveEventsStatement.setString(1, streamName);
                 retrieveEventsStatement.setLong(2, exclusiveStartVersion);
                 retrieveEventsStatement.setLong(3, inclusiveEndVersion);
                 var resultSet = retrieveEventsStatement.executeQuery();
-                return extractRecord.apply(resultSet);
+                return extractRecords(resultSet);
             }
         }
 
-        try (var retrieveEventsStatement = connection.prepareStatement(RETRIEVE_STREAM_EVENTS)) {
+        try (var retrieveEventsStatement = connection.prepareStatement(RETRIEVE_STREAM_EVENTS_BY_TYPES)) {
             retrieveEventsStatement.setString(1, streamName);
             retrieveEventsStatement.setLong(2, exclusiveStartVersion);
             retrieveEventsStatement.setLong(3, inclusiveEndVersion);
             retrieveEventsStatement.setArray(4, connection.createArrayOf("text", eventTypes.toArray()));
             var resultSet = retrieveEventsStatement.executeQuery();
-            return extractRecord.apply(resultSet);
+            return extractRecords(resultSet);
+        }
+    }
+
+    private List<StoredRecord> getRecords(
+            long exclusiveStartId,
+            long inclusiveEndId,
+            List<String> streamNames,
+            List<String> eventTypes,
+            Connection connection,
+            Function<ResultSet, List<StoredRecord>> extractRecords)
+            throws SQLException {
+        if (eventTypes.isEmpty() && streamNames.isEmpty()) {
+            try (var retrieveEventsStatement = connection.prepareStatement(RETRIEVE_EVENTS)) {
+                retrieveEventsStatement.setLong(1, exclusiveStartId);
+                retrieveEventsStatement.setLong(2, inclusiveEndId);
+                var resultSet = retrieveEventsStatement.executeQuery();
+                return extractRecords(resultSet);
+            }
+        }
+
+        if (eventTypes.isEmpty()) {
+            try (var retrieveEventsStatement = connection.prepareStatement(RETRIEVE_EVENTS_IN_STREAMS)) {
+                retrieveEventsStatement.setLong(1, exclusiveStartId);
+                retrieveEventsStatement.setLong(2, inclusiveEndId);
+                retrieveEventsStatement.setArray(3, connection.createArrayOf("text", streamNames.toArray()));
+                var resultSet = retrieveEventsStatement.executeQuery();
+                return extractRecords(resultSet);
+            }
+        }
+
+        if (streamNames.isEmpty()) {
+            try (var retrieveEventsStatement = connection.prepareStatement(RETRIEVE_EVENTS_BY_TYPES)) {
+                retrieveEventsStatement.setLong(1, exclusiveStartId);
+                retrieveEventsStatement.setLong(2, inclusiveEndId);
+                retrieveEventsStatement.setArray(3, connection.createArrayOf("text", eventTypes.toArray()));
+                var resultSet = retrieveEventsStatement.executeQuery();
+                return extractRecords(resultSet);
+            }
+        }
+
+        try (var retrieveEventsStatement = connection.prepareStatement(RETRIEVE_EVENTS_IN_STREAMS_AND_BY_TYPES)) {
+            retrieveEventsStatement.setLong(1, exclusiveStartId);
+            retrieveEventsStatement.setLong(2, inclusiveEndId);
+            retrieveEventsStatement.setArray(3, connection.createArrayOf("text", streamNames.toArray()));
+            retrieveEventsStatement.setArray(4, connection.createArrayOf("text", eventTypes.toArray()));
+            var resultSet = retrieveEventsStatement.executeQuery();
+            return extractRecords(resultSet);
         }
     }
 
@@ -166,15 +233,10 @@ public class PostgresEventStorage implements EventStorage {
             String streamName, List<String> eventTypes, long exclusiveStartVersion, long inclusiveEndVersion) {
         return handleExceptions(() -> {
             try (var connection = dataSource.getConnection()) {
-                var latestVersion = getLatestVersion(connection, streamName);
-                var records = getResults(
-                        streamName,
-                        eventTypes,
-                        exclusiveStartVersion,
-                        inclusiveEndVersion,
-                        connection,
-                        this::extractRecords);
-                return new VersionedRecords(records, latestVersion);
+                var latestRecord = getLatestRecord(connection, streamName);
+                var records =
+                        getRecords(streamName, eventTypes, exclusiveStartVersion, inclusiveEndVersion, connection);
+                return new VersionedRecords(records, latestRecord);
             }
         });
     }
@@ -202,13 +264,18 @@ public class PostgresEventStorage implements EventStorage {
                 " RETURNING " + ID + ", " + INSERTED_ON;
                 //spotless:on
 
+        String LATEST_EVENT_QUERY =
+                // spotless:off
+                " SELECT * FROM " + LATEST_EVENT_TABLE;
+                //spotless:on
+
         String LATEST_STREAM_EVENT_QUERY =
                 // spotless:off
                 " SELECT * FROM " + LATEST_STREAM_EVENT_TABLE +
                 " WHERE " + STREAM_NAME + " = ?";
                 //spotless:on
 
-        String RETRIEVE_STREAM_EVENTS =
+        String RETRIEVE_STREAM_EVENTS_BY_TYPES =
                 // spotless:off
                 " SELECT * FROM " + EVENTS_TABLE +
                 " WHERE " + STREAM_NAME + " = ?" +
@@ -216,11 +283,39 @@ public class PostgresEventStorage implements EventStorage {
                 " AND " + EVENT_TYPE + " = ANY(?::text[])";
                 //spotless:on
 
-        String RETRIEVE_STREAM_EVENTS_ALL_EVENTS =
+        String RETRIEVE_STREAM_EVENTS =
                 // spotless:off
                 " SELECT * FROM " + EVENTS_TABLE +
                 " WHERE " + STREAM_NAME + " = ?" +
                 " AND " + VERSION + " > ? AND " + VERSION + " <= ?";
+                //spotless:on
+
+        String RETRIEVE_EVENTS =
+                // spotless:off
+                " SELECT * FROM " + EVENTS_TABLE +
+                " WHERE " + ID + " > ? AND " + ID + " <= ?";
+                //spotless:on
+
+        String RETRIEVE_EVENTS_IN_STREAMS =
+                // spotless:off
+                " SELECT * FROM " + EVENTS_TABLE +
+                " WHERE " + ID + " > ? AND " + ID + " <= ?" +
+                " AND " + STREAM_NAME + " = ANY(?::text[])";
+                //spotless:on
+
+        String RETRIEVE_EVENTS_BY_TYPES =
+                // spotless:off
+                " SELECT * FROM " + EVENTS_TABLE +
+                " WHERE " + ID + " > ? AND " + ID + " <= ?" +
+                " AND " + EVENT_TYPE + " = ANY(?::text[])";
+                //spotless:on
+
+        String RETRIEVE_EVENTS_IN_STREAMS_AND_BY_TYPES =
+                // spotless:off
+                " SELECT * FROM " + EVENTS_TABLE +
+                " WHERE " + ID + " > ? AND " + ID + " <= ?" +
+                " AND " + STREAM_NAME + " = ANY(?::text[])" +
+                " AND " + EVENT_TYPE + " = ANY(?::text[])";
                 //spotless:on
     }
 
@@ -237,6 +332,7 @@ public class PostgresEventStorage implements EventStorage {
         interface Tables {
             String EVENTS_TABLE = "eventsource.events";
             String LATEST_STREAM_EVENT_TABLE = "eventsource.latest_stream_event";
+            String LATEST_EVENT_TABLE = "eventsource.latest_event";
         }
     }
 }
