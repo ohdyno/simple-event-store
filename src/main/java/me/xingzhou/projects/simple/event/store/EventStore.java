@@ -58,6 +58,7 @@ public class EventStore {
                     return EventRecord.extract(record, deserialized);
                 })
                 .forEach(record -> dependencies.applier().apply(record, aggregate));
+        aggregate.setVersion(new Version(records.latestRecord().version()));
         return aggregate;
     }
 

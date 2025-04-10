@@ -37,6 +37,7 @@ class EventStoreTest {
         assertThat(recorder.appliedEvents()).hasSize(1);
         assertThat(recorder.appliedEvents().getFirst()).isEqualTo(event);
         assertThat(recorder.appliedEvents().getFirst()).isNotSameAs(event);
+        assertThat(recorder.version().value()).isEqualTo(EventStorage.Constants.Versions.NEW_STREAM);
     }
 
     @Test
