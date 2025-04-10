@@ -3,8 +3,8 @@ package me.xingzhou.projects.simple.event.store.storage;
 import jakarta.annotation.Nonnull;
 import java.time.Instant;
 import java.util.*;
+import me.xingzhou.projects.simple.event.store.storage.EventStorage.Constants.INSERTED_ON_TIMESTAMPS;
 import me.xingzhou.projects.simple.event.store.storage.EventStorage.Constants.Ids;
-import me.xingzhou.projects.simple.event.store.storage.EventStorage.Constants.Timestamps;
 import me.xingzhou.projects.simple.event.store.storage.EventStorage.Constants.Versions;
 import me.xingzhou.projects.simple.event.store.storage.failures.DuplicateEventStreamFailure;
 import me.xingzhou.projects.simple.event.store.storage.failures.NoSuchStreamFailure;
@@ -15,10 +15,10 @@ public class InMemoryEventStorage implements EventStorage {
 
     private final Set<String> streamNamesIndex = new HashSet<>();
 
-    private Instant lastUpdateAt = Timestamps.NEVER;
+    private Instant lastUpdateAt = INSERTED_ON_TIMESTAMPS.NEVER;
 
     @Override
-    public StoredRecord appendEvent(
+    public @Nonnull StoredRecord appendEvent(
             @Nonnull String streamName, long currentVersion, @Nonnull String eventType, @Nonnull String eventContent) {
         if (isCreateStreamRequest(currentVersion)) {
             return createStream(streamName, eventType, eventContent);
@@ -55,14 +55,14 @@ public class InMemoryEventStorage implements EventStorage {
     private StoredRecord appendToStream(String streamName, long currentVersion, String eventType, String eventContent) {
         if (getCurrentVersion(streamName) == currentVersion) {
             var record = new StoredRecord(
-                    createEventId(), streamName, eventType, eventContent, currentVersion + 1, Instant.now());
+                    createId(), streamName, eventType, eventContent, currentVersion + 1, Instant.now());
             save(streamName, record);
             return record;
         }
         throw new StaleVersionFailure();
     }
 
-    private long createEventId() {
+    private long createId() {
         return storage.size() + Ids.START;
     }
 
@@ -70,8 +70,8 @@ public class InMemoryEventStorage implements EventStorage {
         if (streamNamesIndex.contains(streamName)) {
             throw new DuplicateEventStreamFailure();
         }
-        var record = new StoredRecord(
-                createEventId(), streamName, eventType, eventContent, Versions.NEW_STREAM, Instant.now());
+        var record =
+                new StoredRecord(createId(), streamName, eventType, eventContent, Versions.NEW_STREAM, Instant.now());
         save(streamName, record);
         return record;
     }
@@ -106,7 +106,7 @@ public class InMemoryEventStorage implements EventStorage {
     private void save(String streamName, StoredRecord record) {
         storage.add(record);
         streamNamesIndex.add(streamName);
-        lastUpdateAt = record.timestamp();
+        lastUpdateAt = record.insertedOn();
     }
 
     private boolean shouldIncludeEvent(
@@ -124,7 +124,7 @@ public class InMemoryEventStorage implements EventStorage {
             List<String> eventTypes) {
         var isInStreams = streamNames.isEmpty() || streamNames.contains(event.streamName());
         var isCorrectType = eventTypes.isEmpty() || eventTypes.contains(event.eventType());
-        var isWithinRange = exclusiveStartId < event.eventId() && event.eventId() <= inclusiveEndId;
+        var isWithinRange = exclusiveStartId < event.id() && event.id() <= inclusiveEndId;
         return isInStreams && isCorrectType && isWithinRange;
     }
 }

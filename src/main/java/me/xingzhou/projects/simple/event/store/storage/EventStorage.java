@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.List;
 
 public interface EventStorage {
+    @Nonnull
     StoredRecord appendEvent(
             @Nonnull String streamName, long currentVersion, @Nonnull String eventType, @Nonnull String eventContent);
 
@@ -27,14 +28,14 @@ public interface EventStorage {
             @Nonnull List<String> eventTypes);
 
     interface Constants {
+        interface INSERTED_ON_TIMESTAMPS {
+            Instant NEVER = Instant.EPOCH;
+        }
+
         interface Ids {
             long MIN = 0L, UNDEFINED = MIN;
             long START = 1L;
             long MAX = Long.MAX_VALUE;
-        }
-
-        interface Timestamps {
-            Instant NEVER = Instant.EPOCH;
         }
 
         /**

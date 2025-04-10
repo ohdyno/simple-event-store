@@ -32,7 +32,7 @@ public class EventStore {
         var records = dependencies
                 .storage()
                 .retrieveEvents(
-                        projection.lastEventId().id(),
+                        projection.lastRecordId().id(),
                         EventStorage.Constants.Ids.MAX,
                         projection.streamNames().stream().map(StreamName::value).toList(),
                         eventTypes);
