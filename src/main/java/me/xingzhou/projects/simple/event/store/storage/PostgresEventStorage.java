@@ -1,5 +1,9 @@
 package me.xingzhou.projects.simple.event.store.storage;
 
+import static me.xingzhou.projects.simple.event.store.internal.tooling.CheckedExceptionHandlers.handleExceptions;
+import static me.xingzhou.projects.simple.event.store.storage.PostgresEventStorage.Schema.Columns.*;
+import static me.xingzhou.projects.simple.event.store.storage.PostgresEventStorage.Schema.Tables.EVENTS_TABLE;
+
 import jakarta.annotation.Nonnull;
 import java.util.List;
 import javax.sql.DataSource;
@@ -15,7 +19,10 @@ public class PostgresEventStorage implements EventStorage {
     @Override
     public StoredRecord appendEvent(
             @Nonnull String streamName, long currentVersion, @Nonnull String eventType, @Nonnull String eventContent) {
-        throw new UnsupportedOperationException("Not Implemented");
+        if (isCreateStreamRequest(currentVersion)) {
+            return createStream(streamName, eventType, eventContent);
+        }
+        return appendToStream(streamName, currentVersion, eventType, eventContent);
     }
 
     @Nonnull
@@ -36,5 +43,48 @@ public class PostgresEventStorage implements EventStorage {
             @Nonnull List<String> streamNames,
             @Nonnull List<String> eventTypes) {
         throw new UnsupportedOperationException("Not Implemented");
+    }
+
+    private StoredRecord appendToStream(String streamName, long currentVersion, String eventType, String eventContent) {
+        throw new UnsupportedOperationException("Not Implemented");
+    }
+
+    private StoredRecord createStream(String streamName, String eventType, String eventContent) {
+        return handleExceptions(() -> {
+            try (var connection = dataSource.getConnection();
+                    var statement = connection.prepareStatement("INSERT INTO " + EVENTS_TABLE + " (" + STREAM_NAME
+                            + ", " + EVENT_TYPE + ", " + EVENT_CONTENT + ", " + VERSION + ") VALUES (?, ?, ?::jsonb, ?)"
+                            + " RETURNING " + ID + ", " + INSERTED_ON)) {
+                statement.setString(1, streamName);
+                statement.setString(2, eventType);
+                statement.setString(3, eventContent);
+                statement.setLong(4, Constants.Versions.NEW_STREAM);
+                var resultSet = statement.executeQuery();
+                resultSet.next();
+                var id = resultSet.getLong(ID);
+                var insertedOn = resultSet.getTimestamp(INSERTED_ON).toInstant();
+                return new StoredRecord(
+                        id, streamName, eventType, eventContent, Constants.Versions.NEW_STREAM, insertedOn);
+            }
+        });
+    }
+
+    private boolean isCreateStreamRequest(long currentVersion) {
+        return currentVersion == Constants.Versions.UNDEFINED_STREAM;
+    }
+
+    interface Schema {
+        interface Columns {
+            String ID = "id";
+            String STREAM_NAME = "stream_name";
+            String EVENT_TYPE = "event_type";
+            String EVENT_CONTENT = "event_content";
+            String VERSION = "version";
+            String INSERTED_ON = "inserted_on";
+        }
+
+        interface Tables {
+            String EVENTS_TABLE = "eventsource.events";
+        }
     }
 }

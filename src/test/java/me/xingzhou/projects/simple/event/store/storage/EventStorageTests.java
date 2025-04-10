@@ -73,9 +73,9 @@ public abstract class EventStorageTests {
         @DisplayName("Create a duplicate stream fails.")
         void createDuplicateStream() {
             storage.appendEvent(streamName, Versions.UNDEFINED_STREAM, "an-event-type", """
-					{"key", "value"}""");
+					{"key": "value"}""");
 
-            assertThatThrownBy(() -> storage.appendEvent(streamName, Versions.UNDEFINED_STREAM, "anything", "anything"))
+            assertThatThrownBy(() -> storage.appendEvent(streamName, Versions.UNDEFINED_STREAM, "anything", "{}"))
                     .isInstanceOf(DuplicateEventStreamFailure.class);
         }
 
@@ -84,7 +84,7 @@ public abstract class EventStorageTests {
         void createStream() {
             var eventType = "an-event-type";
             var eventContent = """
-					{"key", "value"}""";
+					{"key": "value"}""";
 
             var record = storage.appendEvent(streamName, Versions.UNDEFINED_STREAM, eventType, eventContent);
 

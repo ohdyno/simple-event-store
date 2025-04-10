@@ -1,5 +1,7 @@
 package me.xingzhou.projects.simple.event.store.storage;
 
+import static me.xingzhou.projects.simple.event.store.internal.tooling.CheckedExceptionHandlers.handleExceptions;
+
 import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,6 +24,13 @@ public class PostgresEventStorageTests extends EventStorageTests {
 
     @Override
     protected EventStorage createStorage() {
-        return new PostgresEventStorage(dataSource);
+        return handleExceptions(() -> {
+            try (var connection = dataSource.getConnection()) {
+                connection
+                        .prepareStatement("DELETE FROM %s".formatted(PostgresEventStorage.Schema.Tables.EVENTS_TABLE))
+                        .execute();
+            }
+            return new PostgresEventStorage(dataSource);
+        });
     }
 }
