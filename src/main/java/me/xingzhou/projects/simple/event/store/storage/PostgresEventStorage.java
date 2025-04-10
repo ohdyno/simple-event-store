@@ -1,12 +1,16 @@
 package me.xingzhou.projects.simple.event.store.storage;
 
 import static me.xingzhou.projects.simple.event.store.internal.tooling.CheckedExceptionHandlers.handleExceptions;
+import static me.xingzhou.projects.simple.event.store.storage.PostgresEventStorage.ErrorCodes.UNIQUE_VIOLATION;
+import static me.xingzhou.projects.simple.event.store.storage.PostgresEventStorage.Queries.INSERT_EVENT_QUERY;
 import static me.xingzhou.projects.simple.event.store.storage.PostgresEventStorage.Schema.Columns.*;
 import static me.xingzhou.projects.simple.event.store.storage.PostgresEventStorage.Schema.Tables.EVENTS_TABLE;
 
 import jakarta.annotation.Nonnull;
+import java.sql.SQLException;
 import java.util.List;
 import javax.sql.DataSource;
+import me.xingzhou.projects.simple.event.store.storage.failures.DuplicateEventStreamFailure;
 
 public class PostgresEventStorage implements EventStorage {
     private final DataSource dataSource;
@@ -52,9 +56,7 @@ public class PostgresEventStorage implements EventStorage {
     private StoredRecord createStream(String streamName, String eventType, String eventContent) {
         return handleExceptions(() -> {
             try (var connection = dataSource.getConnection();
-                    var statement = connection.prepareStatement("INSERT INTO " + EVENTS_TABLE + " (" + STREAM_NAME
-                            + ", " + EVENT_TYPE + ", " + EVENT_CONTENT + ", " + VERSION + ") VALUES (?, ?, ?::jsonb, ?)"
-                            + " RETURNING " + ID + ", " + INSERTED_ON)) {
+                    var statement = connection.prepareStatement(INSERT_EVENT_QUERY)) {
                 statement.setString(1, streamName);
                 statement.setString(2, eventType);
                 statement.setString(3, eventContent);
@@ -65,12 +67,30 @@ public class PostgresEventStorage implements EventStorage {
                 var insertedOn = resultSet.getTimestamp(INSERTED_ON).toInstant();
                 return new StoredRecord(
                         id, streamName, eventType, eventContent, Constants.Versions.NEW_STREAM, insertedOn);
+            } catch (SQLException e) {
+                if (UNIQUE_VIOLATION.equals(e.getSQLState())) {
+                    throw new DuplicateEventStreamFailure();
+                }
+                throw e;
             }
         });
     }
 
     private boolean isCreateStreamRequest(long currentVersion) {
         return currentVersion == Constants.Versions.UNDEFINED_STREAM;
+    }
+
+    interface ErrorCodes {
+        String UNIQUE_VIOLATION = "23505";
+    }
+
+    interface Queries {
+        String INSERT_EVENT_QUERY =
+                // spotless:off
+                " INSERT INTO " + EVENTS_TABLE + " (" + STREAM_NAME + ", " + EVENT_TYPE + ", " + EVENT_CONTENT + ", " + VERSION + ")" +
+                " VALUES (?, ?, ?::jsonb, ?)" +
+                " RETURNING " + ID + ", " + INSERTED_ON;
+                //spotless:on
     }
 
     interface Schema {
