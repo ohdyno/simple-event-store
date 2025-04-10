@@ -280,34 +280,39 @@ public class PostgresEventStorage implements EventStorage {
                 " SELECT * FROM " + EVENTS_TABLE +
                 " WHERE " + STREAM_NAME + " = ?" +
                 " AND " + VERSION + " > ? AND " + VERSION + " <= ?" +
-                " AND " + EVENT_TYPE + " = ANY(?::text[])";
+                " AND " + EVENT_TYPE + " = ANY(?::text[])" +
+                " ORDER BY " + VERSION;
                 //spotless:on
 
         String RETRIEVE_STREAM_EVENTS =
                 // spotless:off
                 " SELECT * FROM " + EVENTS_TABLE +
                 " WHERE " + STREAM_NAME + " = ?" +
-                " AND " + VERSION + " > ? AND " + VERSION + " <= ?";
+                " AND " + VERSION + " > ? AND " + VERSION + " <= ?" +
+                " ORDER BY " + VERSION;
                 //spotless:on
 
         String RETRIEVE_EVENTS =
                 // spotless:off
                 " SELECT * FROM " + EVENTS_TABLE +
-                " WHERE " + ID + " > ? AND " + ID + " <= ?";
+                " WHERE " + ID + " > ? AND " + ID + " <= ?" +
+                " ORDER BY " + ID;
                 //spotless:on
 
         String RETRIEVE_EVENTS_IN_STREAMS =
                 // spotless:off
                 " SELECT * FROM " + EVENTS_TABLE +
                 " WHERE " + ID + " > ? AND " + ID + " <= ?" +
-                " AND " + STREAM_NAME + " = ANY(?::text[])";
+                " AND " + STREAM_NAME + " = ANY(?::text[])" +
+                " ORDER BY " + ID;
                 //spotless:on
 
         String RETRIEVE_EVENTS_BY_TYPES =
                 // spotless:off
                 " SELECT * FROM " + EVENTS_TABLE +
                 " WHERE " + ID + " > ? AND " + ID + " <= ?" +
-                " AND " + EVENT_TYPE + " = ANY(?::text[])";
+                " AND " + EVENT_TYPE + " = ANY(?::text[])" +
+                " ORDER BY " + ID;
                 //spotless:on
 
         String RETRIEVE_EVENTS_IN_STREAMS_AND_BY_TYPES =
@@ -315,7 +320,8 @@ public class PostgresEventStorage implements EventStorage {
                 " SELECT * FROM " + EVENTS_TABLE +
                 " WHERE " + ID + " > ? AND " + ID + " <= ?" +
                 " AND " + STREAM_NAME + " = ANY(?::text[])" +
-                " AND " + EVENT_TYPE + " = ANY(?::text[])";
+                " AND " + EVENT_TYPE + " = ANY(?::text[])" +
+                " ORDER BY " + ID;
                 //spotless:on
     }
 

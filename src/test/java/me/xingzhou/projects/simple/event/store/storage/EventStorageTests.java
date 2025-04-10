@@ -152,7 +152,7 @@ public abstract class EventStorageTests {
                     storage.retrieveEvents(minRecordId, Ids.MAX, Collections.emptyList(), Collections.emptyList());
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
-            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::insertedOn));
+            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::id));
             assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
         }
 
@@ -165,7 +165,7 @@ public abstract class EventStorageTests {
             var records = storage.retrieveEvents(Ids.MIN, Ids.MAX, Collections.emptyList(), eventTypes);
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
-            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::insertedOn));
+            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::id));
             assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
         }
 
@@ -180,7 +180,7 @@ public abstract class EventStorageTests {
             var records = storage.retrieveEvents(Ids.MIN, Ids.MAX, Collections.emptyList(), eventTypes);
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
-            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::insertedOn));
+            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::id));
             assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
         }
 
@@ -192,7 +192,7 @@ public abstract class EventStorageTests {
             var records = storage.retrieveEvents(Ids.MIN, Ids.MAX, Collections.emptyList(), Collections.emptyList());
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
-            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::insertedOn));
+            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::id));
             assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
         }
 
@@ -208,7 +208,7 @@ public abstract class EventStorageTests {
                     Ids.MIN, maxInclusiveRecordId, Collections.emptyList(), Collections.emptyList());
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
-            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::insertedOn));
+            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::id));
             assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
         }
 
@@ -258,7 +258,7 @@ public abstract class EventStorageTests {
             var records = storage.retrieveEvents(Ids.MIN, Ids.MAX, streamNames, Collections.emptyList());
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
-            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::insertedOn));
+            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::id));
             assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
         }
 
@@ -273,7 +273,7 @@ public abstract class EventStorageTests {
             var records = storage.retrieveEvents(Ids.MIN, Ids.MAX, streamNames, Collections.emptyList());
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
-            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::insertedOn));
+            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::id));
             assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
         }
 
@@ -290,7 +290,7 @@ public abstract class EventStorageTests {
             var records = storage.retrieveEvents(Ids.MIN, Ids.MAX, streamNames, eventTypes);
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
-            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::insertedOn));
+            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::id));
             assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
         }
 
@@ -310,7 +310,7 @@ public abstract class EventStorageTests {
             var records = storage.retrieveEvents(minId, maxIdInclusive, streamNames, eventTypes);
 
             assertThat(records.records()).containsExactlyInAnyOrderElementsOf(expected);
-            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::insertedOn));
+            assertThat(records.records()).isSortedAccordingTo(Comparator.comparing(StoredRecord::id));
             assertThat(records.latestRecord()).isEqualTo(storedRecords.getLast());
         }
 
