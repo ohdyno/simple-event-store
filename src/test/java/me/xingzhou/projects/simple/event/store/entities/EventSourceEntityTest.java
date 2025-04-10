@@ -9,29 +9,26 @@ import org.junit.jupiter.api.Test;
 
 class EventSourceEntityTest {
 
-    private EventSourceEntity subject = new EventSourceEntity() {};
+    private final EventTypesExtractor eventTypesExtractor = new EventTypesExtractor();
 
     @Test
     void extractEventTypesFromApplyMethods() {
         assertAll(
                 "Extract all relevant events from apply methods",
                 () -> {
-                    var subject = new EventSourceEntity() {
+                    var entity = new EventSourceEntity() {
                         public void apply(Event event) {}
                     };
-                    assertThat(subject.extractEventTypesFromApplyMethods()).containsExactlyInAnyOrder(Event.class);
+                    assertThat(eventTypesExtractor.extract(entity)).containsExactlyInAnyOrder(Event.class);
                 },
                 () -> {
-                    var subject = new EventSourceEntity() {
+                    var entity = new EventSourceEntity() {
                         public void apply(Event event) {}
 
                         public void apply(FooEvent event) {}
                     };
-                    assertThat(subject.extractEventTypesFromApplyMethods())
+                    assertThat(eventTypesExtractor.extract(entity))
                             .containsExactlyInAnyOrder(Event.class, FooEvent.class);
                 });
     }
-
-    @Test
-    void isApplyMethod() {}
 }

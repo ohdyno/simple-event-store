@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.function.Predicate;
 import me.xingzhou.projects.simple.event.store.entities.Aggregate;
 import me.xingzhou.projects.simple.event.store.entities.EventSourceEntity;
+import me.xingzhou.projects.simple.event.store.entities.EventTypesExtractor;
 import me.xingzhou.projects.simple.event.store.entities.Projection;
 import me.xingzhou.projects.simple.event.store.eventsmapper.EventTypeConverter;
 import me.xingzhou.projects.simple.event.store.failures.StaleStateFailure;
@@ -15,20 +16,31 @@ import me.xingzhou.projects.simple.event.store.storage.failures.DuplicateEventSt
 import me.xingzhou.projects.simple.event.store.storage.failures.StaleVersionFailure;
 
 public class EventStore {
+
     public static EventStore build(
-            EventStorage storage, EventSerializer serializer, EventTypeConverter eventTypeConverter) {
-        return new EventStore(storage, serializer, eventTypeConverter);
+            EventStorage storage,
+            EventSerializer serializer,
+            EventTypeConverter eventTypeConverter,
+            EventTypesExtractor eventTypesExtractor) {
+        return new EventStore(storage, serializer, eventTypeConverter, eventTypesExtractor);
     }
+
+    private final EventTypesExtractor eventTypesExtractor;
 
     private final EventStorage storage;
 
     private final EventSerializer serializer;
     private final EventTypeConverter eventTypeConverter;
 
-    private EventStore(EventStorage storage, EventSerializer serializer, EventTypeConverter eventTypeConverter) {
+    private EventStore(
+            EventStorage storage,
+            EventSerializer serializer,
+            EventTypeConverter eventTypeConverter,
+            EventTypesExtractor eventTypesExtractor) {
         this.storage = storage;
         this.serializer = serializer;
         this.eventTypeConverter = eventTypeConverter;
+        this.eventTypesExtractor = eventTypesExtractor;
     }
 
     public void enrich(Projection projection) {
@@ -74,7 +86,7 @@ public class EventStore {
     }
 
     private List<String> getEventTypes(EventSourceEntity entity) {
-        return entity.extractEventTypesFromApplyMethods().stream()
+        return eventTypesExtractor.extract(entity).stream()
                 .filter(Predicate.not(klass -> klass.equals(Event.class)))
                 .map(eventTypeConverter::convert)
                 .toList();

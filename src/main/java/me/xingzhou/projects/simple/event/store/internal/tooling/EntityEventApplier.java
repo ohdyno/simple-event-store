@@ -4,6 +4,7 @@ import static me.xingzhou.projects.simple.event.store.internal.tooling.CheckedEx
 
 import me.xingzhou.projects.simple.event.store.EventRecord;
 import me.xingzhou.projects.simple.event.store.entities.EventSourceEntity;
+import me.xingzhou.projects.simple.event.store.entities.EventTypesExtractor;
 
 public class EntityEventApplier {
     public static <T extends EventSourceEntity> void apply(EventRecord record, T entity) {
@@ -15,10 +16,11 @@ public class EntityEventApplier {
     }
 
     private static Class<?> getMethod(EventSourceEntity entity, Class<?> event) throws NoSuchMethodException {
-        return entity.extractEventTypesFromApplyMethods().stream()
-                .filter(klass -> klass.isAssignableFrom(event))
-                .findFirst()
-                .orElseThrow(() -> new NoSuchMethodException("No such method: public void apply(" + event.getName()
-                        + ") on " + entity.getClass().getName()));
+        return new EventTypesExtractor()
+                .extract(entity).stream()
+                        .filter(klass -> klass.isAssignableFrom(event))
+                        .findFirst()
+                        .orElseThrow(() -> new NoSuchMethodException("No such method: public void apply("
+                                + event.getName() + ") on " + entity.getClass().getName()));
     }
 }

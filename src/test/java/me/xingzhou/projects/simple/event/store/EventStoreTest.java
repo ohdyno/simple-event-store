@@ -3,6 +3,7 @@ package me.xingzhou.projects.simple.event.store;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import me.xingzhou.projects.simple.event.store.entities.EventTypesExtractor;
 import me.xingzhou.projects.simple.event.store.entities.ProjectionRecorder;
 import me.xingzhou.projects.simple.event.store.entities.TestAggregate;
 import me.xingzhou.projects.simple.event.store.events.TestEvent;
@@ -66,6 +67,9 @@ class EventStoreTest {
     @BeforeEach
     void setUp() {
         this.store = EventStore.build(
-                new InMemoryEventStorage(), new JacksonEventSerializer(), new ServiceLoaderEventTypeConverter());
+                new InMemoryEventStorage(),
+                new JacksonEventSerializer(),
+                new ServiceLoaderEventTypeConverter(),
+                new EventTypesExtractor());
     }
 }
