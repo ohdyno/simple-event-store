@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import me.xingzhou.projects.simple.event.store.Event;
 import me.xingzhou.projects.simple.event.store.EventRecord;
 import me.xingzhou.projects.simple.event.store.entities.EventSourceEntity;
+import me.xingzhou.projects.simple.event.store.entities.EventTypesExtractor;
+import me.xingzhou.projects.simple.event.store.eventsmapper.ServiceLoaderEventTypeConverter;
 import org.junit.jupiter.api.Test;
 
 public class EntityEventApplierTest {
@@ -15,12 +17,14 @@ public class EntityEventApplierTest {
     void applyEvent() {
         var event = new HierarchyEventWithInterfaces();
         var record = new EventRecord(event, null);
+        var subject = new EntityEventApplier(new EventTypesExtractor(new ServiceLoaderEventTypeConverter()));
+
         assertAll(
                 "apply hierarchical event to different recorders",
                 () -> assertDoesNotThrow(
                         () -> {
                             var recorder = new EventAppliedRecorder();
-                            EntityEventApplier.apply(record, recorder);
+                            subject.apply(record, recorder);
                             var eventTypeName = Event.class.getSimpleName();
                             assertThat(recorder.eventTypeApplied())
                                     .as(eventTypeName)
@@ -30,7 +34,7 @@ public class EntityEventApplierTest {
                 () -> assertDoesNotThrow(
                         () -> {
                             var recorder = new BaseHierarchyEventAppliedRecorder();
-                            EntityEventApplier.apply(record, recorder);
+                            subject.apply(record, recorder);
                             var eventTypeName = BaseHierarchyEvent.class.getSimpleName();
                             assertThat(recorder.eventTypeApplied())
                                     .as(eventTypeName)
@@ -40,7 +44,7 @@ public class EntityEventApplierTest {
                 () -> assertDoesNotThrow(
                         () -> {
                             var recorder = new TestEventInterfaceAEventAppliedRecorder();
-                            EntityEventApplier.apply(record, recorder);
+                            subject.apply(record, recorder);
                             var eventTypeName = TestEventInterfaceA.class.getSimpleName();
                             assertThat(recorder.eventTypeApplied())
                                     .as(eventTypeName)
@@ -50,7 +54,7 @@ public class EntityEventApplierTest {
                 () -> assertDoesNotThrow(
                         () -> {
                             var recorder = new TestEventInterfaceBEventAppliedRecorder();
-                            EntityEventApplier.apply(record, recorder);
+                            subject.apply(record, recorder);
                             var eventTypeName = TestEventInterfaceB.class.getSimpleName();
                             assertThat(recorder.eventTypeApplied())
                                     .as(eventTypeName)
@@ -60,7 +64,7 @@ public class EntityEventApplierTest {
                 () -> assertDoesNotThrow(
                         () -> {
                             var recorder = new HierarchyEventWithInterfacesEventAppliedRecorder();
-                            EntityEventApplier.apply(record, recorder);
+                            subject.apply(record, recorder);
                             var eventTypeName = HierarchyEventWithInterfaces.class.getSimpleName();
                             assertThat(recorder.eventTypeApplied())
                                     .as(eventTypeName)
@@ -70,7 +74,7 @@ public class EntityEventApplierTest {
                 () -> assertDoesNotThrow(
                         () -> {
                             var recorder = new SubRecorder();
-                            EntityEventApplier.apply(record, recorder);
+                            subject.apply(record, recorder);
                             var eventTypeName = Event.class.getSimpleName();
                             assertThat(recorder.eventTypeApplied())
                                     .as(eventTypeName)
