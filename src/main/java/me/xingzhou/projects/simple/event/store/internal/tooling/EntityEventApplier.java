@@ -3,8 +3,10 @@ package me.xingzhou.projects.simple.event.store.internal.tooling;
 import static me.xingzhou.projects.simple.event.store.internal.tooling.CheckedExceptionHandlers.handleExceptions;
 
 import java.lang.reflect.Method;
-import me.xingzhou.projects.simple.event.store.Event;
+import java.util.ArrayList;
+import java.util.List;
 import me.xingzhou.projects.simple.event.store.EventRecord;
+import org.apache.commons.lang3.ClassUtils;
 
 public class EntityEventApplier {
     public static <T> void apply(EventRecord record, T entity) {
@@ -15,13 +17,18 @@ public class EntityEventApplier {
     }
 
     private static <T> Method getMethod(T entity, Class<?> eventClass) throws NoSuchMethodException {
-        try {
-            return entity.getClass().getDeclaredMethod("apply", eventClass);
-        } catch (NoSuchMethodException e) {
-            if (eventClass.equals(Event.class)) {
-                throw e;
+        List<Class<?>> allPossibleClasses = new ArrayList<>();
+        allPossibleClasses.add(eventClass);
+        allPossibleClasses.addAll(ClassUtils.getAllSuperclasses(eventClass));
+        allPossibleClasses.addAll(ClassUtils.getAllInterfaces(eventClass));
+
+        for (var cls : allPossibleClasses) {
+            try {
+                return entity.getClass().getMethod("apply", cls);
+            } catch (NoSuchMethodException ignored) {
             }
-            return getMethod(entity, Event.class);
         }
+        throw new NoSuchMethodException("No such method: public void apply(" + eventClass.getName() + ") in "
+                + entity.getClass().getName());
     }
 }
