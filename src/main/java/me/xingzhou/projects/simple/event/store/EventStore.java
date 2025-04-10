@@ -40,6 +40,8 @@ public class EventStore {
                 .map(record -> EventRecord.extract(
                         record, dependencies.serializer().deserialize(record.eventType(), record.eventContent())))
                 .forEach(record -> dependencies.applier().apply(record, projection));
+        projection.setLastRecordId(new RecordId(records.latestRecord().id()));
+        projection.setLastUpdatedOn(records.latestRecord().insertedOn());
         return projection;
     }
 

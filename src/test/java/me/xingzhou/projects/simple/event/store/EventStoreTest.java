@@ -1,7 +1,6 @@
 package me.xingzhou.projects.simple.event.store;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 
 import me.xingzhou.projects.simple.event.store.entities.ProjectionRecorder;
 import me.xingzhou.projects.simple.event.store.entities.TestAggregate;
@@ -25,6 +24,8 @@ class EventStoreTest {
         assertThat(recorder.appliedEvents()).hasSize(1);
         assertThat(recorder.appliedEvents().getFirst()).isEqualTo(event);
         assertThat(recorder.appliedEvents().getFirst()).isNotSameAs(event);
+        assertThat(recorder.lastRecordId().id()).isEqualTo(EventStorage.Constants.Ids.START);
+        assertThat(recorder.lastUpdatedOn()).isAfter(EventStorage.Constants.InsertedOnTimestamps.NEVER);
     }
 
     @Test
