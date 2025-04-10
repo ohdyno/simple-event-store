@@ -40,7 +40,10 @@ public class PostgresEventStorage implements EventStorage {
             @Nonnull List<String> eventTypes,
             long exclusiveStartVersion,
             long inclusiveEndVersion) {
-        throw new UnsupportedOperationException("Not Implemented");
+        if (streamExists(streamName)) {
+            throw new UnsupportedOperationException("Not Implemented");
+        }
+        throw new NoSuchStreamFailure(streamName);
     }
 
     @Nonnull
@@ -70,10 +73,9 @@ public class PostgresEventStorage implements EventStorage {
     }
 
     private StoredRecord createStream(String streamName, String eventType, String eventContent) {
-        var version = Constants.Versions.NEW_STREAM;
         return handleExceptions(() -> {
             try {
-                return insertRecord(streamName, eventType, eventContent, version);
+                return insertRecord(streamName, eventType, eventContent, Constants.Versions.NEW_STREAM);
             } catch (SQLException e) {
                 if (UNIQUE_VIOLATION.equals(e.getSQLState())) {
                     throw new DuplicateEventStreamFailure();
@@ -103,13 +105,15 @@ public class PostgresEventStorage implements EventStorage {
         return currentVersion == Constants.Versions.UNDEFINED_STREAM;
     }
 
-    private boolean streamExists(String streamName) throws SQLException {
-        try (var connection = dataSource.getConnection();
-                var statement = connection.prepareStatement(LATEST_STREAM_EVENT_QUERY)) {
-            statement.setString(1, streamName);
-            var resultSet = statement.executeQuery();
-            return resultSet.next();
-        }
+    private boolean streamExists(String streamName) {
+        return handleExceptions(() -> {
+            try (var connection = dataSource.getConnection();
+                    var statement = connection.prepareStatement(LATEST_STREAM_EVENT_QUERY)) {
+                statement.setString(1, streamName);
+                var resultSet = statement.executeQuery();
+                return resultSet.next();
+            }
+        });
     }
 
     interface ErrorCodes {
