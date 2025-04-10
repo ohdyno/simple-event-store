@@ -3,16 +3,11 @@ package me.xingzhou.projects.simple.event.store;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import me.xingzhou.projects.simple.event.store.entities.EventTypesExtractor;
 import me.xingzhou.projects.simple.event.store.entities.ProjectionRecorder;
 import me.xingzhou.projects.simple.event.store.entities.TestAggregate;
 import me.xingzhou.projects.simple.event.store.events.TestEvent;
-import me.xingzhou.projects.simple.event.store.eventsmapper.ServiceLoaderEventTypeConverter;
 import me.xingzhou.projects.simple.event.store.failures.StaleStateFailure;
-import me.xingzhou.projects.simple.event.store.internal.tooling.EntityEventApplier;
-import me.xingzhou.projects.simple.event.store.serializer.adapters.JacksonEventSerializer;
 import me.xingzhou.projects.simple.event.store.storage.EventStorage;
-import me.xingzhou.projects.simple.event.store.storage.InMemoryEventStorage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -67,11 +62,6 @@ class EventStoreTest {
 
     @BeforeEach
     void setUp() {
-        var converter = new ServiceLoaderEventTypeConverter();
-        var extractor = new EventTypesExtractor(converter);
-        var serializer = new JacksonEventSerializer(converter);
-        var storage = new InMemoryEventStorage();
-        var applier = new EntityEventApplier(extractor);
-        this.store = EventStore.build(new EventStoreDependencies(storage, serializer, converter, extractor, applier));
+        this.store = EventStore.build(EventStoreDependencies.buildWithInMemoryStorage());
     }
 }
