@@ -27,8 +27,14 @@ class EventStoreTest {
         assertThat(recorder.appliedEvents()).hasSize(1);
         assertThat(recorder.appliedEvents().getFirst()).isEqualTo(event);
         assertThat(recorder.appliedEvents().getFirst()).isNotSameAs(event);
-        assertThat(recorder.lastRecordId().id()).isEqualTo(EventStorage.Constants.Ids.START);
-        assertThat(recorder.lastUpdatedOn()).isAfter(EventStorage.Constants.InsertedOnTimestamps.NEVER);
+
+        StepVerifier.create(store.publisher())
+                .assertNext(record -> {
+                    assertThat(recorder.lastRecordId().id()).isEqualTo(record.id());
+                    assertThat(recorder.lastUpdatedOn()).isEqualTo(record.insertedOn());
+                })
+                .thenCancel()
+                .verify();
     }
 
     @Test
@@ -41,7 +47,10 @@ class EventStoreTest {
         assertThat(recorder.appliedEvents()).hasSize(1);
         assertThat(recorder.appliedEvents().getFirst()).isEqualTo(event);
         assertThat(recorder.appliedEvents().getFirst()).isNotSameAs(event);
-        assertThat(recorder.version().value()).isEqualTo(EventStorage.Constants.Versions.NEW_STREAM);
+        StepVerifier.create(store.publisher())
+                .assertNext(record -> assertThat(recorder.version().value()).isEqualTo(record.version()))
+                .thenCancel()
+                .verify();
     }
 
     @Test
