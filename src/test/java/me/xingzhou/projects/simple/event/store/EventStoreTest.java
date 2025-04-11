@@ -1,7 +1,9 @@
 package me.xingzhou.projects.simple.event.store;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.time.Duration;
 import me.xingzhou.projects.simple.event.store.entities.ProjectionRecorder;
 import me.xingzhou.projects.simple.event.store.entities.TestAggregate;
 import me.xingzhou.projects.simple.event.store.events.TestEvent;
@@ -9,6 +11,7 @@ import me.xingzhou.projects.simple.event.store.failures.StaleStateFailure;
 import me.xingzhou.projects.simple.event.store.storage.EventStorage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import reactor.test.StepVerifier;
 
 class EventStoreTest {
 
@@ -59,5 +62,18 @@ class EventStoreTest {
     @BeforeEach
     void setUp() {
         this.store = EventStore.build(EventStoreDependencies.buildWithInMemoryStorage());
+        StepVerifier.setDefaultTimeout(Duration.ofMillis(100));
+    }
+
+    @Test
+    void subscribe() {
+        var event = new TestEvent();
+
+        store.save(event, new TestAggregate());
+
+        StepVerifier.create(store.publisher())
+                .assertNext(record -> assertThat(record.id()).isEqualTo(EventStorage.Constants.Ids.START))
+                .thenCancel()
+                .verify();
     }
 }

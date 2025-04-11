@@ -4,8 +4,11 @@ import me.xingzhou.projects.simple.event.store.entities.Aggregate;
 import me.xingzhou.projects.simple.event.store.entities.Projection;
 import me.xingzhou.projects.simple.event.store.failures.StaleStateFailure;
 import me.xingzhou.projects.simple.event.store.storage.EventStorage;
+import me.xingzhou.projects.simple.event.store.storage.StoredRecord;
 import me.xingzhou.projects.simple.event.store.storage.failures.DuplicateEventStreamFailure;
 import me.xingzhou.projects.simple.event.store.storage.failures.StaleVersionFailure;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
 
 public class EventStore {
 
@@ -14,6 +17,8 @@ public class EventStore {
     }
 
     private final EventStoreDependencies dependencies;
+
+    private final Sinks.Many<StoredRecord> sinks = Sinks.many().replay().latest();
 
     private EventStore(EventStoreDependencies dependencies) {
         this.dependencies = dependencies;
@@ -64,6 +69,10 @@ public class EventStore {
         return aggregate;
     }
 
+    public Flux<StoredRecord> publisher() {
+        return sinks.asFlux();
+    }
+
     public <T extends Aggregate> T save(Event event, T aggregate) {
         return save(event, aggregate, dependencies);
     }
@@ -79,6 +88,7 @@ public class EventStore {
                             serialized.eventType(),
                             serialized.eventJson());
             aggregate.setVersion(new Version(record.version()));
+            sinks.tryEmitNext(record);
             return aggregate;
         } catch (DuplicateEventStreamFailure | StaleVersionFailure failure) {
             throw new StaleStateFailure();
