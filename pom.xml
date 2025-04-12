@@ -104,11 +104,6 @@
       <version>3.0.0</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-      <version>3.17.0</version>
-    </dependency>
-    <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
       <scope>test</scope>
@@ -116,11 +111,6 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-params</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -190,13 +180,19 @@
               <eclipse>
                 <version>4.35</version>
                 <sortMembersEnabled>true</sortMembersEnabled>
-                <!-- Optional: Specify the sort order of the member categories. (default: T,SF,SI,SM,F,I,C,M)
-                     SF,SI,SM,F,I,C,M,T = Static Fields, Static Initializers, Static Methods, Fields, Initializers, Constructors, Methods, (Nested) Types -->
+                <!-- Optional: Specify the sort order of the member categories.
+                (default: T, SF, SI, SM, F, I, C, M)
+                     SF, SI, SM, F, I, C, M, T =
+                     Static Fields, Static Initializers, Static Methods,
+                     Fields, Initializers, Constructors, Methods, (Nested) Types -->
                 <sortMembersOrder>SF,SI,SM,F,I,C,M,T</sortMembersOrder>
-                <!-- Optional: Enable reordering of members of the same category by the visibility within the category. (default: false) -->
+                <!-- Optional: Enable reordering members of the same category by the visibility within the category.
+                (default: false) -->
                 <sortMembersVisibilityOrderEnabled>true</sortMembersVisibilityOrderEnabled>
-                <!-- Optional: Specify the ordering of members of the same category by the visibility within the category. (default: B,V,R,D)
-                     B,R,D,V = Public, Protected, Package, Private -->
+                <!-- Optional:
+                Specify the ordering of members from the same category by the visibility within the category.
+                (default: B, V, R, D)
+                     B, R, D, V = Public, Protected, Package, Private -->
                 <sortMembersVisibilityOrder>B,R,D,V</sortMembersVisibilityOrder>
               </eclipse>
               <palantirJavaFormat>
