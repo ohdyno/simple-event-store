@@ -7,16 +7,22 @@
     <version>3.4.4</version>
     <relativePath/>
   </parent>
-  <groupId>me.xingzhou.projects</groupId>
-  <artifactId>simple-event-store-parent</artifactId>
+  <groupId>me.xingzhou.simple.event.store</groupId>
+  <artifactId>parent</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>simple-event-store</name>
   <url>http://https://github.com/ohdyno/simple-event-store/</url>
   <modules>
     <module>core</module>
-    <module>postgres</module>
-    <module>adapter-contract</module>
+    <module>dependencies/storage/adapters/postgres</module>
+    <module>dependencies/storage/contract-tests</module>
+    <module>dependencies/storage/adapters/in-memory</module>
+    <module>dependencies/serializer/contract-tests</module>
+    <module>dependencies/serializer/adapters/jackson</module>
+    <module>dependencies/converter/contract-tests</module>
+    <module>dependencies/converter/adapters/service-loader</module>
+    <module>dependencies/converter/adapters/map-backed</module>
   </modules>
   <properties>
     <auto-service.version>1.1.1</auto-service.version>

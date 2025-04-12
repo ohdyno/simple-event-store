@@ -1,0 +1,21 @@
+package me.xingzhou.simple.event.store.event.converter;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import me.xingzhou.simple.event.store.serializer.events.FooEvent;
+import org.junit.jupiter.api.Test;
+
+class ServiceLoaderEventTypeConverterTest {
+
+    private EventTypeConverter subject = new ServiceLoaderEventTypeConverter();
+
+    @Test
+    void convert() {
+        var event = new FooEvent("foo-event-id");
+
+        var eventType = subject.convert(event.getClass());
+        var convertedEvent = subject.convert(eventType);
+
+        assertThat(convertedEvent).isEqualTo(event.getClass());
+    }
+}
