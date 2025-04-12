@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.4.4</version>
-    <relativePath/>
-  </parent>
   <groupId>me.xingzhou.simple.event.store</groupId>
   <artifactId>parent</artifactId>
   <version>0.0.1-SNAPSHOT</version>
@@ -14,18 +8,18 @@
   <name>simple-event-store</name>
   <url>http://https://github.com/ohdyno/simple-event-store/</url>
   <modules>
-    <module>core</module>
-    <module>dependencies/storage/adapters/postgres</module>
-    <module>dependencies/storage/contract-tests</module>
-    <module>dependencies/storage/adapters/in-memory</module>
-    <module>dependencies/serializer/contract-tests</module>
-    <module>dependencies/serializer/adapters/jackson</module>
-    <module>dependencies/converter/contract-tests</module>
-    <module>dependencies/converter/adapters/service-loader</module>
-    <module>dependencies/converter/adapters/map-backed</module>
+    <module>domain/core</module>
+    <module>adapters/storage/postgres</module>
+    <module>adapters/storage/contract-tests</module>
+    <module>adapters/storage/in-memory</module>
+    <module>adapters/serializer/contract-tests</module>
+    <module>adapters/serializer/jackson</module>
+    <module>adapters/converter/contract-tests</module>
+    <module>adapters/converter/service-loader</module>
+    <module>adapters/converter/map-backed</module>
+    <module>domain/ports</module>
   </modules>
   <properties>
-    <auto-service.version>1.1.1</auto-service.version>
     <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
@@ -35,13 +29,6 @@
         <groupId>io.cucumber</groupId>
         <artifactId>cucumber-bom</artifactId>
         <version>7.21.1</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      <dependency>
-        <groupId>io.projectreactor</groupId>
-        <artifactId>reactor-bom</artifactId>
-        <version>2024.0.4</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -66,50 +53,9 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      <dependency>
-        <groupId>org.testcontainers</groupId>
-        <artifactId>testcontainers-bom</artifactId>
-        <version>1.20.6</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
     </dependencies>
   </dependencyManagement>
   <dependencies>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <version>2.17.2</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.auto.service</groupId>
-      <artifactId>auto-service-annotations</artifactId>
-      <version>${auto-service.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.cucumber</groupId>
-      <artifactId>cucumber-java</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.cucumber</groupId>
-      <artifactId>cucumber-junit-platform-engine</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.cucumber</groupId>
-      <artifactId>cucumber-picocontainer</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.projectreactor</groupId>
-      <artifactId>reactor-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.projectreactor</groupId>
-      <artifactId>reactor-test</artifactId>
-      <scope>test</scope>
-    </dependency>
     <dependency>
       <groupId>jakarta.annotation</groupId>
       <artifactId>jakarta.annotation-api</artifactId>
@@ -123,46 +69,6 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.platform</groupId>
-      <artifactId>junit-platform-suite</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.postgresql</groupId>
-      <artifactId>postgresql</artifactId>
-      <version>42.7.4</version>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-data-jpa</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-testcontainers</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.testcontainers</groupId>
-      <artifactId>junit-jupiter</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.testcontainers</groupId>
-      <artifactId>postgresql</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -290,15 +196,6 @@
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
           <version>3.13.0</version>
-          <configuration>
-            <annotationProcessorPaths>
-              <path>
-                <groupId>com.google.auto.service</groupId>
-                <artifactId>auto-service</artifactId>
-                <version>${auto-service.version}</version>
-              </path>
-            </annotationProcessorPaths>
-          </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-deploy-plugin</artifactId>
@@ -347,10 +244,6 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>versions-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
       </plugin>
     </plugins>
   </build>
