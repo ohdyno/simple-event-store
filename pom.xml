@@ -8,10 +8,16 @@
     <relativePath/>
   </parent>
   <groupId>me.xingzhou.projects</groupId>
-  <artifactId>simple-event-store</artifactId>
+  <artifactId>simple-event-store-parent</artifactId>
   <version>0.0.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
   <name>simple-event-store</name>
   <url>http://https://github.com/ohdyno/simple-event-store/</url>
+  <modules>
+    <module>core</module>
+    <module>postgres</module>
+    <module>adapter-contract</module>
+  </modules>
   <properties>
     <auto-service.version>1.1.1</auto-service.version>
     <maven.compiler.release>21</maven.compiler.release>
