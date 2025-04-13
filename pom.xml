@@ -18,6 +18,7 @@
     <module>adapters/converter/service-loader</module>
     <module>adapters/converter/map-backed</module>
     <module>domain/ports</module>
+    <module>starter</module>
   </modules>
   <properties>
     <maven.compiler.release>21</maven.compiler.release>
