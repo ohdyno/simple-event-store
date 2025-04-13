@@ -22,7 +22,7 @@ class EventTypesExtractorTest {
                     var entity = new EventSourceEntity() {
                         public void apply(Event event) {}
                     };
-                    assertThat(eventTypesExtractor.extractTypes(entity)).containsExactlyInAnyOrder(Event.class);
+                    assertThat(eventTypesExtractor.extractTypes(entity)).containsOnly(Event.class);
                 },
                 () -> {
                     var entity = new EventSourceEntity() {
@@ -30,8 +30,7 @@ class EventTypesExtractorTest {
 
                         public void apply(TestEvent event) {}
                     };
-                    assertThat(eventTypesExtractor.extractTypes(entity))
-                            .containsExactlyInAnyOrder(Event.class, TestEvent.class);
+                    assertThat(eventTypesExtractor.extractTypes(entity)).containsExactly(Event.class, TestEvent.class);
                 },
                 () -> {
                     var entity = new EventSourceEntity() {
@@ -39,8 +38,19 @@ class EventTypesExtractorTest {
 
                         public void apply(TestEvent event) {}
                     };
-                    assertThat(eventTypesExtractor.extractTypes(entity))
-                            .containsExactlyInAnyOrder(Event.class, TestEvent.class);
+                    assertThat(eventTypesExtractor.extractTypes(entity)).containsExactly(Event.class, TestEvent.class);
+                },
+                () -> {
+                    var entity = new EventSourceEntity() {
+                        public void apply(Event event, RecordDetails details) {}
+
+                        public void apply(TestEvent event) {}
+                    };
+                    assertThat(eventTypesExtractor.extractTypes(entity)).containsExactly(TestEvent.class, Event.class);
+                },
+                () -> {
+                    var entity = new EventSourceEntity() {};
+                    assertThat(eventTypesExtractor.extractTypes(entity)).isEmpty();
                 });
     }
 }
