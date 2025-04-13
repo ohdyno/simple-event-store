@@ -4,7 +4,7 @@
   <parent>
     <groupId>me.xingzhou</groupId>
     <artifactId>simple-event-store-parent</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>${revision}</version>
     <relativePath>../../../pom.xml</relativePath>
   </parent>
   <artifactId>simple-event-store-jackson-serializer</artifactId>
@@ -18,18 +18,18 @@
     <dependency>
       <groupId>me.xingzhou</groupId>
       <artifactId>simple-event-store-dependency-contracts</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>me.xingzhou</groupId>
       <artifactId>simple-event-store-map-backed-event-converter</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>me.xingzhou</groupId>
       <artifactId>simple-event-store-serializer-contract-tests</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

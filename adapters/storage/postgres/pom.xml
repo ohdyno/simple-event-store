@@ -4,13 +4,18 @@
   <parent>
     <groupId>me.xingzhou</groupId>
     <artifactId>simple-event-store-parent</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>${revision}</version>
     <relativePath>../../../pom.xml</relativePath>
   </parent>
   <artifactId>simple-event-store-postgres-storage</artifactId>
   <packaging>jar</packaging>
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>org.postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+        <version>42.7.4</version>
+      </dependency>
       <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
@@ -31,18 +36,17 @@
     <dependency>
       <groupId>me.xingzhou</groupId>
       <artifactId>simple-event-store-dependency-contracts</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>me.xingzhou</groupId>
       <artifactId>simple-event-store-storage-contract-tests</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
-      <version>42.7.4</version>
       <scope>test</scope>
     </dependency>
     <dependency>
