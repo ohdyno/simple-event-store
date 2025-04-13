@@ -1,5 +1,7 @@
-package me.xingzhou.simple.event.store;
+package me.xingzhou.simple.event.store.enrich;
 
+import me.xingzhou.simple.event.store.Event;
+import me.xingzhou.simple.event.store.RecordDetails;
 import me.xingzhou.simple.event.store.storage.StoredRecord;
 
 public record EventRecord(Event event, RecordDetails details) {

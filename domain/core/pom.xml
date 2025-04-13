@@ -59,14 +59,14 @@
     </dependency>
     <dependency>
       <groupId>me.xingzhou.simple.event.store</groupId>
-      <artifactId>ports</artifactId>
+      <artifactId>map-backed-event-converter</artifactId>
       <version>0.0.1-SNAPSHOT</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>me.xingzhou.simple.event.store</groupId>
-      <artifactId>service-loader-event-converter</artifactId>
+      <artifactId>ports</artifactId>
       <version>0.0.1-SNAPSHOT</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.junit.platform</groupId>

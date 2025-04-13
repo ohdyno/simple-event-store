@@ -4,14 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
-import java.util.Map;
+import me.xingzhou.simple.event.store.enrich.EntityEventApplier;
+import me.xingzhou.simple.event.store.enrich.EventTypesExtractor;
 import me.xingzhou.simple.event.store.entities.ProjectionRecorder;
 import me.xingzhou.simple.event.store.entities.TestAggregate;
-import me.xingzhou.simple.event.store.event.converter.MapBackedEventTypeConverter;
 import me.xingzhou.simple.event.store.events.TestEvent;
+import me.xingzhou.simple.event.store.events.TestEventTypeConverter;
 import me.xingzhou.simple.event.store.failures.StaleStateFailure;
-import me.xingzhou.simple.event.store.internal.tooling.EntityEventApplier;
-import me.xingzhou.simple.event.store.internal.tooling.EventTypesExtractor;
 import me.xingzhou.simple.event.store.serializer.adapters.JacksonEventSerializer;
 import me.xingzhou.simple.event.store.storage.EventStorage;
 import me.xingzhou.simple.event.store.storage.adapters.InMemoryEventStorage;
@@ -76,7 +75,7 @@ class EventStoreTest {
 
     @BeforeEach
     void setUp() {
-        var converter = new MapBackedEventTypeConverter(Map.of("TestEvent", TestEvent.class));
+        var converter = new TestEventTypeConverter();
         var extractor = new EventTypesExtractor(converter);
         var serializer = new JacksonEventSerializer(converter);
         var storage = new InMemoryEventStorage();

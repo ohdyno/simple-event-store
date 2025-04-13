@@ -1,4 +1,4 @@
-package me.xingzhou.simple.event.store.internal.tooling;
+package me.xingzhou.simple.event.store.enrich;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -10,12 +10,6 @@ import me.xingzhou.simple.event.store.entities.EventSourceEntity;
 import me.xingzhou.simple.event.store.event.converter.EventTypeConverter;
 
 public class EventTypesExtractor {
-    private static boolean isApplyMethod(Method method) {
-        return EventSourceEntity.APPLY_METHOD_NAME.equals(method.getName())
-                && method.getParameterCount() > 0
-                && Event.class.isAssignableFrom(method.getParameterTypes()[0]);
-    }
-
     private final EventTypeConverter converter;
 
     public EventTypesExtractor(EventTypeConverter converter) {
@@ -31,8 +25,14 @@ public class EventTypesExtractor {
 
     public List<Class<?>> extractTypes(EventSourceEntity entity) {
         return Arrays.stream(entity.getClass().getMethods())
-                .filter(EventTypesExtractor::isApplyMethod)
+                .filter(this::isApplyMethod)
                 .map(method -> method.getParameterTypes()[0])
                 .collect(Collectors.toUnmodifiableList());
+    }
+
+    private boolean isApplyMethod(Method method) {
+        return EventSourceEntity.APPLY_METHOD_NAME.equals(method.getName())
+                && method.getParameterCount() > 0
+                && Event.class.isAssignableFrom(method.getParameterTypes()[0]);
     }
 }

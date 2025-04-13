@@ -1,6 +1,6 @@
 package me.xingzhou.simple.event.store.entities;
 
-import me.xingzhou.simple.event.store.Version;
+import me.xingzhou.simple.event.store.ids.Version;
 import me.xingzhou.simple.event.store.storage.EventStorage;
 
 public abstract class BaseAggregate implements Aggregate {

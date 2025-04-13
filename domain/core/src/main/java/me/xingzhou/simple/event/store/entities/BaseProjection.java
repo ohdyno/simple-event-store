@@ -3,8 +3,8 @@ package me.xingzhou.simple.event.store.entities;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
-import me.xingzhou.simple.event.store.RecordId;
-import me.xingzhou.simple.event.store.StreamName;
+import me.xingzhou.simple.event.store.ids.RecordId;
+import me.xingzhou.simple.event.store.ids.StreamName;
 import me.xingzhou.simple.event.store.storage.EventStorage;
 
 public class BaseProjection implements Projection {

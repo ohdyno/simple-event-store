@@ -1,8 +1,7 @@
-package me.xingzhou.simple.event.store.internal.tooling;
+package me.xingzhou.simple.event.store.enrich;
 
 import static me.xingzhou.simple.event.store.internal.tooling.CheckedExceptionHandlers.handleExceptions;
 
-import me.xingzhou.simple.event.store.EventRecord;
 import me.xingzhou.simple.event.store.entities.EventSourceEntity;
 
 public class EntityEventApplier {
@@ -16,8 +15,17 @@ public class EntityEventApplier {
     public <T extends EventSourceEntity> void apply(EventRecord record, T entity) {
         handleExceptions(() -> {
             var parameterType = getMethod(entity, record.event().getClass());
-            var method = entity.getClass().getMethod(EventSourceEntity.APPLY_METHOD_NAME, parameterType);
-            method.invoke(entity, record.event());
+            try {
+                var method = entity.getClass().getMethod(EventSourceEntity.APPLY_METHOD_NAME, parameterType);
+                method.invoke(entity, record.event());
+            } catch (NoSuchMethodException e) {
+                var method = entity.getClass()
+                        .getMethod(
+                                EventSourceEntity.APPLY_METHOD_NAME,
+                                parameterType,
+                                record.details().getClass());
+                method.invoke(entity, record.event(), record.details());
+            }
         });
     }
 

@@ -1,13 +1,14 @@
-package me.xingzhou.simple.event.store.internal.tooling;
+package me.xingzhou.simple.event.store.enrich;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
+import java.time.Instant;
 import me.xingzhou.simple.event.store.Event;
-import me.xingzhou.simple.event.store.EventRecord;
+import me.xingzhou.simple.event.store.RecordDetails;
 import me.xingzhou.simple.event.store.entities.EventSourceEntity;
-import me.xingzhou.simple.event.store.event.converter.ServiceLoaderEventTypeConverter;
+import me.xingzhou.simple.event.store.events.TestEventTypeConverter;
 import org.junit.jupiter.api.Test;
 
 public class EntityEventApplierTest {
@@ -15,8 +16,8 @@ public class EntityEventApplierTest {
     @Test
     void applyEvent() {
         var event = new HierarchyEventWithInterfaces();
-        var record = new EventRecord(event, null);
-        var subject = new EntityEventApplier(new EventTypesExtractor(new ServiceLoaderEventTypeConverter()));
+        var record = new EventRecord(event, new RecordDetails("stream-name", 0, 0, Instant.now()));
+        var subject = new EntityEventApplier(new EventTypesExtractor(new TestEventTypeConverter()));
 
         assertAll(
                 "apply hierarchical event to different recorders",
@@ -29,7 +30,7 @@ public class EntityEventApplierTest {
                                     .as(eventTypeName)
                                     .isTrue();
                         },
-                        "Event"),
+                        "apply(Event)"),
                 () -> assertDoesNotThrow(
                         () -> {
                             var recorder = new BaseHierarchyEventAppliedRecorder();
@@ -39,7 +40,7 @@ public class EntityEventApplierTest {
                                     .as(eventTypeName)
                                     .isTrue();
                         },
-                        "BaseHierarchyEvent"),
+                        "apply(BaseHierarchyEvent)"),
                 () -> assertDoesNotThrow(
                         () -> {
                             var recorder = new TestEventInterfaceAEventAppliedRecorder();
@@ -49,7 +50,7 @@ public class EntityEventApplierTest {
                                     .as(eventTypeName)
                                     .isTrue();
                         },
-                        "TestEventInterfaceA"),
+                        "apply(TestEventInterfaceA)"),
                 () -> assertDoesNotThrow(
                         () -> {
                             var recorder = new TestEventInterfaceBEventAppliedRecorder();
@@ -59,7 +60,7 @@ public class EntityEventApplierTest {
                                     .as(eventTypeName)
                                     .isTrue();
                         },
-                        "TestEventInterfaceB"),
+                        "apply(TestEventInterfaceB)"),
                 () -> assertDoesNotThrow(
                         () -> {
                             var recorder = new HierarchyEventWithInterfacesEventAppliedRecorder();
@@ -69,7 +70,7 @@ public class EntityEventApplierTest {
                                     .as(eventTypeName)
                                     .isTrue();
                         },
-                        "HierarchyEventWithInterfaces"),
+                        "apply(HierarchyEventWithInterfaces)"),
                 () -> assertDoesNotThrow(
                         () -> {
                             var recorder = new SubRecorder();
@@ -79,7 +80,18 @@ public class EntityEventApplierTest {
                                     .as(eventTypeName)
                                     .isTrue();
                         },
-                        "SubRecorder"));
+                        "apply(Event) from super class"),
+                () -> assertDoesNotThrow(
+                        () -> {
+                            var recorder = new EventWithRecordDetailsRecorder();
+                            subject.apply(record, recorder);
+                            var eventTypeName = Event.class.getSimpleName();
+                            assertThat(recorder.eventTypeApplied())
+                                    .as(eventTypeName)
+                                    .isTrue();
+                            assertThat(recorder.recordedDetails()).isEqualTo(record.details());
+                        },
+                        "apply(<? extends Event>, RecordDetails)"));
     }
 
     public static class BaseHierarchyEvent implements Event {}
@@ -93,6 +105,19 @@ public class EntityEventApplierTest {
     public static class EventAppliedRecorder extends Recorder {
         public void apply(Event event) {
             eventTypeApplied = true;
+        }
+    }
+
+    public static class EventWithRecordDetailsRecorder extends Recorder {
+        private RecordDetails recordedDetails = null;
+
+        public void apply(Event event, RecordDetails recordDetails) {
+            eventTypeApplied = true;
+            recordedDetails = recordDetails;
+        }
+
+        private RecordDetails recordedDetails() {
+            return recordedDetails;
         }
     }
 

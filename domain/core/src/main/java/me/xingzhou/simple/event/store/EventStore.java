@@ -1,8 +1,12 @@
 package me.xingzhou.simple.event.store;
 
+import me.xingzhou.simple.event.store.enrich.EventRecord;
 import me.xingzhou.simple.event.store.entities.Aggregate;
 import me.xingzhou.simple.event.store.entities.Projection;
 import me.xingzhou.simple.event.store.failures.StaleStateFailure;
+import me.xingzhou.simple.event.store.ids.RecordId;
+import me.xingzhou.simple.event.store.ids.StreamName;
+import me.xingzhou.simple.event.store.ids.Version;
 import me.xingzhou.simple.event.store.storage.EventStorage;
 import me.xingzhou.simple.event.store.storage.StoredRecord;
 import me.xingzhou.simple.event.store.storage.failures.DuplicateEventStreamFailure;
