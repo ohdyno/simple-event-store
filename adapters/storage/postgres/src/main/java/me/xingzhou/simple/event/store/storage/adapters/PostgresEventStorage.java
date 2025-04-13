@@ -11,6 +11,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 import javax.sql.DataSource;
@@ -43,7 +44,7 @@ public class PostgresEventStorage implements EventStorage {
     @Override
     public VersionedRecords retrieveEvents(
             @Nonnull String streamName,
-            @Nonnull List<String> eventTypes,
+            @Nonnull Collection<String> eventTypes,
             long exclusiveStartVersion,
             long inclusiveEndVersion) {
         if (streamExists(streamName)) {
@@ -57,8 +58,8 @@ public class PostgresEventStorage implements EventStorage {
     public TimestampedRecords retrieveEvents(
             long exclusiveStartId,
             long inclusiveEndId,
-            @Nonnull List<String> streamNames,
-            @Nonnull List<String> eventTypes) {
+            @Nonnull Collection<String> streamNames,
+            @Nonnull Collection<String> eventTypes) {
         return handleExceptions(() -> {
             try (var connection = dataSource.getConnection()) {
                 var latestRecord = getLatestRecord(connection, this::extractRecord);
@@ -141,7 +142,7 @@ public class PostgresEventStorage implements EventStorage {
 
     private List<StoredRecord> getRecords(
             String streamName,
-            List<String> eventTypes,
+            Collection<String> eventTypes,
             long exclusiveStartVersion,
             long inclusiveEndVersion,
             Connection connection)
@@ -169,8 +170,8 @@ public class PostgresEventStorage implements EventStorage {
     private List<StoredRecord> getRecords(
             long exclusiveStartId,
             long inclusiveEndId,
-            List<String> streamNames,
-            List<String> eventTypes,
+            Collection<String> streamNames,
+            Collection<String> eventTypes,
             Connection connection,
             Function<ResultSet, List<StoredRecord>> extractRecords)
             throws SQLException {
@@ -234,7 +235,7 @@ public class PostgresEventStorage implements EventStorage {
     }
 
     private VersionedRecords retrieveStreamEvents(
-            String streamName, List<String> eventTypes, long exclusiveStartVersion, long inclusiveEndVersion) {
+            String streamName, Collection<String> eventTypes, long exclusiveStartVersion, long inclusiveEndVersion) {
         return handleExceptions(() -> {
             try (var connection = dataSource.getConnection()) {
                 var latestRecord = getLatestRecord(connection, streamName);

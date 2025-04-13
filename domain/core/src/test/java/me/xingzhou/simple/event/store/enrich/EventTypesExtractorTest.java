@@ -42,11 +42,28 @@ class EventTypesExtractorTest {
                 },
                 () -> {
                     var entity = new EventSourceEntity() {
+                        /**
+                         * spotless:off
+                         * Turning spotless off so that the apply methods are not automatically sorted.
+                         */
+                        public void apply(TestEvent event) {}
+
                         public void apply(Event event, RecordDetails details) {}
 
-                        public void apply(TestEvent event) {}
+                        /*
+                          spotless:on -- leave a space above this toggle
+                          so that Eclipse formatter doesn't try to remove it or move it around
+                          and break spotless.
+                         */
                     };
                     assertThat(eventTypesExtractor.extractTypes(entity)).containsExactly(TestEvent.class, Event.class);
+                },
+                () -> {
+                    var entity = new EventSourceEntity() {
+                        public void apply(TestEvent event) {}
+                        public void apply(TestEvent event, RecordDetails details) {}
+                    };
+                    assertThat(eventTypesExtractor.extractTypes(entity)).containsExactly(TestEvent.class);
                 },
                 () -> {
                     var entity = new EventSourceEntity() {};

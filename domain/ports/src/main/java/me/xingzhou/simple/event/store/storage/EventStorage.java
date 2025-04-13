@@ -2,7 +2,7 @@ package me.xingzhou.simple.event.store.storage;
 
 import jakarta.annotation.Nonnull;
 import java.time.Instant;
-import java.util.List;
+import java.util.Collection;
 
 public interface EventStorage {
     @Nonnull
@@ -16,7 +16,7 @@ public interface EventStorage {
     @Nonnull
     VersionedRecords retrieveEvents(
             @Nonnull String streamName,
-            @Nonnull List<String> eventTypes,
+            @Nonnull Collection<String> eventTypes,
             long exclusiveStartVersion,
             long inclusiveEndVersion);
 
@@ -24,8 +24,8 @@ public interface EventStorage {
     TimestampedRecords retrieveEvents(
             long exclusiveStartId,
             long inclusiveEndId,
-            @Nonnull List<String> streamNames,
-            @Nonnull List<String> eventTypes);
+            @Nonnull Collection<String> streamNames,
+            @Nonnull Collection<String> eventTypes);
 
     interface Constants {
         interface Ids {

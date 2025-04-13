@@ -27,6 +27,7 @@ public class EventTypesExtractor {
         return Arrays.stream(entity.getClass().getMethods())
                 .filter(this::isApplyMethod)
                 .map(method -> method.getParameterTypes()[0])
+                .distinct()
                 .collect(Collectors.toUnmodifiableList());
     }
 
