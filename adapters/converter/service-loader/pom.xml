@@ -2,12 +2,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>me.xingzhou.simple.event.store</groupId>
-    <artifactId>parent</artifactId>
+    <groupId>me.xingzhou</groupId>
+    <artifactId>simple-event-store-parent</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <relativePath>../../../pom.xml</relativePath>
   </parent>
-  <artifactId>service-loader-event-converter</artifactId>
+  <artifactId>simple-event-store-service-loader-event-converter</artifactId>
   <packaging>jar</packaging>
   <properties>
     <auto-service.version>1.1.1</auto-service.version>
@@ -19,19 +19,19 @@
       <version>${auto-service.version}</version>
     </dependency>
     <dependency>
-      <groupId>me.xingzhou.simple.event.store</groupId>
-      <artifactId>event-converter-contract</artifactId>
+      <groupId>me.xingzhou</groupId>
+      <artifactId>simple-event-store-dependency-contracts</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>me.xingzhou</groupId>
+      <artifactId>simple-event-store-event-converter-contract-tests</artifactId>
       <version>0.0.1-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>me.xingzhou.simple.event.store</groupId>
-      <artifactId>map-backed-event-converter</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>me.xingzhou.simple.event.store</groupId>
-      <artifactId>ports</artifactId>
+      <groupId>me.xingzhou</groupId>
+      <artifactId>simple-event-store-map-backed-event-converter</artifactId>
       <version>0.0.1-SNAPSHOT</version>
     </dependency>
   </dependencies>

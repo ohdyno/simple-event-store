@@ -2,12 +2,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>me.xingzhou.simple.event.store</groupId>
-    <artifactId>parent</artifactId>
+    <groupId>me.xingzhou</groupId>
+    <artifactId>simple-event-store-parent</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
-  <artifactId>core</artifactId>
+  <artifactId>simple-event-store-core</artifactId>
   <packaging>jar</packaging>
   <dependencyManagement>
     <dependencies>
@@ -46,27 +46,27 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>me.xingzhou.simple.event.store</groupId>
-      <artifactId>in-memory-storage</artifactId>
+      <groupId>me.xingzhou</groupId>
+      <artifactId>simple-event-store-dependency-contracts</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>me.xingzhou</groupId>
+      <artifactId>simple-event-store-in-memory-storage</artifactId>
       <version>0.0.1-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>me.xingzhou.simple.event.store</groupId>
-      <artifactId>jackson-serializer</artifactId>
+      <groupId>me.xingzhou</groupId>
+      <artifactId>simple-event-store-jackson-serializer</artifactId>
       <version>0.0.1-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>me.xingzhou.simple.event.store</groupId>
-      <artifactId>map-backed-event-converter</artifactId>
+      <groupId>me.xingzhou</groupId>
+      <artifactId>simple-event-store-map-backed-event-converter</artifactId>
       <version>0.0.1-SNAPSHOT</version>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>me.xingzhou.simple.event.store</groupId>
-      <artifactId>ports</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.junit.platform</groupId>

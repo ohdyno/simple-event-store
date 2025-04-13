@@ -2,12 +2,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>me.xingzhou.simple.event.store</groupId>
-    <artifactId>parent</artifactId>
+    <groupId>me.xingzhou</groupId>
+    <artifactId>simple-event-store-parent</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <relativePath>../../../pom.xml</relativePath>
   </parent>
-  <artifactId>jackson-serializer</artifactId>
+  <artifactId>simple-event-store-jackson-serializer</artifactId>
   <packaging>jar</packaging>
   <dependencies>
     <dependency>
@@ -16,18 +16,19 @@
       <version>2.17.2</version>
     </dependency>
     <dependency>
-      <groupId>me.xingzhou.simple.event.store</groupId>
-      <artifactId>map-backed-event-converter</artifactId>
+      <groupId>me.xingzhou</groupId>
+      <artifactId>simple-event-store-dependency-contracts</artifactId>
       <version>0.0.1-SNAPSHOT</version>
     </dependency>
     <dependency>
-      <groupId>me.xingzhou.simple.event.store</groupId>
-      <artifactId>ports</artifactId>
+      <groupId>me.xingzhou</groupId>
+      <artifactId>simple-event-store-map-backed-event-converter</artifactId>
       <version>0.0.1-SNAPSHOT</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>me.xingzhou.simple.event.store</groupId>
-      <artifactId>serializer-contract</artifactId>
+      <groupId>me.xingzhou</groupId>
+      <artifactId>simple-event-store-serializer-contract-tests</artifactId>
       <version>0.0.1-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
