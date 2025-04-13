@@ -8,6 +8,7 @@
     <relativePath>../../../pom.xml</relativePath>
   </parent>
   <artifactId>postgres-storage</artifactId>
+  <packaging>jar</packaging>
   <dependencyManagement>
     <dependencies>
       <dependency>

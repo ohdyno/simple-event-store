@@ -8,6 +8,7 @@
     <relativePath>../../../pom.xml</relativePath>
   </parent>
   <artifactId>jackson-serializer</artifactId>
+  <packaging>jar</packaging>
   <dependencies>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>

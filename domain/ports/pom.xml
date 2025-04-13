@@ -8,4 +8,5 @@
     <relativePath>../../pom.xml</relativePath>
   </parent>
   <artifactId>ports</artifactId>
+  <packaging>jar</packaging>
 </project>

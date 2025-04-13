@@ -8,6 +8,7 @@
     <relativePath>../../../pom.xml</relativePath>
   </parent>
   <artifactId>storage-contract</artifactId>
+  <packaging>jar</packaging>
   <dependencies>
     <dependency>
       <groupId>me.xingzhou.simple.event.store</groupId>
