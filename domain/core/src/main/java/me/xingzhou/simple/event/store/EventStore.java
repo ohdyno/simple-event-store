@@ -92,6 +92,7 @@ public class EventStore {
                             serialized.eventType(),
                             serialized.eventJson());
             aggregate.setVersion(new Version(record.version()));
+            dependencies.applier().apply(EventRecord.extract(record, event), aggregate);
             sinks.tryEmitNext(record);
             return aggregate;
         } catch (DuplicateEventStreamFailure | StaleVersionFailure failure) {

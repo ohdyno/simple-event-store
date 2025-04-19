@@ -63,6 +63,7 @@ class EventStoreTest {
         var event = new TestEvent();
         var aggregate = store.save(event, new TestAggregate());
         assertThat(aggregate.version().value()).isEqualTo(EventStorage.Constants.Versions.NEW_STREAM);
+        assertThat(aggregate.appliedEvents()).containsExactly(event);
     }
 
     @Test
