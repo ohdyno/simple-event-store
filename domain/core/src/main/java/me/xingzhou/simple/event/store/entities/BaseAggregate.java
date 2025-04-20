@@ -7,6 +7,11 @@ public abstract class BaseAggregate implements Aggregate {
     private long version = EventStorage.Constants.Versions.UNDEFINED_STREAM;
 
     @Override
+    public boolean isDefined() {
+        return version != EventStorage.Constants.Versions.UNDEFINED_STREAM;
+    }
+
+    @Override
     public void setVersion(Version version) {
         this.version = version.value();
     }

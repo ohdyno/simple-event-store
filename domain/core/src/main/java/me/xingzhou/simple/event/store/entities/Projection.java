@@ -1,6 +1,7 @@
 package me.xingzhou.simple.event.store.entities;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import me.xingzhou.simple.event.store.ids.RecordId;
 import me.xingzhou.simple.event.store.ids.StreamName;
@@ -14,5 +15,7 @@ public interface Projection extends EventSourceEntity {
 
     void setLastUpdatedOn(Instant instant);
 
-    List<StreamName> streamNames();
+    default List<StreamName> streamNames() {
+        return Collections.emptyList();
+    }
 }

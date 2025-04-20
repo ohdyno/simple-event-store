@@ -38,6 +38,7 @@ class EventStoreTest {
 
         var recorder = store.enrich(new ProjectionRecorder());
 
+        assertThat(recorder.isDefined()).isTrue();
         assertThat(recorder.appliedEvents()).hasSize(1);
         assertThat(recorder.appliedEvents().getFirst()).isEqualTo(event);
         assertThat(recorder.appliedEvents().getFirst()).isNotSameAs(event);
@@ -88,6 +89,8 @@ class EventStoreTest {
     void saveAnEvent() {
         var event = new TestEvent();
         var aggregate = store.save(event, new TestAggregate());
+
+        assertThat(aggregate.isDefined()).isTrue();
         assertThat(aggregate.version().value()).isEqualTo(EventStorage.Constants.Versions.NEW_STREAM);
         assertThat(aggregate.appliedEvents()).containsExactly(event);
     }
