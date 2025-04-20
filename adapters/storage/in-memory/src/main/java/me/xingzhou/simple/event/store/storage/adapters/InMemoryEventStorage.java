@@ -6,9 +6,8 @@ import java.util.*;
 import me.xingzhou.simple.event.store.storage.EventStorage;
 import me.xingzhou.simple.event.store.storage.EventStorage.Constants.Ids;
 import me.xingzhou.simple.event.store.storage.EventStorage.Constants.Versions;
+import me.xingzhou.simple.event.store.storage.RetrievedRecords;
 import me.xingzhou.simple.event.store.storage.StoredRecord;
-import me.xingzhou.simple.event.store.storage.TimestampedRecords;
-import me.xingzhou.simple.event.store.storage.VersionedRecords;
 import me.xingzhou.simple.event.store.storage.failures.DuplicateEventStreamFailure;
 import me.xingzhou.simple.event.store.storage.failures.NoSuchStreamFailure;
 import me.xingzhou.simple.event.store.storage.failures.StaleVersionFailure;
@@ -28,7 +27,7 @@ public class InMemoryEventStorage implements EventStorage {
     }
 
     @Override
-    public @Nonnull VersionedRecords retrieveEvents(
+    public @Nonnull RetrievedRecords retrieveEvents(
             @Nonnull String streamName,
             @Nonnull Collection<String> eventTypes,
             long exclusiveStartVersion,
@@ -38,11 +37,11 @@ public class InMemoryEventStorage implements EventStorage {
         var records = eventStream.stream()
                 .filter(event -> shouldIncludeEvent(event, eventTypes, exclusiveStartVersion, inclusiveEndVersion))
                 .toList();
-        return new VersionedRecords(records, latestRecord);
+        return new RetrievedRecords(records, latestRecord);
     }
 
     @Override
-    public @Nonnull TimestampedRecords retrieveEvents(
+    public @Nonnull RetrievedRecords retrieveEvents(
             long exclusiveStartId,
             long inclusiveEndId,
             @Nonnull Collection<String> streamNames,
@@ -51,7 +50,7 @@ public class InMemoryEventStorage implements EventStorage {
         var records = storage.stream()
                 .filter(event -> shouldIncludeEvent(event, exclusiveStartId, inclusiveEndId, streamNames, eventTypes))
                 .toList();
-        return new TimestampedRecords(records, latestRecord);
+        return new RetrievedRecords(records, latestRecord);
     }
 
     private StoredRecord appendToStream(String streamName, long currentVersion, String eventType, String eventContent) {

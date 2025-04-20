@@ -14,4 +14,9 @@ public class ProjectionRecorder extends BaseProjection {
     public void apply(Event event) {
         appliedEvents.add(event);
     }
+
+    @Override
+    public String toString() {
+        return "ProjectionRecorder{" + "appliedEvents=" + appliedEvents + '}';
+    }
 }

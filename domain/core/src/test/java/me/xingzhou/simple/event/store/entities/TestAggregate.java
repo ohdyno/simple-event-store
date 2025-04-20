@@ -22,4 +22,9 @@ public class TestAggregate extends BaseAggregate {
     public StreamName streamName() {
         return new StreamName(id);
     }
+
+    @Override
+    public String toString() {
+        return "TestAggregate{" + "id='" + id + '\'' + ", appliedEvents=" + appliedEvents + '}';
+    }
 }

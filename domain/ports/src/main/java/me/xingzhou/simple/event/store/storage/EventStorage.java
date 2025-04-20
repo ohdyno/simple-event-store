@@ -14,14 +14,14 @@ public interface EventStorage {
      * a version, retrieve all events led to this version.
      */
     @Nonnull
-    VersionedRecords retrieveEvents(
+    RetrievedRecords retrieveEvents(
             @Nonnull String streamName,
             @Nonnull Collection<String> eventTypes,
             long exclusiveStartVersion,
             long inclusiveEndVersion);
 
     @Nonnull
-    TimestampedRecords retrieveEvents(
+    RetrievedRecords retrieveEvents(
             long exclusiveStartId,
             long inclusiveEndId,
             @Nonnull Collection<String> streamNames,

@@ -16,9 +16,8 @@ import java.util.List;
 import java.util.function.Function;
 import javax.sql.DataSource;
 import me.xingzhou.simple.event.store.storage.EventStorage;
+import me.xingzhou.simple.event.store.storage.RetrievedRecords;
 import me.xingzhou.simple.event.store.storage.StoredRecord;
-import me.xingzhou.simple.event.store.storage.TimestampedRecords;
-import me.xingzhou.simple.event.store.storage.VersionedRecords;
 import me.xingzhou.simple.event.store.storage.failures.DuplicateEventStreamFailure;
 import me.xingzhou.simple.event.store.storage.failures.NoSuchStreamFailure;
 import me.xingzhou.simple.event.store.storage.failures.StaleVersionFailure;
@@ -42,7 +41,7 @@ public class PostgresEventStorage implements EventStorage {
 
     @Nonnull
     @Override
-    public VersionedRecords retrieveEvents(
+    public RetrievedRecords retrieveEvents(
             @Nonnull String streamName,
             @Nonnull Collection<String> eventTypes,
             long exclusiveStartVersion,
@@ -55,7 +54,7 @@ public class PostgresEventStorage implements EventStorage {
 
     @Nonnull
     @Override
-    public TimestampedRecords retrieveEvents(
+    public RetrievedRecords retrieveEvents(
             long exclusiveStartId,
             long inclusiveEndId,
             @Nonnull Collection<String> streamNames,
@@ -65,7 +64,7 @@ public class PostgresEventStorage implements EventStorage {
                 var latestRecord = getLatestRecord(connection, this::extractRecord);
                 var records = getRecords(
                         exclusiveStartId, inclusiveEndId, streamNames, eventTypes, connection, this::extractRecords);
-                return new TimestampedRecords(records, latestRecord);
+                return new RetrievedRecords(records, latestRecord);
             }
         });
     }
@@ -234,14 +233,14 @@ public class PostgresEventStorage implements EventStorage {
         return currentVersion == Constants.Versions.UNDEFINED_STREAM;
     }
 
-    private VersionedRecords retrieveStreamEvents(
+    private RetrievedRecords retrieveStreamEvents(
             String streamName, Collection<String> eventTypes, long exclusiveStartVersion, long inclusiveEndVersion) {
         return handleExceptions(() -> {
             try (var connection = dataSource.getConnection()) {
                 var latestRecord = getLatestRecord(connection, streamName);
                 var records =
                         getRecords(streamName, eventTypes, exclusiveStartVersion, inclusiveEndVersion, connection);
-                return new VersionedRecords(records, latestRecord);
+                return new RetrievedRecords(records, latestRecord);
             }
         });
     }

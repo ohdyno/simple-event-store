@@ -4,14 +4,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
+import com.github.valfirst.slf4jtest.LoggingEvent;
+import com.github.valfirst.slf4jtest.TestLogger;
+import com.github.valfirst.slf4jtest.TestLoggerFactory;
 import java.time.Instant;
+import java.util.stream.Collectors;
 import me.xingzhou.simple.event.store.Event;
 import me.xingzhou.simple.event.store.RecordDetails;
 import me.xingzhou.simple.event.store.entities.EventSourceEntity;
 import me.xingzhou.simple.event.store.events.TestEventTypeConverter;
+import org.approvaltests.Approvals;
+import org.approvaltests.core.Options;
+import org.approvaltests.scrubbers.DateScrubber;
 import org.junit.jupiter.api.Test;
 
 public class EntityEventApplierTest {
+
+    private static final TestLogger logger = TestLoggerFactory.getTestLogger(EntityEventApplier.class);
 
     @Test
     void applyEvent() {
@@ -92,19 +101,40 @@ public class EntityEventApplierTest {
                             assertThat(recorder.recordedDetails()).isEqualTo(record.details());
                         },
                         "apply(<? extends Event>, RecordDetails)"));
+
+        var loggedEvents = logger.getAllLoggingEvents().stream()
+                .map(LoggingEvent::toString)
+                .collect(Collectors.joining("\n"));
+        Approvals.verify(
+                loggedEvents, new Options().withScrubber(DateScrubber.getScrubberFor("2025-04-20T04:21:48.191772Z")));
     }
 
-    public static class BaseHierarchyEvent implements Event {}
+    public static class BaseHierarchyEvent implements Event {
+        @Override
+        public String toString() {
+            return "BaseHierarchyEvent{}";
+        }
+    }
 
     public static class BaseHierarchyEventAppliedRecorder extends Recorder {
         public void apply(BaseHierarchyEvent event) {
             eventTypeApplied = true;
+        }
+
+        @Override
+        public String toString() {
+            return "BaseHierarchyEventAppliedRecorder{" + "eventTypeApplied=" + eventTypeApplied + '}';
         }
     }
 
     public static class EventAppliedRecorder extends Recorder {
         public void apply(Event event) {
             eventTypeApplied = true;
+        }
+
+        @Override
+        public String toString() {
+            return "EventAppliedRecorder{}";
         }
     }
 
@@ -116,25 +146,51 @@ public class EntityEventApplierTest {
             recordedDetails = recordDetails;
         }
 
+        @Override
+        public String toString() {
+            return "EventWithRecordDetailsRecorder{" + "recordedDetails=" + recordedDetails + ", eventTypeApplied="
+                    + eventTypeApplied + '}';
+        }
+
         private RecordDetails recordedDetails() {
             return recordedDetails;
         }
     }
 
     public static class HierarchyEventWithInterfaces extends BaseHierarchyEvent
-            implements TestEventInterfaceA, TestEventInterfaceB {}
+            implements TestEventInterfaceA, TestEventInterfaceB {
+        @Override
+        public String toString() {
+            return "HierarchyEventWithInterfaces{}";
+        }
+    }
 
     public static class HierarchyEventWithInterfacesEventAppliedRecorder extends Recorder {
         public void apply(HierarchyEventWithInterfaces event) {
             eventTypeApplied = true;
         }
+
+        @Override
+        public String toString() {
+            return "HierarchyEventWithInterfacesEventAppliedRecorder{" + "eventTypeApplied=" + eventTypeApplied + '}';
+        }
     }
 
-    public static class SubRecorder extends SuperRecorder {}
+    public static class SubRecorder extends SuperRecorder {
+        @Override
+        public String toString() {
+            return "SubRecorder{" + "eventTypeApplied=" + eventTypeApplied + '}';
+        }
+    }
 
     public static class SuperRecorder extends Recorder {
         public void apply(Event event) {
             eventTypeApplied = true;
+        }
+
+        @Override
+        public String toString() {
+            return "SuperRecorder{" + "eventTypeApplied=" + eventTypeApplied + '}';
         }
     }
 
@@ -144,6 +200,11 @@ public class EntityEventApplierTest {
         public void apply(TestEventInterfaceA event) {
             eventTypeApplied = true;
         }
+
+        @Override
+        public String toString() {
+            return "TestEventInterfaceAEventAppliedRecorder{" + "eventTypeApplied=" + eventTypeApplied + '}';
+        }
     }
 
     public interface TestEventInterfaceB extends Event {}
@@ -152,6 +213,11 @@ public class EntityEventApplierTest {
         public void apply(TestEventInterfaceB event) {
             eventTypeApplied = true;
         }
+
+        @Override
+        public String toString() {
+            return "TestEventInterfaceBEventAppliedRecorder{" + "eventTypeApplied=" + eventTypeApplied + '}';
+        }
     }
 
     private abstract static class Recorder implements EventSourceEntity {
@@ -159,6 +225,11 @@ public class EntityEventApplierTest {
 
         public boolean eventTypeApplied() {
             return eventTypeApplied;
+        }
+
+        @Override
+        public String toString() {
+            return "Recorder{" + "eventTypeApplied=" + eventTypeApplied + '}';
         }
     }
 }

@@ -3,7 +3,11 @@ package me.xingzhou.simple.event.store;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.github.valfirst.slf4jtest.LoggingEvent;
+import com.github.valfirst.slf4jtest.TestLogger;
+import com.github.valfirst.slf4jtest.TestLoggerFactory;
 import java.time.Duration;
+import java.util.stream.Collectors;
 import me.xingzhou.simple.event.store.enrich.EntityEventApplier;
 import me.xingzhou.simple.event.store.enrich.EventTypesExtractor;
 import me.xingzhou.simple.event.store.entities.ProjectionRecorder;
@@ -14,11 +18,16 @@ import me.xingzhou.simple.event.store.failures.StaleStateFailure;
 import me.xingzhou.simple.event.store.serializer.adapters.JacksonEventSerializer;
 import me.xingzhou.simple.event.store.storage.EventStorage;
 import me.xingzhou.simple.event.store.storage.adapters.InMemoryEventStorage;
+import org.approvaltests.Approvals;
+import org.approvaltests.core.Options;
+import org.approvaltests.scrubbers.DateScrubber;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import reactor.test.StepVerifier;
 
 class EventStoreTest {
+
+    private static final TestLogger logger = TestLoggerFactory.getTestLogger(EventStore.class);
 
     private EventStore store;
 
@@ -59,6 +68,23 @@ class EventStoreTest {
     }
 
     @Test
+    void logging() {
+        var event = new TestEvent("event-id");
+        var aggregate = new TestAggregate();
+
+        store.save(event, aggregate);
+        store.save(event, aggregate);
+
+        store.enrich(new ProjectionRecorder());
+
+        var loggedEvents = logger.getAllLoggingEvents().stream()
+                .map(LoggingEvent::toString)
+                .collect(Collectors.joining("\n"));
+        Approvals.verify(
+                loggedEvents, new Options().withScrubber(DateScrubber.getScrubberFor("2025-04-20T04:21:48.191772Z")));
+    }
+
+    @Test
     void saveAnEvent() {
         var event = new TestEvent();
         var aggregate = store.save(event, new TestAggregate());
@@ -76,6 +102,7 @@ class EventStoreTest {
 
     @BeforeEach
     void setUp() {
+        logger.clearAll();
         var converter = new TestEventTypeConverter();
         var extractor = new EventTypesExtractor(converter);
         var serializer = new JacksonEventSerializer(converter);

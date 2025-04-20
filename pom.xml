@@ -29,6 +29,16 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>com.approvaltests</groupId>
+        <artifactId>approvaltests</artifactId>
+        <version>24.21.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.valfirst</groupId>
+        <artifactId>slf4j-test</artifactId>
+        <version>3.0.1</version>
+      </dependency>
+      <dependency>
         <groupId>io.cucumber</groupId>
         <artifactId>cucumber-bom</artifactId>
         <version>7.21.1</version>
@@ -65,6 +75,16 @@
   </dependencyManagement>
   <dependencies>
     <dependency>
+      <groupId>com.approvaltests</groupId>
+      <artifactId>approvaltests</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.github.valfirst</groupId>
+      <artifactId>slf4j-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>jakarta.annotation</groupId>
       <artifactId>jakarta.annotation-api</artifactId>
     </dependency>
@@ -77,6 +97,10 @@
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
     </dependency>
   </dependencies>
   <build>
