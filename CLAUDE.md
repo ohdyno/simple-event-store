@@ -20,6 +20,12 @@ This project uses Maven as the build system with Java 21.
 - `./mvnw test -pl domain/core` - Run tests in a specific module
 - BDD feature files are located in `src/test/resources/features/`
 
+### Maven Central Publishing
+
+- `./mvnw clean verify -Ppublish` - Build with sources, javadoc, and GPG signing for publishing
+- `./mvnw clean deploy -Ppublish` - Deploy to Maven Central (requires credentials in `~/.m2/settings.xml`)
+- **Prerequisites**: Create account at https://central.sonatype.com/, generate user token, configure GPG keys
+
 ## Architecture Overview
 
 This is a modular Event Store implementation using hexagonal architecture principles:
