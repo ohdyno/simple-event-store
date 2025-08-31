@@ -75,4 +75,5 @@ The project uses multiple testing approaches:
 - **Git hooks** automatically format code on commit (`githooks/pre-commit`)
 - **SLF4J** for logging throughout the application
 - All formatting rules are defined in the parent `pom.xml`
+- Always use conventional commit patterns when committing the changes in this repo.
 
