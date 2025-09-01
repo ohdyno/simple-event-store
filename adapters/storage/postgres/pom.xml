@@ -9,6 +9,7 @@
   </parent>
   <artifactId>simple-event-store-postgres-storage</artifactId>
   <packaging>jar</packaging>
+  <name>Simple Event Store - PostgreSQL Storage</name>
   <dependencyManagement>
     <dependencies>
       <dependency>

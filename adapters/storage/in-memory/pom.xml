@@ -9,6 +9,7 @@
   </parent>
   <artifactId>simple-event-store-in-memory-storage</artifactId>
   <packaging>jar</packaging>
+  <name>Simple Event Store - In-Memory Storage</name>
   <dependencies>
     <dependency>
       <groupId>me.xingzhou</groupId>

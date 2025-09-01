@@ -9,4 +9,5 @@
   </parent>
   <artifactId>simple-event-store-dependency-contracts</artifactId>
   <packaging>jar</packaging>
+  <name>Simple Event Store - Dependency Contracts</name>
 </project>

@@ -9,6 +9,7 @@
   </parent>
   <artifactId>simple-event-store-map-backed-event-converter</artifactId>
   <packaging>jar</packaging>
+  <name>Simple Event Store - Map-Backed Event Converter</name>
   <dependencies>
     <dependency>
       <groupId>me.xingzhou</groupId>

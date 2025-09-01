@@ -9,6 +9,7 @@
   </parent>
   <artifactId>simple-event-store-core</artifactId>
   <packaging>jar</packaging>
+  <name>Simple Event Store - Core</name>
   <dependencyManagement>
     <dependencies>
       <dependency>
