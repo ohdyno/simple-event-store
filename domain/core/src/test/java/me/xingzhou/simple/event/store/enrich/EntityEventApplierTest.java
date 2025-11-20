@@ -16,6 +16,7 @@ import me.xingzhou.simple.event.store.events.TestEventTypeConverter;
 import org.approvaltests.Approvals;
 import org.approvaltests.core.Options;
 import org.approvaltests.scrubbers.DateScrubber;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class EntityEventApplierTest {
@@ -107,6 +108,11 @@ public class EntityEventApplierTest {
                 .collect(Collectors.joining("\n"));
         Approvals.verify(
                 loggedEvents, new Options().withScrubber(DateScrubber.getScrubberFor("2025-04-20T04:21:48.191772Z")));
+    }
+
+    @BeforeEach
+    void setUp() {
+        logger.clearAll();
     }
 
     public static class BaseHierarchyEvent implements Event {
@@ -225,6 +231,14 @@ public class EntityEventApplierTest {
 
         public boolean eventTypeApplied() {
             return eventTypeApplied;
+        }
+
+        @Override
+        public void handleEnrichedSuccessfully() {}
+
+        @Override
+        public boolean isEnriched() {
+            return false;
         }
 
         @Override

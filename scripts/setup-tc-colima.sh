@@ -77,7 +77,7 @@ print_help() {
 	print "\t" "--jb" "\t\t" "Print semi-colon delimited environment variables that can be copy/pasted into IntelliJ"
 	print "\t\t\t" "Example: $script_name --jb | pbcopy"
 	print ""
-	print "\t" "--js" "\t\t" "Print an export command for the environment variables that can be 'eval()' to change current shell"
+	print "\t" "--sh" "\t\t" "Print an export command for the environment variables that can be 'eval()' to change current shell"
 	print "\t\t\t" "Example: eval \$($script_name --sh)"
 	print ""
 	print "\t" "-h" "\t\t" "Print this message"

@@ -5,6 +5,6 @@ import me.xingzhou.simple.event.store.event.converter.MapBackedEventTypeConverte
 
 public class TestEventTypeConverter extends MapBackedEventTypeConverter {
     public TestEventTypeConverter() {
-        super(Map.of("TestEvent", TestEvent.class));
+        super(Map.of("TestEvent", TestEvent.class, "AnotherEvent", AnotherEvent.class));
     }
 }

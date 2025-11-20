@@ -97,8 +97,9 @@ public class EventStore {
                             aggregate.version().value(),
                             serialized.eventType(),
                             serialized.eventJson());
-            aggregate.setVersion(new Version(record.version()));
             dependencies.applier().apply(EventRecord.extract(record, event), aggregate);
+            aggregate.setVersion(new Version(record.version()));
+            aggregate.handleEnrichedSuccessfully();
             publish(record);
             return aggregate;
         } catch (DuplicateEventStreamFailure | StaleVersionFailure failure) {
@@ -135,13 +136,17 @@ public class EventStore {
                 log.info("enriching {}", entity);
                 var eventTypes = dependencies.extractor().extract(entity);
                 var records = recordsRetriever.apply(eventTypes);
-                log.info("retrieved {} events", records.records().size());
-                records.records().stream()
-                        .map(record -> EventRecord.extract(
-                                record,
-                                dependencies.serializer().deserialize(record.eventType(), record.eventContent())))
-                        .forEach(record -> dependencies.applier().apply(record, entity));
-                log.info("applied {} events to {}", records.records().size(), entity);
+                int recordsSize = records.records().size();
+                log.info("retrieved {} events", recordsSize);
+                if (recordsSize > 0) {
+                    records.records().stream()
+                            .map(record -> EventRecord.extract(
+                                    record,
+                                    dependencies.serializer().deserialize(record.eventType(), record.eventContent())))
+                            .forEach(record -> dependencies.applier().apply(record, entity));
+                    log.info("applied {} events to {}", recordsSize, entity);
+                    entity.handleEnrichedSuccessfully();
+                }
                 onSuccess.accept(records);
                 return entity;
             }
