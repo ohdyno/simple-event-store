@@ -25,10 +25,10 @@
 # Define environment variables using values extracted from Colima
 define_vars() {
 	local colima_status
-	colima_status=$(colima status -j)
+	colima_status=$(colima status --json)
 
 	local address
-	address=$(jq -r '.ip_address' <<<"$colima_status")
+	address=$(jq --raw-output '.ip_address' <<<"$colima_status")
 
 	if [[ -z "${address}" ]]; then
 		print "Missing Address. Make sure colima is started with --network-address"
@@ -36,7 +36,7 @@ define_vars() {
 	fi
 
 	local docker_host
-	docker_host=$(jq -r '.docker_socket' <<<"$colima_status")
+	docker_host=$(jq --raw-output '.docker_socket' <<<"$colima_status")
 
 	local docker_socket="/var/run/docker.sock"
 
@@ -44,7 +44,7 @@ define_vars() {
 }
 
 print_delimited() {
-	read -r -A env_vars
+	read -r -A env_vars # read STDIN into an array "env_vars"
 	local IFS=";"
 	print -n "${env_vars[*]}" # print without newline at the end; otherwise, cannot directly copy/paste into IntelliJ due to parsing error
 }
@@ -112,7 +112,7 @@ run_script() {
 	fi
 
 	if [[ true == "${flags[start]}" ]]; then
-		start_colima >"$(tty)"
+		start_colima >"$(tty)" # redirect to current terminal without polluting STDOUT so it can be piped
 	fi
 
 	if [[ true == "${flags[jetbrains]}" ]]; then
