@@ -10,4 +10,25 @@
   <artifactId>simple-event-store-dependency-contracts</artifactId>
   <packaging>jar</packaging>
   <name>Simple Event Store - Dependency Contracts</name>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <tags>
+            <tag>
+              <name>apiNote</name>
+              <placement>a</placement>
+              <head>API Note:</head>
+            </tag>
+            <tag>
+              <name>implSpec</name>
+              <placement>a</placement>
+              <head>Implementation Spec:</head>
+            </tag>
+          </tags>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
