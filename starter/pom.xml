@@ -16,6 +16,11 @@
     </dependency>
     <dependency>
       <groupId>me.xingzhou</groupId>
+      <artifactId>simple-event-store-dependency-contracts</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>me.xingzhou</groupId>
       <artifactId>simple-event-store-in-memory-storage</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -27,6 +32,16 @@
     <dependency>
       <groupId>me.xingzhou</groupId>
       <artifactId>simple-event-store-map-backed-event-converter</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>me.xingzhou</groupId>
+      <artifactId>simple-event-store-postgres-storage</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>me.xingzhou</groupId>
+      <artifactId>simple-event-store-service-loader-event-converter</artifactId>
       <version>${project.version}</version>
     </dependency>
   </dependencies>
