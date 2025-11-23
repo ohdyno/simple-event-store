@@ -3,6 +3,7 @@ package me.xingzhou.simple.event.store.storage.adapters;
 import jakarta.annotation.Nonnull;
 import java.time.Instant;
 import java.util.*;
+import java.util.function.Supplier;
 import me.xingzhou.simple.event.store.storage.EventStorage;
 import me.xingzhou.simple.event.store.storage.EventStorage.Constants.Ids;
 import me.xingzhou.simple.event.store.storage.EventStorage.Constants.Versions;
@@ -16,6 +17,16 @@ public class InMemoryEventStorage implements EventStorage {
     private final List<StoredRecord> storage = new ArrayList<>();
 
     private final Set<String> streamNamesIndex = new HashSet<>();
+
+    private final Supplier<Instant> now;
+
+    public InMemoryEventStorage() {
+        this(Instant::now);
+    }
+
+    public InMemoryEventStorage(Supplier<Instant> now) {
+        this.now = now;
+    }
 
     @Override
     public @Nonnull StoredRecord appendEvent(
@@ -55,8 +66,8 @@ public class InMemoryEventStorage implements EventStorage {
 
     private StoredRecord appendToStream(String streamName, long currentVersion, String eventType, String eventContent) {
         if (getCurrentVersion(streamName) == currentVersion) {
-            var record = new StoredRecord(
-                    createId(), streamName, eventType, eventContent, currentVersion + 1, Instant.now());
+            var record =
+                    new StoredRecord(createId(), streamName, eventType, eventContent, currentVersion + 1, now.get());
             save(streamName, record);
             return record;
         }
@@ -71,8 +82,7 @@ public class InMemoryEventStorage implements EventStorage {
         if (streamNamesIndex.contains(streamName)) {
             throw new DuplicateEventStreamFailure();
         }
-        var record =
-                new StoredRecord(createId(), streamName, eventType, eventContent, Versions.NEW_STREAM, Instant.now());
+        var record = new StoredRecord(createId(), streamName, eventType, eventContent, Versions.NEW_STREAM, now.get());
         save(streamName, record);
         return record;
     }

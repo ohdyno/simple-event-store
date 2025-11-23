@@ -84,7 +84,6 @@ public interface EventStorage {
          * @implSpec Since the other methods rely on the value of version, all implementations should use these
          *     constants when appropriate.
          */
-        /** Constants for stream versions. */
         interface Versions {
             /** Minimum version value and constant for undefined streams. */
             long MIN = -1, UNDEFINED_STREAM = MIN;
