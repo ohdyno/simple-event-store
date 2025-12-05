@@ -1,6 +1,7 @@
 package me.xingzhou.simple.event.store;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.github.valfirst.slf4jtest.LoggingEvent;
@@ -19,11 +20,11 @@ import me.xingzhou.simple.event.store.events.AnotherEvent;
 import me.xingzhou.simple.event.store.events.TestEvent;
 import me.xingzhou.simple.event.store.events.TestEventTypeConverter;
 import me.xingzhou.simple.event.store.failures.StaleStateFailure;
+import me.xingzhou.simple.event.store.failures.StreamNotFoundFailure;
 import me.xingzhou.simple.event.store.ids.StreamName;
 import me.xingzhou.simple.event.store.serializer.adapters.JacksonEventSerializer;
 import me.xingzhou.simple.event.store.storage.EventStorage;
 import me.xingzhou.simple.event.store.storage.adapters.InMemoryEventStorage;
-import me.xingzhou.simple.event.store.storage.failures.NoSuchStreamFailure;
 import org.approvaltests.Approvals;
 import org.approvaltests.core.Options;
 import org.approvaltests.scrubbers.DateScrubber;
@@ -107,7 +108,7 @@ class EventStoreTest {
 
     @Test
     void enrichAnAggregateFromANonExistentStream() {
-        assertThrows(NoSuchStreamFailure.class, () -> store.enrich(new TestAggregate()));
+        assertThrows(StreamNotFoundFailure.class, () -> store.enrich(new TestAggregate()));
     }
 
     @Test

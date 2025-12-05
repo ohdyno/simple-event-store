@@ -8,6 +8,7 @@ import me.xingzhou.simple.event.store.entities.Aggregate;
 import me.xingzhou.simple.event.store.entities.EventSourceEntity;
 import me.xingzhou.simple.event.store.entities.Projection;
 import me.xingzhou.simple.event.store.failures.StaleStateFailure;
+import me.xingzhou.simple.event.store.failures.StreamNotFoundFailure;
 import me.xingzhou.simple.event.store.ids.RecordId;
 import me.xingzhou.simple.event.store.ids.StreamName;
 import me.xingzhou.simple.event.store.ids.Version;
@@ -15,6 +16,7 @@ import me.xingzhou.simple.event.store.storage.EventStorage;
 import me.xingzhou.simple.event.store.storage.RetrievedRecords;
 import me.xingzhou.simple.event.store.storage.StoredRecord;
 import me.xingzhou.simple.event.store.storage.failures.DuplicateEventStreamFailure;
+import me.xingzhou.simple.event.store.storage.failures.NoSuchStreamFailure;
 import me.xingzhou.simple.event.store.storage.failures.StaleVersionFailure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,17 +67,21 @@ public class EventStore {
     }
 
     public <T extends Aggregate> T enrich(T aggregate, EventStoreDependencies dependencies) {
-        return EntityEnricher.enrich(aggregate)
-                .with(eventTypes -> dependencies
-                        .storage()
-                        .retrieveEvents(
-                                aggregate.streamName().value(),
-                                eventTypes,
-                                aggregate.version().value(),
-                                EventStorage.Constants.Versions.MAX))
-                .onSuccess(records ->
-                        aggregate.setVersion(new Version(records.latestRecord().version())))
-                .perform(dependencies);
+        try {
+            return EntityEnricher.enrich(aggregate)
+                    .with(eventTypes -> dependencies
+                            .storage()
+                            .retrieveEvents(
+                                    aggregate.streamName().value(),
+                                    eventTypes,
+                                    aggregate.version().value(),
+                                    EventStorage.Constants.Versions.MAX))
+                    .onSuccess(records -> aggregate.setVersion(
+                            new Version(records.latestRecord().version())))
+                    .perform(dependencies);
+        } catch (NoSuchStreamFailure e) {
+            throw new StreamNotFoundFailure(e);
+        }
     }
 
     public Flux<StoredRecord> publisher() {
@@ -112,44 +118,47 @@ public class EventStore {
         sinks.tryEmitNext(record);
     }
 
-    private record EntityEnricher<T extends EventSourceEntity>(T entity) {
+    private static final class EntityEnricher<T extends EventSourceEntity> {
         private static <T extends EventSourceEntity> EntityEnricher<T> enrich(T entity) {
             return new EntityEnricher<>(entity);
         }
 
-        private WithRecordsRetriever<T> with(Function<List<String>, RetrievedRecords> recordsRetriever) {
-            return new WithRecordsRetriever<>(entity, recordsRetriever);
+        private final T entity;
+        private Function<List<String>, RetrievedRecords> recordsRetriever;
+
+        private Consumer<RetrievedRecords> onSuccessHandler;
+
+        private EntityEnricher(T entity) {
+            this.entity = entity;
         }
 
-        private record WithRecordsRetriever<T extends EventSourceEntity>(
-                T entity, Function<List<String>, RetrievedRecords> recordsRetriever) {
-            private OnSuccessfulApplication<T> onSuccess(Consumer<RetrievedRecords> onSuccess) {
-                return new OnSuccessfulApplication<>(entity, recordsRetriever, onSuccess);
-            }
+        private EntityEnricher<T> onSuccess(Consumer<RetrievedRecords> onSuccess) {
+            this.onSuccessHandler = onSuccess;
+            return this;
         }
 
-        private record OnSuccessfulApplication<T extends EventSourceEntity>(
-                T entity,
-                Function<List<String>, RetrievedRecords> recordsRetriever,
-                Consumer<RetrievedRecords> onSuccess) {
-            private T perform(EventStoreDependencies dependencies) {
-                log.info("enriching {}", entity);
-                var eventTypes = dependencies.extractor().extract(entity);
-                var records = recordsRetriever.apply(eventTypes);
-                int recordsSize = records.records().size();
-                log.info("retrieved {} events", recordsSize);
-                if (recordsSize > 0) {
-                    records.records().stream()
-                            .map(record -> EventRecord.extract(
-                                    record,
-                                    dependencies.serializer().deserialize(record.eventType(), record.eventContent())))
-                            .forEach(record -> dependencies.applier().apply(record, entity));
-                    log.info("applied {} events to {}", recordsSize, entity);
-                    entity.handleEnrichedSuccessfully();
-                }
-                onSuccess.accept(records);
-                return entity;
+        private T perform(EventStoreDependencies dependencies) {
+            log.info("enriching {}", entity);
+            var eventTypes = dependencies.extractor().extract(entity);
+            var records = recordsRetriever.apply(eventTypes);
+            int recordsSize = records.records().size();
+            log.info("retrieved {} events", recordsSize);
+            if (recordsSize > 0) {
+                records.records().stream()
+                        .map(record -> EventRecord.extract(
+                                record,
+                                dependencies.serializer().deserialize(record.eventType(), record.eventContent())))
+                        .forEach(record -> dependencies.applier().apply(record, entity));
+                log.info("applied {} events to {}", recordsSize, entity);
+                entity.handleEnrichedSuccessfully();
             }
+            onSuccessHandler.accept(records);
+            return entity;
+        }
+
+        private EntityEnricher<T> with(Function<List<String>, RetrievedRecords> recordsRetriever) {
+            this.recordsRetriever = recordsRetriever;
+            return this;
         }
     }
 }

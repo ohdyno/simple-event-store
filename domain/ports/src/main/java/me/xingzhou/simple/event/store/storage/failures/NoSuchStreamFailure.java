@@ -2,6 +2,8 @@ package me.xingzhou.simple.event.store.storage.failures;
 
 /** Exception thrown when attempting to access a stream that does not exist. */
 public class NoSuchStreamFailure extends RuntimeException {
+    private final String streamName;
+
     /**
      * Constructs a new NoSuchStreamFailure with the specified stream name.
      *
@@ -9,5 +11,10 @@ public class NoSuchStreamFailure extends RuntimeException {
      */
     public NoSuchStreamFailure(String streamName) {
         super("Stream '" + streamName + "' does not exist");
+        this.streamName = streamName;
+    }
+
+    public String streamName() {
+        return streamName;
     }
 }
