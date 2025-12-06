@@ -13,6 +13,7 @@ This project uses Maven as the build system with Java 21.
 - `./mvnw spotless:apply` - Format code according to project conventions (Palantir Java format, Eclipse sorting, etc.)
 - `./mvnw spotless:check` - Check code formatting without making changes
 - `./mvnw clean verify` - Full build including compilation, tests, and code formatting checks
+- `./mvnw versions:use-next-releases` - Update dependencies to the latest versions
 
 ### Running Individual Tests
 

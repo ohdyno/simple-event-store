@@ -15,19 +15,19 @@
       <dependency>
         <groupId>org.postgresql</groupId>
         <artifactId>postgresql</artifactId>
-        <version>42.7.4</version>
+        <version>42.7.5</version>
       </dependency>
       <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
-        <version>3.4.4</version>
+        <version>3.4.5</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>org.testcontainers</groupId>
         <artifactId>testcontainers-bom</artifactId>
-        <version>1.20.6</version>
+        <version>1.21.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
