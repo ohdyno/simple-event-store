@@ -11,7 +11,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 import me.xingzhou.simple.event.store.enrich.EntityEventApplier;
-import me.xingzhou.simple.event.store.enrich.EventTypesExtractor;
+import me.xingzhou.simple.event.store.enrich.EventNamesExtractor;
 import me.xingzhou.simple.event.store.entities.BaseAggregate;
 import me.xingzhou.simple.event.store.entities.BaseProjection;
 import me.xingzhou.simple.event.store.entities.ProjectionRecorder;
@@ -195,10 +195,10 @@ class EventStoreTest {
     void setUp() {
         logger.clearAll();
         var converter = new TestEventTypeConverter();
-        var extractor = new EventTypesExtractor(converter);
+        var extractor = new EventNamesExtractor(converter);
         var serializer = new JacksonEventSerializer(converter);
         var storage = new InMemoryEventStorage();
-        var applier = new EntityEventApplier(extractor);
+        var applier = new EntityEventApplier();
         this.store = EventStore.build(new EventStoreDependencies(storage, serializer, extractor, applier));
         StepVerifier.setDefaultTimeout(Duration.ofMillis(100));
     }

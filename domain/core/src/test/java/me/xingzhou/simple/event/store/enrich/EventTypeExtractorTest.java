@@ -1,21 +1,19 @@
 package me.xingzhou.simple.event.store.enrich;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
-
 import me.xingzhou.simple.event.store.Event;
 import me.xingzhou.simple.event.store.RecordDetails;
 import me.xingzhou.simple.event.store.entities.EventSourceEntity;
 import me.xingzhou.simple.event.store.events.TestEvent;
-import me.xingzhou.simple.event.store.events.TestEventTypeConverter;
 import org.junit.jupiter.api.Test;
 
-class EventTypesExtractorTest {
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
-    private final EventTypesExtractor eventTypesExtractor = new EventTypesExtractor(new TestEventTypeConverter());
+class EventTypeExtractorTest {
 
     @Test
     void extract() {
+        EventTypeExtractor subject = new EventTypeExtractor();
         assertAll(
                 "Extract all relevant events from apply methods",
                 () -> {
@@ -23,7 +21,7 @@ class EventTypesExtractorTest {
                         public void apply(Event event) {
                         }
                     };
-                    assertThat(eventTypesExtractor.extractTypes(entity)).containsOnly(Event.class);
+                    assertThat(subject.extractTypes(entity)).containsOnly(Event.class);
                 },
                 () -> {
                     var entity = new EventSourceEntityForEventTypeExtraction() {
@@ -33,7 +31,7 @@ class EventTypesExtractorTest {
                         public void apply(TestEvent event) {
                         }
                     };
-                    assertThat(eventTypesExtractor.extractTypes(entity)).containsExactly(Event.class, TestEvent.class);
+                    assertThat(subject.extractTypes(entity)).containsExactly(Event.class, TestEvent.class);
                 },
                 () -> {
                     var entity = new EventSourceEntityForEventTypeExtraction() {
@@ -43,7 +41,7 @@ class EventTypesExtractorTest {
                         public void apply(TestEvent event) {
                         }
                     };
-                    assertThat(eventTypesExtractor.extractTypes(entity)).containsExactly(Event.class, TestEvent.class);
+                    assertThat(subject.extractTypes(entity)).containsExactly(Event.class, TestEvent.class);
                 },
                 () -> {
                     var entity = new EventSourceEntityForEventTypeExtraction() {
@@ -63,7 +61,7 @@ class EventTypesExtractorTest {
                           and break spotless.
                          */
                     };
-                    assertThat(eventTypesExtractor.extractTypes(entity)).containsExactly(TestEvent.class, Event.class);
+                    assertThat(subject.extractTypes(entity)).containsExactly(TestEvent.class, Event.class);
                 },
                 () -> {
                     var entity = new EventSourceEntityForEventTypeExtraction() {
@@ -73,12 +71,12 @@ class EventTypesExtractorTest {
                         public void apply(TestEvent event, RecordDetails details) {
                         }
                     };
-                    assertThat(eventTypesExtractor.extractTypes(entity)).containsExactly(TestEvent.class);
+                    assertThat(subject.extractTypes(entity)).containsExactly(TestEvent.class);
                 },
                 () -> {
                     var entity = new EventSourceEntityForEventTypeExtraction() {
                     };
-                    assertThat(eventTypesExtractor.extractTypes(entity)).isEmpty();
+                    assertThat(subject.extractTypes(entity)).isEmpty();
                 });
     }
 

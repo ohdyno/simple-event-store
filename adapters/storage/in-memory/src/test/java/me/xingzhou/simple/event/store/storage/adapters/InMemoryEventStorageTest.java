@@ -1,9 +1,9 @@
 package me.xingzhou.simple.event.store.storage.adapters;
 
 import me.xingzhou.simple.event.store.storage.EventStorage;
-import me.xingzhou.simple.event.store.storage.EventStorageTests;
+import me.xingzhou.simple.event.store.storage.EventStorageTest;
 
-public class InMemoryEventStorageTests extends EventStorageTests {
+public class InMemoryEventStorageTest extends EventStorageTest {
     @Override
     protected EventStorage createStorage() {
         return new InMemoryEventStorage();

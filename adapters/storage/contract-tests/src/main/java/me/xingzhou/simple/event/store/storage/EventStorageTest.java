@@ -15,7 +15,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-public abstract class EventStorageTests {
+public abstract class EventStorageTest {
     private static List<StoredRecord> flatten(HashMap<String, List<StoredRecord>> storedRecords) {
         return storedRecords.values().stream().flatMap(List::stream).toList();
     }

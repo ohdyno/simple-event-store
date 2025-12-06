@@ -57,11 +57,7 @@ public class EntityEventApplier {
         }
     }
 
-    private final EventTypesExtractor eventTypesExtractor;
-
-    public EntityEventApplier(EventTypesExtractor eventTypesExtractor) {
-        this.eventTypesExtractor = eventTypesExtractor;
-    }
+    private final EventTypeExtractor eventTypeExtractor = new EventTypeExtractor();
 
     public <T extends EventSourceEntity> void apply(EventRecord record, T entity) {
         log.debug("apply {} to entity {}", record, entity);
@@ -79,7 +75,7 @@ public class EntityEventApplier {
                 "attempting to find the first parameter of the first {}(<? extends {}>) method",
                 APPLY_METHOD_NAME,
                 event);
-        return eventTypesExtractor.extractTypes(entity).stream()
+        return eventTypeExtractor.extractTypes(entity).stream()
                 .filter(klass -> klass.isAssignableFrom(event))
                 .findFirst()
                 .or(() -> {

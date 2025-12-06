@@ -4,7 +4,7 @@ import static me.xingzhou.simple.event.store.storage.adapters.internal.CheckedEx
 
 import javax.sql.DataSource;
 import me.xingzhou.simple.event.store.storage.EventStorage;
-import me.xingzhou.simple.event.store.storage.EventStorageTests;
+import me.xingzhou.simple.event.store.storage.EventStorageTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
@@ -16,7 +16,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @SpringBootTest(
         properties = {"spring.sql.init.mode=always", "spring.sql.init.schema-locations=classpath:db/postgres/schema.sql"
         })
-public class PostgresEventStorageTests extends EventStorageTests {
+public class PostgresEventStorageTest extends EventStorageTest {
     @Container
     @ServiceConnection
     private static final PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:17-alpine");

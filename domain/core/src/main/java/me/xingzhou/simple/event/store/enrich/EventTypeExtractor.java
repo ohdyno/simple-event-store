@@ -3,26 +3,11 @@ package me.xingzhou.simple.event.store.enrich;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import me.xingzhou.simple.event.store.Event;
 import me.xingzhou.simple.event.store.entities.EventSourceEntity;
-import me.xingzhou.simple.event.store.event.converter.EventTypeConverter;
 
-public class EventTypesExtractor {
-    private final EventTypeConverter converter;
-
-    public EventTypesExtractor(EventTypeConverter converter) {
-        this.converter = converter;
-    }
-
-    public List<String> extract(EventSourceEntity entity) {
-        return extractTypes(entity).stream()
-                .filter(Predicate.not(klass -> klass.equals(Event.class)))
-                .map(converter::convert)
-                .toList();
-    }
-
+public class EventTypeExtractor {
     public List<Class<?>> extractTypes(EventSourceEntity entity) {
         return Arrays.stream(entity.getClass().getMethods())
                 .filter(this::isApplyMethod)

@@ -1,20 +1,16 @@
 package me.xingzhou.simple.event.store.enrich;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import com.github.valfirst.slf4jtest.LoggingEvent;
 import com.github.valfirst.slf4jtest.TestLogger;
 import com.github.valfirst.slf4jtest.TestLoggerFactory;
 import java.time.Instant;
-import java.util.Map;
 import java.util.stream.Collectors;
 import me.xingzhou.simple.event.store.Event;
 import me.xingzhou.simple.event.store.RecordDetails;
 import me.xingzhou.simple.event.store.entities.EventSourceEntity;
-import me.xingzhou.simple.event.store.event.converter.MapBackedEventTypeConverter;
-import me.xingzhou.simple.event.store.events.TestEventTypeConverter;
 import org.approvaltests.Approvals;
 import org.approvaltests.core.Options;
 import org.approvaltests.reporters.ClipboardReporter;
@@ -22,6 +18,7 @@ import org.approvaltests.reporters.DiffReporter;
 import org.approvaltests.reporters.UseReporter;
 import org.approvaltests.scrubbers.DateScrubber;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @UseReporter({DiffReporter.class, ClipboardReporter.class})
@@ -29,7 +26,7 @@ public class EntityEventApplierTest {
 
     private static final TestLogger logger = TestLoggerFactory.getTestLogger(EntityEventApplier.class);
 
-    private static String stringifyAllLogMessages(TestLogger logger) {
+    private static String loggedEvents() {
         return logger.getAllLoggingEvents().stream()
                 .map(LoggingEvent::getFormattedMessage)
                 .collect(Collectors.joining("\n"));
@@ -39,98 +36,167 @@ public class EntityEventApplierTest {
             new Options().withScrubber(DateScrubber.getScrubberFor("2025-04-20T04:21:48.191772Z"));
 
     @Test
+    @DisplayName("apply(BaseHierarchyEvent)")
+    void applyBaseHierarchyEvent() {
+        var event = new HierarchyEventWithInterfaces();
+        var record = new EventRecord(event, new RecordDetails("stream-name", 0, 0, Instant.now()));
+        var subject = new EntityEventApplier();
+        var recorder = new Recorder() {
+            public void apply(BaseHierarchyEvent event) {
+                eventTypeApplied = true;
+            }
+
+            @Override
+            public String toString() {
+                return "%s{eventTypeApplied=%s}".formatted("BaseHierarchyEventAppliedRecorder", eventTypeApplied);
+            }
+        };
+
+        subject.apply(record, recorder);
+
+        assertThat(recorder.eventTypeApplied()).isTrue();
+
+        Approvals.verify(loggedEvents(), approvalOptions);
+    }
+
+    @Test
+    @DisplayName("apply(Event)")
     void applyEvent() {
         var event = new HierarchyEventWithInterfaces();
         var record = new EventRecord(event, new RecordDetails("stream-name", 0, 0, Instant.now()));
-        var subject = new EntityEventApplier(new EventTypesExtractor(new TestEventTypeConverter()));
+        var subject = new EntityEventApplier();
 
-        assertAll(
-                "apply hierarchical event to different recorders",
-                () -> assertDoesNotThrow(
-                        () -> {
-                            var recorder = new EventAppliedRecorder();
-                            subject.apply(record, recorder);
-                            var eventTypeName = Event.class.getSimpleName();
-                            assertThat(recorder.eventTypeApplied())
-                                    .as(eventTypeName)
-                                    .isTrue();
-                        },
-                        "apply(Event)"),
-                () -> assertDoesNotThrow(
-                        () -> {
-                            var recorder = new BaseHierarchyEventAppliedRecorder();
-                            subject.apply(record, recorder);
-                            var eventTypeName = BaseHierarchyEvent.class.getSimpleName();
-                            assertThat(recorder.eventTypeApplied())
-                                    .as(eventTypeName)
-                                    .isTrue();
-                        },
-                        "apply(BaseHierarchyEvent)"),
-                () -> assertDoesNotThrow(
-                        () -> {
-                            var recorder = new TestEventInterfaceAEventAppliedRecorder();
-                            subject.apply(record, recorder);
-                            var eventTypeName = TestEventInterfaceA.class.getSimpleName();
-                            assertThat(recorder.eventTypeApplied())
-                                    .as(eventTypeName)
-                                    .isTrue();
-                        },
-                        "apply(TestEventInterfaceA)"),
-                () -> assertDoesNotThrow(
-                        () -> {
-                            var recorder = new TestEventInterfaceBEventAppliedRecorder();
-                            subject.apply(record, recorder);
-                            var eventTypeName = TestEventInterfaceB.class.getSimpleName();
-                            assertThat(recorder.eventTypeApplied())
-                                    .as(eventTypeName)
-                                    .isTrue();
-                        },
-                        "apply(TestEventInterfaceB)"),
-                () -> assertDoesNotThrow(
-                        () -> {
-                            var recorder = new HierarchyEventWithInterfacesEventAppliedRecorder();
-                            subject.apply(record, recorder);
-                            var eventTypeName = HierarchyEventWithInterfaces.class.getSimpleName();
-                            assertThat(recorder.eventTypeApplied())
-                                    .as(eventTypeName)
-                                    .isTrue();
-                        },
-                        "apply(HierarchyEventWithInterfaces)"),
-                () -> assertDoesNotThrow(
-                        () -> {
-                            var recorder = new SubRecorder();
-                            subject.apply(record, recorder);
-                            var eventTypeName = Event.class.getSimpleName();
-                            assertThat(recorder.eventTypeApplied())
-                                    .as(eventTypeName)
-                                    .isTrue();
-                        },
-                        "apply(Event) from super class"),
-                () -> assertDoesNotThrow(
-                        () -> {
-                            var recorder = new EventWithRecordDetailsRecorder();
-                            subject.apply(record, recorder);
-                            var eventTypeName = Event.class.getSimpleName();
-                            assertThat(recorder.eventTypeApplied())
-                                    .as(eventTypeName)
-                                    .isTrue();
-                            assertThat(recorder.recordedDetails()).isEqualTo(record.details());
-                        },
-                        "apply(<? extends Event>, RecordDetails)"));
+        var recorder = new Recorder() {
+            public void apply(Event event) {
+                eventTypeApplied = true;
+            }
 
-        var loggedEvents = stringifyAllLogMessages(logger);
-        Approvals.verify(loggedEvents, approvalOptions);
+            @Override
+            public String toString() {
+                return "%s{eventTypeApplied=%s}".formatted("EventAppliedRecorder", eventTypeApplied);
+            }
+        };
+
+        subject.apply(record, recorder);
+
+        assertThat(recorder.eventTypeApplied()).isTrue();
+
+        Approvals.verify(loggedEvents(), approvalOptions);
     }
 
     @Test
     void applyEventToAnEntityThatDoesNotHaveTheAssociatedApplyMethod() {
         var event = new BaseHierarchyEvent();
-        var recorder = new Recorder() {};
-        var subject = new EntityEventApplier(
-                new EventTypesExtractor(new MapBackedEventTypeConverter(Map.of("TestEvent", event.getClass()))));
+        var recorder = new Recorder() {
+            @Override
+            public String toString() {
+                return "%s{eventTypeApplied=%s}".formatted("Anonymous Recorder", eventTypeApplied);
+            }
+        };
+        var subject = new EntityEventApplier();
         assertDoesNotThrow(() -> subject.apply(new EventRecord(event, new RecordDetails("", 0, 0, null)), recorder));
-        var loggedEvents = stringifyAllLogMessages(logger);
-        Approvals.verify(loggedEvents, approvalOptions);
+    }
+
+    @Test
+    @DisplayName("apply(Event) from super class")
+    void applyFromSuperClass() {
+        var event = new HierarchyEventWithInterfaces();
+        var record = new EventRecord(event, new RecordDetails("stream-name", 0, 0, Instant.now()));
+        var subject = new EntityEventApplier();
+        var recorder = new SubRecorder();
+
+        subject.apply(record, recorder);
+
+        assertThat(recorder.eventTypeApplied()).isTrue();
+        Approvals.verify(loggedEvents(), approvalOptions);
+    }
+
+    @Test
+    @DisplayName("apply(HierarchyEventWithInterfaces)")
+    void applyHierarchyEventWithInterfaces() {
+        var event = new HierarchyEventWithInterfaces();
+        var record = new EventRecord(event, new RecordDetails("stream-name", 0, 0, Instant.now()));
+        var subject = new EntityEventApplier();
+        var recorder = new Recorder() {
+            public void apply(HierarchyEventWithInterfaces event) {
+                eventTypeApplied = true;
+            }
+
+            @Override
+            public String toString() {
+                return "%s{eventTypeApplied=%s}"
+                        .formatted("HierarchyEventWithInterfacesEventAppliedRecorder", eventTypeApplied);
+            }
+        };
+
+        subject.apply(record, recorder);
+
+        assertThat(recorder.eventTypeApplied()).isTrue();
+
+        Approvals.verify(loggedEvents(), approvalOptions);
+    }
+
+    @Test
+    @DisplayName("apply(TestEventInterfaceA)")
+    void applyTestEventInterfaceA() {
+        var event = new HierarchyEventWithInterfaces();
+        var record = new EventRecord(event, new RecordDetails("stream-name", 0, 0, Instant.now()));
+        var subject = new EntityEventApplier();
+        var recorder = new Recorder() {
+            public void apply(TestEventInterfaceA event) {
+                eventTypeApplied = true;
+            }
+
+            @Override
+            public String toString() {
+                return "%s{eventTypeApplied=%s}".formatted("TestEventInterfaceAEventAppliedRecorder", eventTypeApplied);
+            }
+        };
+
+        subject.apply(record, recorder);
+
+        assertThat(recorder.eventTypeApplied()).isTrue();
+
+        Approvals.verify(loggedEvents(), approvalOptions);
+    }
+
+    @Test
+    @DisplayName("apply(TestEventInterfaceB)")
+    void applyTestEventInterfaceB() {
+        var event = new HierarchyEventWithInterfaces();
+        var record = new EventRecord(event, new RecordDetails("stream-name", 0, 0, Instant.now()));
+        var subject = new EntityEventApplier();
+        var recorder = new Recorder() {
+            public void apply(TestEventInterfaceB event) {
+                eventTypeApplied = true;
+            }
+
+            @Override
+            public String toString() {
+                return "%s{eventTypeApplied=%s}".formatted("TestEventInterfaceBEventAppliedRecorder", eventTypeApplied);
+            }
+        };
+
+        subject.apply(record, recorder);
+
+        assertThat(recorder.eventTypeApplied()).isTrue();
+
+        Approvals.verify(loggedEvents(), approvalOptions);
+    }
+
+    @Test
+    @DisplayName("apply(<? extends Event>, RecordDetails)")
+    void applyWithRecordDetails() {
+        var event = new HierarchyEventWithInterfaces();
+        var record = new EventRecord(event, new RecordDetails("stream-name", 0, 0, Instant.now()));
+        var subject = new EntityEventApplier();
+        var recorder = new EventWithRecordDetailsRecorder();
+
+        subject.apply(record, recorder);
+
+        assertThat(recorder.eventTypeApplied()).isTrue();
+        assertThat(recorder.recordedDetails()).isEqualTo(record.details());
+        Approvals.verify(loggedEvents(), approvalOptions);
     }
 
     @BeforeEach
@@ -142,28 +208,6 @@ public class EntityEventApplierTest {
         @Override
         public String toString() {
             return "BaseHierarchyEvent{}";
-        }
-    }
-
-    public static class BaseHierarchyEventAppliedRecorder extends Recorder {
-        public void apply(BaseHierarchyEvent event) {
-            eventTypeApplied = true;
-        }
-
-        @Override
-        public String toString() {
-            return "BaseHierarchyEventAppliedRecorder{" + "eventTypeApplied=" + eventTypeApplied + '}';
-        }
-    }
-
-    public static class EventAppliedRecorder extends Recorder {
-        public void apply(Event event) {
-            eventTypeApplied = true;
-        }
-
-        @Override
-        public String toString() {
-            return "EventAppliedRecorder{}";
         }
     }
 
@@ -194,17 +238,6 @@ public class EntityEventApplierTest {
         }
     }
 
-    public static class HierarchyEventWithInterfacesEventAppliedRecorder extends Recorder {
-        public void apply(HierarchyEventWithInterfaces event) {
-            eventTypeApplied = true;
-        }
-
-        @Override
-        public String toString() {
-            return "HierarchyEventWithInterfacesEventAppliedRecorder{" + "eventTypeApplied=" + eventTypeApplied + '}';
-        }
-    }
-
     public static class SubRecorder extends SuperRecorder {
         @Override
         public String toString() {
@@ -225,29 +258,7 @@ public class EntityEventApplierTest {
 
     public interface TestEventInterfaceA extends Event {}
 
-    public static class TestEventInterfaceAEventAppliedRecorder extends Recorder {
-        public void apply(TestEventInterfaceA event) {
-            eventTypeApplied = true;
-        }
-
-        @Override
-        public String toString() {
-            return "TestEventInterfaceAEventAppliedRecorder{" + "eventTypeApplied=" + eventTypeApplied + '}';
-        }
-    }
-
     public interface TestEventInterfaceB extends Event {}
-
-    public static class TestEventInterfaceBEventAppliedRecorder extends Recorder {
-        public void apply(TestEventInterfaceB event) {
-            eventTypeApplied = true;
-        }
-
-        @Override
-        public String toString() {
-            return "TestEventInterfaceBEventAppliedRecorder{" + "eventTypeApplied=" + eventTypeApplied + '}';
-        }
-    }
 
     private abstract static class Recorder implements EventSourceEntity {
         protected boolean eventTypeApplied = false;

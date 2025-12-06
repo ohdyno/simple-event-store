@@ -1,0 +1,6 @@
+apply EventRecord[event=HierarchyEventWithInterfaces{}, details=RecordDetails[streamName=StreamName[value=stream-name], version=Version[value=0], recordId=RecordId[id=0], insertedOn=[Date1]]] to entity EventWithRecordDetailsRecorder{recordedDetails=RecordDetails[streamName=StreamName[value=stream-name], version=Version[value=0], recordId=RecordId[id=0], insertedOn=[Date1]], eventTypeApplied=true}
+attempting to find the first parameter of the first apply(<? extends class me.xingzhou.simple.event.store.enrich.EntityEventApplierTest$HierarchyEventWithInterfaces>) method
+attempting to find accessible method apply(interface me.xingzhou.simple.event.store.Event)
+unable to apply event because unable to find accessible method apply(interface me.xingzhou.simple.event.store.Event)
+attempting to find accessible method apply(interface me.xingzhou.simple.event.store.Event, class me.xingzhou.simple.event.store.RecordDetails)
+attempting to invoke method apply(interface me.xingzhou.simple.event.store.Event, class me.xingzhou.simple.event.store.RecordDetails)
