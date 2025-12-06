@@ -85,6 +85,7 @@ public class EntityEventApplierTest {
     }
 
     @Test
+    @DisplayName("missing apply(Event)")
     void applyEventToAnEntityThatDoesNotHaveTheAssociatedApplyMethod() {
         var event = new BaseHierarchyEvent();
         var recorder = new Recorder() {
