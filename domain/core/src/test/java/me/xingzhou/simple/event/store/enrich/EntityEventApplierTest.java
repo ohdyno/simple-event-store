@@ -8,20 +8,35 @@ import com.github.valfirst.slf4jtest.LoggingEvent;
 import com.github.valfirst.slf4jtest.TestLogger;
 import com.github.valfirst.slf4jtest.TestLoggerFactory;
 import java.time.Instant;
+import java.util.Map;
 import java.util.stream.Collectors;
 import me.xingzhou.simple.event.store.Event;
 import me.xingzhou.simple.event.store.RecordDetails;
 import me.xingzhou.simple.event.store.entities.EventSourceEntity;
+import me.xingzhou.simple.event.store.event.converter.MapBackedEventTypeConverter;
 import me.xingzhou.simple.event.store.events.TestEventTypeConverter;
 import org.approvaltests.Approvals;
 import org.approvaltests.core.Options;
+import org.approvaltests.reporters.ClipboardReporter;
+import org.approvaltests.reporters.DiffReporter;
+import org.approvaltests.reporters.UseReporter;
 import org.approvaltests.scrubbers.DateScrubber;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+@UseReporter({DiffReporter.class, ClipboardReporter.class})
 public class EntityEventApplierTest {
 
     private static final TestLogger logger = TestLoggerFactory.getTestLogger(EntityEventApplier.class);
+
+    private static String stringifyAllLogMessages(TestLogger logger) {
+        return logger.getAllLoggingEvents().stream()
+                .map(LoggingEvent::getFormattedMessage)
+                .collect(Collectors.joining("\n"));
+    }
+
+    private final Options approvalOptions =
+            new Options().withScrubber(DateScrubber.getScrubberFor("2025-04-20T04:21:48.191772Z"));
 
     @Test
     void applyEvent() {
@@ -103,11 +118,19 @@ public class EntityEventApplierTest {
                         },
                         "apply(<? extends Event>, RecordDetails)"));
 
-        var loggedEvents = logger.getAllLoggingEvents().stream()
-                .map(LoggingEvent::toString)
-                .collect(Collectors.joining("\n"));
-        Approvals.verify(
-                loggedEvents, new Options().withScrubber(DateScrubber.getScrubberFor("2025-04-20T04:21:48.191772Z")));
+        var loggedEvents = stringifyAllLogMessages(logger);
+        Approvals.verify(loggedEvents, approvalOptions);
+    }
+
+    @Test
+    void applyEventToAnEntityThatDoesNotHaveTheAssociatedApplyMethod() {
+        var event = new BaseHierarchyEvent();
+        var recorder = new Recorder() {};
+        var subject = new EntityEventApplier(
+                new EventTypesExtractor(new MapBackedEventTypeConverter(Map.of("TestEvent", event.getClass()))));
+        assertDoesNotThrow(() -> subject.apply(new EventRecord(event, new RecordDetails("", 0, 0, null)), recorder));
+        var loggedEvents = stringifyAllLogMessages(logger);
+        Approvals.verify(loggedEvents, approvalOptions);
     }
 
     @BeforeEach
