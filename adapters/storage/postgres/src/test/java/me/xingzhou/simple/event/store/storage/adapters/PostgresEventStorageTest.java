@@ -2,27 +2,30 @@ package me.xingzhou.simple.event.store.storage.adapters;
 
 import static me.xingzhou.simple.event.store.storage.adapters.internal.CheckedExceptionHandlers.handleExceptions;
 
-import javax.sql.DataSource;
 import me.xingzhou.simple.event.store.storage.EventStorage;
 import me.xingzhou.simple.event.store.storage.EventStorageTest;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.junit.jupiter.api.BeforeAll;
+import org.postgresql.ds.PGSimpleDataSource;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @Testcontainers
-@SpringBootTest(
-        properties = {"spring.sql.init.mode=always", "spring.sql.init.schema-locations=classpath:db/postgres/schema.sql"
-        })
 public class PostgresEventStorageTest extends EventStorageTest {
     @Container
-    @ServiceConnection
-    private static final PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:17-alpine");
+    private static final PostgreSQLContainer postgreSQLContainer =
+            new PostgreSQLContainer("postgres:17-alpine").withInitScript("db/postgres/schema.sql");
 
-    @Autowired
-    private DataSource dataSource;
+    private static PGSimpleDataSource dataSource;
+
+    @BeforeAll
+    static void createDataSource() {
+        dataSource = new PGSimpleDataSource();
+        dataSource.setUrl(postgreSQLContainer.getJdbcUrl());
+        dataSource.setDatabaseName(postgreSQLContainer.getDatabaseName());
+        dataSource.setUser(postgreSQLContainer.getUsername());
+        dataSource.setPassword(postgreSQLContainer.getPassword());
+    }
 
     @Override
     protected EventStorage createStorage() {
