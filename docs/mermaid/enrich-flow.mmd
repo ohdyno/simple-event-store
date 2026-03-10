@@ -1,0 +1,26 @@
+sequenceDiagram
+    participant Client as Application code
+    participant Store as EventStore
+    participant Extractor as EventNamesExtractor
+    participant Converter as EventTypeConverter
+    participant Storage as EventStorage
+    participant Serializer as EventSerializer
+    participant Applier as EntityEventApplier
+    participant Entity as Aggregate or Projection
+
+    Client->>Store: enrich(entity)
+    Store->>Extractor: extract(entity)
+    Extractor->>Converter: convert(apply(...) parameter types)
+    Converter-->>Extractor: event type names
+    Extractor-->>Store: event type filters
+    Store->>Storage: retrieveEvents(...)
+    Storage-->>Store: RetrievedRecords
+
+    Store->>Serializer: deserialize each matching record
+    Serializer-->>Store: Event instances
+    Store->>Applier: apply(EventRecord, entity)
+    Applier->>Entity: apply(event [, RecordDetails])
+
+    Store->>Entity: update version or lastRecordId/lastUpdatedOn
+    Store->>Entity: handleEnrichedSuccessfully()
+    Store-->>Client: enriched entity

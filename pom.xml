@@ -283,6 +283,20 @@
         <plugin>
           <artifactId>maven-javadoc-plugin</artifactId>
           <version>3.10.1</version>
+          <configuration>
+            <tags>
+              <tag>
+                <name>apiNote</name>
+                <placement>a</placement>
+                <head>API Note:</head>
+              </tag>
+              <tag>
+                <name>implSpec</name>
+                <placement>a</placement>
+                <head>Implementation Spec:</head>
+              </tag>
+            </tags>
+          </configuration>
           <executions>
             <execution>
               <id>attach-javadocs</id>
@@ -369,6 +383,9 @@
       <plugin>
         <groupId>com.rudikershaw.gitbuildhook</groupId>
         <artifactId>git-build-hook-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <artifactId>maven-javadoc-plugin</artifactId>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>

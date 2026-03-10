@@ -1,0 +1,23 @@
+sequenceDiagram
+    participant Client as Application code
+    participant Store as EventStore
+    participant Serializer as EventSerializer
+    participant Converter as EventTypeConverter
+    participant Storage as EventStorage
+    participant Applier as EntityEventApplier
+    participant Aggregate as Aggregate
+    participant Flux as Reactor publisher
+
+    Client->>Store: save(event, aggregate)
+    Store->>Serializer: serialize(event)
+    Serializer->>Converter: convert(event class)
+    Converter-->>Serializer: event type
+    Serializer-->>Store: SerializedEvent
+    Store->>Storage: appendEvent(stream, version, type, json)
+    Storage-->>Store: StoredRecord
+    Store->>Applier: apply(EventRecord, aggregate)
+    Applier->>Aggregate: apply(event [, RecordDetails])
+    Store->>Aggregate: setVersion(record.version)
+    Store->>Aggregate: handleEnrichedSuccessfully()
+    Store->>Flux: publish(record)
+    Store-->>Client: enriched aggregate

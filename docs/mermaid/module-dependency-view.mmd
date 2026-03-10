@@ -1,0 +1,38 @@
+flowchart TD
+    starter[starter]
+    core[domain/core]
+    ports[domain/ports]
+
+    storageInMemory[in-memory storage]
+    storagePostgres[postgres storage]
+    serializerJackson[jackson serializer]
+    converterMap[map-backed converter]
+    converterServiceLoader[service-loader converter]
+
+    storageContract[storage contract tests]
+    serializerContract[serializer contract tests]
+    converterContract[converter contract tests]
+
+    starter --> core
+    starter --> storageInMemory
+    starter --> storagePostgres
+    starter --> serializerJackson
+    starter --> converterMap
+    starter --> converterServiceLoader
+
+    core --> ports
+    storageInMemory --> ports
+    storagePostgres --> ports
+    serializerJackson --> ports
+    converterMap --> ports
+    converterServiceLoader --> ports
+    converterServiceLoader --> converterMap
+
+    storageInMemory -.-> storageContract
+    storagePostgres -.-> storageContract
+    serializerJackson -.-> serializerContract
+    converterMap -.-> converterContract
+    converterServiceLoader -.-> converterContract
+    storageContract --> ports
+    serializerContract --> ports
+    converterContract --> ports

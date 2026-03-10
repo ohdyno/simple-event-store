@@ -1,0 +1,51 @@
+flowchart LR
+    app[Application code]
+
+    subgraph starter[Bootstrap / Composition]
+        builder[EventStoreBuilder]
+        deps[EventStoreDependencies]
+    end
+
+    subgraph core[Hexagon: domain/core]
+        store[EventStore]
+        entities[Aggregate / Projection]
+        extractor[EventNamesExtractor]
+        applier[EntityEventApplier]
+        publisher[Reactor publisher]
+    end
+
+    subgraph ports[Secondary ports: domain/ports]
+        storagePort[EventStorage]
+        serializerPort[EventSerializer]
+        converterPort[EventTypeConverter]
+    end
+
+    subgraph adapters[Secondary adapters]
+        inMemory[InMemoryEventStorage]
+        postgres[PostgresEventStorage]
+        jackson[JacksonEventSerializer]
+        mapBacked[MapBackedEventTypeConverter]
+        serviceLoader[ServiceLoaderEventTypeConverter]
+    end
+
+    app --> builder
+    app --> store
+
+    builder --> deps
+    deps --> store
+
+    store --> entities
+    store --> extractor
+    store --> applier
+    store --> publisher
+    store --> storagePort
+    store --> serializerPort
+
+    extractor --> converterPort
+    jackson --> converterPort
+
+    inMemory -. implements .-> storagePort
+    postgres -. implements .-> storagePort
+    jackson -. implements .-> serializerPort
+    mapBacked -. implements .-> converterPort
+    serviceLoader -. implements .-> converterPort
