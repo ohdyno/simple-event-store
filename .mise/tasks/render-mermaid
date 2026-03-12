@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+#MISE description="Render Mermaid diagrams via docs/mermaid/render.sh"
+#USAGE arg "[args]" var=#true double_dash="required" help="Arguments passed to docs/mermaid/render.sh"
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd -- "${SCRIPT_DIR}/../.." && pwd)"
+
+exec "${REPO_ROOT}/docs/mermaid/render.sh" "$@"
